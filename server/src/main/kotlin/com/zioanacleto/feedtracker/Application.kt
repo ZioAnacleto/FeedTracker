@@ -1,20 +1,37 @@
 package com.zioanacleto.feedtracker
 
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import com.zioanacleto.feedtracker.config.configureDI
+import com.zioanacleto.feedtracker.config.configureDatabase
+import com.zioanacleto.feedtracker.config.configureExceptions
+import com.zioanacleto.feedtracker.config.configureRouting
+import com.zioanacleto.feedtracker.config.configureSecurity
+import com.zioanacleto.feedtracker.config.configureSerialization
+import io.ktor.server.application.Application
+import io.ktor.server.netty.EngineMain
 
-fun main() {
-    embeddedServer(Netty, port = SERVER_PORT, host = "0.0.0.0", module = Application::module)
-        .start(wait = true)
+fun main(args: Array<String>) {
+    EngineMain.main(args)
 }
 
 fun Application.module() {
-    routing {
-        get("/") {
-            call.respondText("Ktor: ${Greeting().greet()}")
-        }
+    configureSerialization()
+    configureExceptions()
+    configureSecurity()
+    configureDI()
+    configureDatabase()
+    configureRouting()
+}
+
+fun Application.testModule(
+    initDatabase: Boolean = false,
+    configureDependencies: Application.() -> Unit = { configureDI() },
+) {
+    configureSerialization()
+    configureExceptions()
+    configureSecurity()
+    configureDependencies()
+    if (initDatabase) {
+        configureDatabase()
     }
+    configureRouting()
 }

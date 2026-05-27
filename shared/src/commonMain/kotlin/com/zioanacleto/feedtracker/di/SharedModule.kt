@@ -7,12 +7,17 @@ import com.zioanacleto.feedtracker.domain.repositories.TrackingSessionsRepositor
 import com.zioanacleto.feedtracker.data.repositories.TrackingSessionsRepositoryImpl
 import com.zioanacleto.feedtracker.domain.core.DispatcherProvider
 import com.zioanacleto.feedtracker.domain.core.DispatcherProviderImpl
+import com.zioanacleto.feedtracker.network.FeedTrackerApiClient
+import com.zioanacleto.feedtracker.network.createFeedTrackerHttpClient
 import org.koin.dsl.module
 
 val sharedModule = module {
     single<DispatcherProvider> { DispatcherProviderImpl() }
 
-    factory { TrackingSessionNetworkDataSource() }
+    single { createFeedTrackerHttpClient() }
+    single { FeedTrackerApiClient(get()) }
+
+    factory { TrackingSessionNetworkDataSource(get()) }
     factory { TrackingSessionLocalDataSource() }
 
     factory<TrackingSessionsRepository> {

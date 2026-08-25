@@ -30,7 +30,11 @@ kotlin {
         }
     }
 
-    jvm()
+    jvm {
+        mainRun {
+            mainClass.set("com.zioanacleto.feedtracker.DesktopMainKt")
+        }
+    }
 
     sourceSets {
         androidMain.dependencies {
@@ -82,6 +86,23 @@ kotlin {
     }
 }
 
+val feedtrackerVersionCode =
+    (findProperty("feedtracker.versionCode") as String?)?.toIntOrNull() ?: 1
+val feedtrackerVersionName =
+    (findProperty("feedtracker.versionName") as String?) ?: "1.0.0"
+
+val androidKeystoreFile = providers.environmentVariable("ANDROID_KEYSTORE_FILE")
+val androidKeystorePassword = providers.environmentVariable("ANDROID_KEYSTORE_PASSWORD")
+val androidKeyAlias = providers.environmentVariable("ANDROID_KEY_ALIAS")
+val androidKeyPassword = providers.environmentVariable("ANDROID_KEY_PASSWORD")
+val androidKeystorePath = androidKeystoreFile.orNull
+val canSignAndroidRelease =
+    !androidKeystorePath.isNullOrBlank() &&
+        androidKeystorePassword.orNull?.isNotBlank() == true &&
+        androidKeyAlias.orNull?.isNotBlank() == true &&
+        androidKeyPassword.orNull?.isNotBlank() == true &&
+        file(androidKeystorePath).exists()
+
 android {
     namespace = "com.zioanacleto.feedtracker"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -90,17 +111,30 @@ android {
         applicationId = "com.zioanacleto.feedtracker"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = feedtrackerVersionCode
+        versionName = feedtrackerVersionName
     }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    if (canSignAndroidRelease) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(androidKeystorePath!!)
+                storePassword = androidKeystorePassword.get()
+                keyAlias = androidKeyAlias.get()
+                keyPassword = androidKeyPassword.get()
+            }
+        }
+    }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            if (canSignAndroidRelease) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
@@ -123,7 +157,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.zioanacleto.feedtracker"
-            packageVersion = "1.0.0"
+            packageVersion = feedtrackerVersionName
         }
     }
 }

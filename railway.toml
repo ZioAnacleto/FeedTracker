@@ -1,0 +1,16 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+watchPatterns = [
+  "Dockerfile",
+  ".dockerignore",
+  "railway.toml",
+  "gradlew",
+  "gradlew.bat",
+  "gradle/**",
+  "gradle.properties",
+  "settings.gradle.kts",
+  "build.gradle.kts",
+  "server/**",
+  "shared/**",
+]

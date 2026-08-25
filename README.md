@@ -57,6 +57,46 @@ Apri la cartella [`iosApp`](./iosApp) in Xcode e lancia lo schema dell’app, op
 
 Su ogni push e pull request, GitHub Actions esegue ktlint, Android Lint e i test del server, JVM e Android su Linux, più i test iOS sul simulatore su macOS.
 
+Quando la CI su `main` (o `master`) è verde, il workflow **Release** produce gli artifact (conservati 30 giorni): AAB Android firmato, installer Linux (`.deb`), Windows (`.msi`) e macOS (`.dmg`). Si scaricano da Actions → run **Release** → Artifacts. Non vengono caricati sugli store.
+
+DMG e MSI non sono firmati con certificati Apple/Authenticode: il sistema operativo può mostrare un avviso. L’IPA iOS non è incluso.
+
+### Keystore Android (una tantum)
+
+Genera un keystore in locale (non committarlo; `*.jks` e `*.keystore` sono in `.gitignore`):
+
+```shell
+keytool -genkeypair -v \
+  -keystore upload-keystore.jks \
+  -alias upload \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 10000
+```
+
+Codifica il file in base64:
+
+```shell
+base64 -i upload-keystore.jks | pbcopy
+```
+
+Su Linux usa `base64 -w 0 upload-keystore.jks`. Imposta questi **secret** nel repository GitHub (`Settings` → `Secrets and variables` → `Actions`):
+
+| Secret | Contenuto |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | Keystore in base64 |
+| `ANDROID_KEYSTORE_PASSWORD` | Password del keystore |
+| `ANDROID_KEY_ALIAS` | Alias della chiave (es. `upload`) |
+| `ANDROID_KEY_PASSWORD` | Password della chiave |
+
+`versionCode` e `versionName` (`1.0.<n>`) sono presi dal numero di run di GitHub Actions. In locale restano `1` / `1.0.0`, oppure si possono passare `-Pfeedtracker.versionCode=…` e `-Pfeedtracker.versionName=…`.
+
+## Deploy Railway
+
+Il backend si costruisce con il [`Dockerfile`](./Dockerfile) di root (fat jar, solo `server` + `shared`). [`railway.toml`](./railway.toml) limita i **watch path**: Railway ridistribuisce solo se cambiano Dockerfile, Gradle, `server/` o `shared/`. Un merge che tocca solo `composeApp/`, `iosApp/` o `.github/` non deve far partire un deploy.
+
+In dashboard: lascia vuoto il Custom Start Command (l’entrypoint del Dockerfile è già `java -jar /app/server.jar`) e verifica che il servizio usi il Dockerfile di root.
+
 ---
 
 Documentazione Kotlin Multiplatform: [get started](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html).

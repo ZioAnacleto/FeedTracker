@@ -17,7 +17,7 @@ fun main() = application {
     ) {
         App(
             modifier = Modifier
-                .padding(20.dp)
+                .padding(20.dp),
         )
     }
 }

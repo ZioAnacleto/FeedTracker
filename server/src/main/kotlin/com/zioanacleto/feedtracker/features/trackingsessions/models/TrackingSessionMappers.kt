@@ -16,16 +16,15 @@ fun ResultRow.toTrackingSessionModel(): TrackingSessionModel = TrackingSessionMo
     additionalNotes = this[TrackingSessionsTable.additionalNotes],
 )
 
-fun CreateTrackingSessionRequest.toModel(id: String = UUID.randomUUID().toString()): TrackingSessionModel =
-    TrackingSessionModel(
-        id = id,
-        sessionStartTime = sessionStartTime,
-        sessionEndTime = sessionEndTime,
-        name = name,
-        surname = surname,
-        birthDate = birthDate,
-        additionalNotes = additionalNotes,
-    )
+fun CreateTrackingSessionRequest.toModel(id: String = UUID.randomUUID().toString()): TrackingSessionModel = TrackingSessionModel(
+    id = id,
+    sessionStartTime = sessionStartTime,
+    sessionEndTime = sessionEndTime,
+    name = name,
+    surname = surname,
+    birthDate = birthDate,
+    additionalNotes = additionalNotes,
+)
 
 fun UpdateTrackingSessionRequest.toModel(id: String): TrackingSessionModel = TrackingSessionModel(
     id = id,

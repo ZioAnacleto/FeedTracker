@@ -18,19 +18,19 @@ fun Application.configureExceptions() {
         exception<ResourceNotFoundException> { call, cause ->
             call.respond(
                 cause.statusCode,
-                ApiResponse<Unit>("ERROR", cause.message ?: "Resource not found")
+                ApiResponse<Unit>("ERROR", cause.message ?: "Resource not found"),
             )
         }
         exception<ValidationException> { call, cause ->
             call.respond(
                 cause.statusCode,
-                ApiResponse<Unit>("ERROR", cause.message ?: "Validation error")
+                ApiResponse<Unit>("ERROR", cause.message ?: "Validation error"),
             )
         }
         exception<ApplicationException> { call, cause ->
             call.respond(
                 cause.statusCode,
-                ApiResponse<Unit>("ERROR", cause.message ?: "Application error")
+                ApiResponse<Unit>("ERROR", cause.message ?: "Application error"),
             )
         }
         exception<Throwable> { call, cause ->

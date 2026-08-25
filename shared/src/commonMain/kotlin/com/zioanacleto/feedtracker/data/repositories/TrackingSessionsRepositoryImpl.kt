@@ -31,9 +31,7 @@ class TrackingSessionsRepositoryImpl(
         }
     }
 
-    private fun <T> loadFromPreferredSource(
-        block: suspend TrackingSessionDataSource.() -> T,
-    ): Flow<Resource<T>> = flow {
+    private fun <T> loadFromPreferredSource(block: suspend TrackingSessionDataSource.() -> T): Flow<Resource<T>> = flow {
         emit(Resource.Loading)
         emit(Resource.Success(preferredDataSource().block()))
     }.catch { throwable ->

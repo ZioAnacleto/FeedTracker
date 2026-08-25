@@ -19,19 +19,19 @@ kotlin {
             }
         }
     }
-    
+
     listOf(
         iosArm64(),
-        iosSimulatorArm64()
+        iosSimulatorArm64(),
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
         }
     }
-    
+
     jvm()
-    
+
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
@@ -58,10 +58,26 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.kotest.assertions.core)
+            implementation(libs.turbine)
+        }
+        androidUnitTest.dependencies {
+            implementation(libs.mockk)
+            implementation(libs.junit)
+            implementation(libs.androidx.testExt.junit)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.kotest.assertions.core)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+        }
+        jvmTest.dependencies {
+            implementation(libs.mockk)
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.kotest.assertions.core)
         }
     }
 }
@@ -91,6 +107,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -99,7 +118,7 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "com.zioanacleto.feedtracker.MainKt"
+        mainClass = "com.zioanacleto.feedtracker.DesktopMainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)

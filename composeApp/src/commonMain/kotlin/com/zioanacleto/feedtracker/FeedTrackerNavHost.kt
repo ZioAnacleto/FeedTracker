@@ -12,14 +12,11 @@ import com.zioanacleto.feedtracker.features.newtracking.NewTrackingScreen
 import com.zioanacleto.feedtracker.features.newtracking.navigation.NewTrackingRoute
 
 @Composable
-fun FeedTrackerNavHost(
-    modifier: Modifier,
-    navController: NavHostController = rememberNavController()
-) {
+fun FeedTrackerNavHost(modifier: Modifier, navController: NavHostController = rememberNavController()) {
     NavHost(
         navController = navController,
         modifier = Modifier,
-        startDestination = HomeRoute
+        startDestination = HomeRoute,
     ) {
         composable<HomeRoute> {
             HomeScreen(modifier) { navController.navigate(NewTrackingRoute) }

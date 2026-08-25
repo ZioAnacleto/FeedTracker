@@ -18,10 +18,7 @@ import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun TitleWithName(
-    modifier: Modifier = Modifier,
-    name: String
-) {
+fun TitleWithName(modifier: Modifier = Modifier, name: String) {
     var showName by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(700)
@@ -31,15 +28,15 @@ fun TitleWithName(
     Row(modifier = modifier) {
         Text(
             style = MaterialTheme.typography.titleLarge,
-            text = stringResource(Res.string.hello)
+            text = stringResource(Res.string.hello),
         )
         AnimatedVisibility(
             showName,
-            enter = fadeIn()
+            enter = fadeIn(),
         ) {
             Text(
                 style = MaterialTheme.typography.titleLarge,
-                text = name
+                text = name,
             )
         }
     }

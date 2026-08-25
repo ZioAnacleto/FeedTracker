@@ -64,10 +64,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun NewTrackingScreen(
-    modifier: Modifier = Modifier,
-    onBackButtonClick: () -> Unit
-) {
+fun NewTrackingScreen(modifier: Modifier = Modifier, onBackButtonClick: () -> Unit) {
     var nameTextField by remember { mutableStateOf(TextFieldValue("")) }
     var surnameTextField by remember { mutableStateOf(TextFieldValue("")) }
     var birthDateTextField by remember { mutableStateOf(TextFieldValue("")) }
@@ -76,8 +73,8 @@ fun NewTrackingScreen(
     val isButtonEnabled by remember {
         derivedStateOf {
             nameTextField.text.isNotEmpty() &&
-                    surnameTextField.text.isNotEmpty() &&
-                    (birthDateTextField.text.isNotEmpty() && birthDateTextField.text.length == 10)
+                surnameTextField.text.isNotEmpty() &&
+                (birthDateTextField.text.isNotEmpty() && birthDateTextField.text.length == 10)
         }
     }
 
@@ -115,23 +112,23 @@ fun NewTrackingScreen(
             .background(MaterialTheme.colorScheme.primaryContainer)
             .safeContentPadding()
             .fillMaxSize()
-            .hideKeyboardOnTouch()
+            .hideKeyboardOnTouch(),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = stringResource(Res.string.new_tracking_session),
                 style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(vertical = 16.dp)
+                modifier = Modifier.padding(vertical = 16.dp),
             )
 
             // Timer Display
             AnimatedTimer(
                 time = elapsedTime,
-                modifier = Modifier.padding(vertical = 24.dp)
+                modifier = Modifier.padding(vertical = 24.dp),
             )
 
             // Name
@@ -154,7 +151,7 @@ fun NewTrackingScreen(
                             contentDescription = stringResource(Res.string.clear_name),
                             modifier = Modifier
                                 .padding(end = 8.dp)
-                                .clickable { nameTextField = TextFieldValue("") }
+                                .clickable { nameTextField = TextFieldValue("") },
                         )
                     }
                 },
@@ -162,9 +159,9 @@ fun NewTrackingScreen(
                     capitalization = KeyboardCapitalization.Words,
                     keyboardType = KeyboardType.Text,
                     showKeyboardOnFocus = true,
-                    imeAction = ImeAction.Next
+                    imeAction = ImeAction.Next,
                 ),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(10.dp),
             )
 
             // Surname
@@ -187,7 +184,7 @@ fun NewTrackingScreen(
                             contentDescription = stringResource(Res.string.clear_surname),
                             modifier = Modifier
                                 .padding(end = 8.dp)
-                                .clickable { surnameTextField = TextFieldValue("") }
+                                .clickable { surnameTextField = TextFieldValue("") },
                         )
                     }
                 },
@@ -195,9 +192,9 @@ fun NewTrackingScreen(
                     capitalization = KeyboardCapitalization.Words,
                     keyboardType = KeyboardType.Text,
                     showKeyboardOnFocus = true,
-                    imeAction = ImeAction.Next
+                    imeAction = ImeAction.Next,
                 ),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(10.dp),
             )
 
             // Date of birth
@@ -229,7 +226,7 @@ fun NewTrackingScreen(
                             }
                             birthDateTextField = input.copy(
                                 text = formatted,
-                                selection = TextRange(formatted.length)
+                                selection = TextRange(formatted.length),
                             )
                             if (newText.length == 10) localFocusManager.clearFocus()
                         } else {
@@ -248,16 +245,16 @@ fun NewTrackingScreen(
                             contentDescription = stringResource(Res.string.clear_date_of_birth),
                             modifier = Modifier
                                 .padding(end = 8.dp)
-                                .clickable { birthDateTextField = TextFieldValue("") }
+                                .clickable { birthDateTextField = TextFieldValue("") },
                         )
                     }
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Number,
                     showKeyboardOnFocus = true,
-                    imeAction = ImeAction.Done
+                    imeAction = ImeAction.Done,
                 ),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(10.dp),
             )
 
             // Additional notes
@@ -274,9 +271,9 @@ fun NewTrackingScreen(
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Text,
                     showKeyboardOnFocus = true,
-                    imeAction = ImeAction.Done
+                    imeAction = ImeAction.Done,
                 ),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(10.dp),
             )
         }
 
@@ -287,7 +284,7 @@ fun NewTrackingScreen(
             enabled = isButtonEnabled,
             modifier = Modifier
                 .padding(bottom = 24.dp)
-                .align(Alignment.BottomCenter)
+                .align(Alignment.BottomCenter),
         ) {
             Text(stringResource(Res.string.save_new_tracking))
         }
@@ -325,7 +322,7 @@ fun NewTrackingScreen(
                 Button(onClick = { viewModel.hidePopup() }) {
                     Text(stringResource(Res.string.cancel))
                 }
-            }
+            },
         )
     }
 

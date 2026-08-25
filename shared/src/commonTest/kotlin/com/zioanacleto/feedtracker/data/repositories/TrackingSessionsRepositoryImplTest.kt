@@ -1,112 +1,116 @@
 package com.zioanacleto.feedtracker.data.repositories
 
+import app.cash.turbine.test
 import com.zioanacleto.feedtracker.data.datasources.TrackingSessionDataSource
-import com.zioanacleto.feedtracker.domain.TrackingSessionModel
-import com.zioanacleto.feedtracker.domain.core.DispatcherProvider
 import com.zioanacleto.feedtracker.domain.core.Resource
-import com.zioanacleto.feedtracker.network.NetworkMonitor
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.runBlocking
+import com.zioanacleto.feedtracker.testutil.FakeNetworkMonitor
+import com.zioanacleto.feedtracker.testutil.FakeTrackingSessionDataSource
+import com.zioanacleto.feedtracker.testutil.ImmediateDispatcherProvider
+import com.zioanacleto.feedtracker.testutil.trackingSession
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertTrue
 
 class TrackingSessionsRepositoryImplTest {
 
     @Test
-    fun getTrackingSessionsUsesNetworkWhenOnline() = runBlocking {
-        val networkSession = session("network")
+    fun getTrackingSessionsUsesNetworkWhenOnline() = runTest {
+        val networkSession = trackingSession("network")
         val repository = repository(
             online = true,
             network = FakeTrackingSessionDataSource(listOf(networkSession)),
-            local = FakeTrackingSessionDataSource(listOf(session("local"))),
+            local = FakeTrackingSessionDataSource(listOf(trackingSession("local"))),
         )
 
-        val result = repository.getTrackingSessions().first { it !is Resource.Loading }
-
-        assertIs<Resource.Success<List<TrackingSessionModel>>>(result)
-        assertEquals(listOf(networkSession), result.data)
+        repository.getTrackingSessions().test {
+            awaitItem() shouldBe Resource.Loading
+            awaitItem() shouldBe Resource.Success(listOf(networkSession))
+            awaitComplete()
+        }
     }
 
     @Test
-    fun getTrackingSessionsUsesLocalWhenOffline() = runBlocking {
-        val localSession = session("local")
+    fun getTrackingSessionsUsesLocalWhenOffline() = runTest {
+        val localSession = trackingSession("local")
         val repository = repository(
             online = false,
-            network = FakeTrackingSessionDataSource(listOf(session("network"))),
+            network = FakeTrackingSessionDataSource(listOf(trackingSession("network"))),
             local = FakeTrackingSessionDataSource(listOf(localSession)),
         )
 
-        val result = repository.getTrackingSessions().first { it !is Resource.Loading }
-
-        assertIs<Resource.Success<List<TrackingSessionModel>>>(result)
-        assertEquals(listOf(localSession), result.data)
+        repository.getTrackingSessions().test {
+            awaitItem() shouldBe Resource.Loading
+            awaitItem() shouldBe Resource.Success(listOf(localSession))
+            awaitComplete()
+        }
     }
 
     @Test
-    fun saveTrackingSessionPostsToNetworkWhenOnline() = runBlocking {
+    fun getTrackingSessionsEmitsErrorWhenSourceFails() = runTest {
+        val network = FakeTrackingSessionDataSource().apply {
+            getSessionsError = IllegalStateException("network down")
+        }
+        val repository = repository(online = true, network = network)
+
+        repository.getTrackingSessions().test {
+            awaitItem() shouldBe Resource.Loading
+            val error = awaitItem().shouldBeInstanceOf<Resource.Error>()
+            error.message shouldBe "network down"
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun getTrackingSessionUsesNetworkWhenOnline() = runTest {
+        val session = trackingSession("session-1")
+        val repository = repository(
+            online = true,
+            network = FakeTrackingSessionDataSource(listOf(session)),
+        )
+
+        repository.getTrackingSession("session-1").test {
+            awaitItem() shouldBe Resource.Loading
+            awaitItem() shouldBe Resource.Success(session)
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun saveTrackingSessionPostsToNetworkWhenOnline() = runTest {
         val network = FakeTrackingSessionDataSource()
         val local = FakeTrackingSessionDataSource()
         val repository = repository(online = true, network = network, local = local)
-        val session = session("new")
+        val session = trackingSession("new")
 
         repository.saveTrackingSession(session)
 
-        assertEquals(listOf(session), network.saved)
-        assertTrue(local.saved.isEmpty())
+        network.saved shouldBe listOf(session)
+        local.saved.shouldBeEmpty()
+    }
+
+    @Test
+    fun saveTrackingSessionStoresLocallyWhenOffline() = runTest {
+        val network = FakeTrackingSessionDataSource()
+        val local = FakeTrackingSessionDataSource()
+        val repository = repository(online = false, network = network, local = local)
+        val session = trackingSession("offline")
+
+        repository.saveTrackingSession(session)
+
+        local.saved shouldBe listOf(session)
+        network.saved.shouldBeEmpty()
     }
 
     private fun repository(
         online: Boolean,
-        network: TrackingSessionDataSource,
-        local: TrackingSessionDataSource,
+        network: TrackingSessionDataSource = FakeTrackingSessionDataSource(),
+        local: TrackingSessionDataSource = FakeTrackingSessionDataSource(),
     ) = TrackingSessionsRepositoryImpl(
         localDataSource = local,
         networkDataSource = network,
         dispatcherProvider = ImmediateDispatcherProvider,
         networkMonitor = FakeNetworkMonitor(online),
     )
-
-    private fun session(id: String) = TrackingSessionModel(
-        id = id,
-        sessionStartTime = 1_000L,
-        sessionEndTime = 2_000L,
-        name = "Mario",
-        surname = "Rossi",
-        birthDate = "01/01/1990",
-        additionalNotes = null,
-    )
-}
-
-private class FakeTrackingSessionDataSource(
-    initial: List<TrackingSessionModel> = emptyList(),
-) : TrackingSessionDataSource {
-    private val sessions = initial.toMutableList()
-    val saved = mutableListOf<TrackingSessionModel>()
-
-    override suspend fun getTrackingSessions(): List<TrackingSessionModel> = sessions.toList()
-
-    override suspend fun getTrackingSession(id: String): TrackingSessionModel =
-        sessions.first { it.id == id }
-
-    override suspend fun saveNewTrackingSession(sessionModel: TrackingSessionModel) {
-        saved += sessionModel
-        sessions += sessionModel
-    }
-}
-
-private class FakeNetworkMonitor(online: Boolean) : NetworkMonitor {
-    override val isOnline: Flow<Boolean> = flowOf(online)
-}
-
-private object ImmediateDispatcherProvider : DispatcherProvider {
-    override fun io(): CoroutineDispatcher = Dispatchers.Unconfined
-    override fun main(): CoroutineDispatcher = Dispatchers.Unconfined
-    override fun default(): CoroutineDispatcher = Dispatchers.Unconfined
-    override fun unconfined(): CoroutineDispatcher = Dispatchers.Unconfined
 }

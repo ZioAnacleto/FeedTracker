@@ -22,9 +22,7 @@ sealed interface SaveTrackingUiState {
 }
 
 @OptIn(ExperimentalUuidApi::class)
-class NewTrackingViewModel(
-    private val trackingSessionsRepository: TrackingSessionsRepository,
-) : ViewModel() {
+class NewTrackingViewModel(private val trackingSessionsRepository: TrackingSessionsRepository) : ViewModel() {
 
     private val _showPopup = MutableStateFlow(false)
     val showPopup: StateFlow<Boolean> = _showPopup.asStateFlow()

@@ -7,9 +7,7 @@ import com.zioanacleto.feedtracker.domain.TrackingSessionModel
 import com.zioanacleto.feedtracker.domain.UpdateTrackingSessionRequest
 import com.zioanacleto.feedtracker.features.trackingsessions.repositories.TrackingSessionRepository
 
-class TrackingSessionServiceImpl(
-    private val repository: TrackingSessionRepository,
-) : TrackingSessionService {
+class TrackingSessionServiceImpl(private val repository: TrackingSessionRepository) : TrackingSessionService {
 
     override suspend fun getAll(): List<TrackingSessionModel> = repository.findAll()
 
@@ -22,10 +20,7 @@ class TrackingSessionServiceImpl(
         return repository.create(request)
     }
 
-    override suspend fun update(
-        id: String,
-        request: UpdateTrackingSessionRequest
-    ): TrackingSessionModel {
+    override suspend fun update(id: String, request: UpdateTrackingSessionRequest): TrackingSessionModel {
         validateSessionTimes(request.sessionStartTime, request.sessionEndTime)
         validatePersonFields(request.name, request.surname, request.birthDate)
         return repository.update(id, request)
@@ -55,7 +50,7 @@ class TrackingSessionServiceImpl(
 
     companion object {
         private val BIRTH_DATE_REGEX = Regex(
-            """^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/(19\d{2}|20\d{2})$"""
+            """^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/(19\d{2}|20\d{2})$""",
         )
     }
 }

@@ -6,9 +6,7 @@ import com.zioanacleto.feedtracker.theme.FeedTrackerTheme
 import org.koin.compose.KoinContext
 
 @Composable
-fun App(
-    modifier: Modifier = Modifier
-) {
+fun App(modifier: Modifier = Modifier) {
     FeedTrackerTheme {
         FeedTrackerNavHost(modifier)
     }

@@ -10,11 +10,9 @@ import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.includes
 import org.koin.dsl.module
 
-fun initKoin(configuration: KoinAppDeclaration? = null): KoinApplication {
-    return startKoin {
-        includes(configuration)
-        modules(sharedModule + uiModule + platformModule)
-    }
+fun initKoin(configuration: KoinAppDeclaration? = null): KoinApplication = startKoin {
+    includes(configuration)
+    modules(sharedModule + uiModule + platformModule)
 }
 
 val uiModule = module {

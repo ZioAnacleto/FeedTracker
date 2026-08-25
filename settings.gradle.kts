@@ -32,6 +32,13 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-include(":composeApp")
+val serverOnlyBuild =
+    (providers.gradleProperty("feedtracker.serverOnly").orNull
+        ?: providers.environmentVariable("FEEDTRACKER_SERVER_ONLY").orNull)
+        ?.equals("true", ignoreCase = true) == true
+
 include(":server")
 include(":shared")
+if (!serverOnlyBuild) {
+    include(":composeApp")
+}

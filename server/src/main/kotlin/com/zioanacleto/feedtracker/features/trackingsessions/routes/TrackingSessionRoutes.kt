@@ -3,6 +3,7 @@ package com.zioanacleto.feedtracker.features.trackingsessions.routes
 import com.zioanacleto.feedtracker.common.exceptions.ValidationException
 import com.zioanacleto.feedtracker.common.models.ApiResponse
 import com.zioanacleto.feedtracker.domain.CreateTrackingSessionRequest
+import com.zioanacleto.feedtracker.domain.TrackingSessionModel
 import com.zioanacleto.feedtracker.domain.UpdateTrackingSessionRequest
 import com.zioanacleto.feedtracker.features.trackingsessions.services.TrackingSessionService
 import io.ktor.http.HttpStatusCode
@@ -19,7 +20,13 @@ fun Route.trackingSessionRoutes(trackingSessionService: TrackingSessionService) 
     route("/api/tracking-sessions") {
         get {
             val sessions = trackingSessionService.getAll()
-            call.respond(ApiResponse("SUCCESS", "Tracking sessions retrieved", sessions))
+            call.respond(
+                ApiResponse<List<TrackingSessionModel>>(
+                    status = "SUCCESS",
+                    message = "Tracking sessions retrieved",
+                    data = sessions,
+                ),
+            )
         }
 
         get("/{id}") {
@@ -50,7 +57,7 @@ fun Route.trackingSessionRoutes(trackingSessionService: TrackingSessionService) 
             val id = call.parameters["id"]?.takeIf { it.isNotBlank() }
                 ?: throw ValidationException("Invalid ID")
             trackingSessionService.delete(id)
-            call.respond(ApiResponse<Nothing>("SUCCESS", "Tracking session deleted"))
+            call.respond(ApiResponse<Unit>("SUCCESS", "Tracking session deleted"))
         }
     }
 }

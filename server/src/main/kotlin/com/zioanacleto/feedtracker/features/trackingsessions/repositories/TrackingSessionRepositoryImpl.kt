@@ -33,21 +33,21 @@ class TrackingSessionRepositoryImpl : TrackingSessionRepository {
                 .singleOrNull()
         }
 
-    override suspend fun create(request: CreateTrackingSessionRequest): TrackingSessionModel =
-        with(request.toModel()) {
-            transactionDb {
-                TrackingSessionsTable.insert {
-                    it[TrackingSessionsTable.id] = id
-                    it[TrackingSessionsTable.sessionStartTime] = sessionStartTime
-                    it[TrackingSessionsTable.sessionEndTime] = sessionEndTime
-                    it[TrackingSessionsTable.name] = name
-                    it[TrackingSessionsTable.surname] = surname
-                    it[TrackingSessionsTable.birthDate] = birthDate
-                    it[TrackingSessionsTable.additionalNotes] = additionalNotes
-                }
+    override suspend fun create(request: CreateTrackingSessionRequest): TrackingSessionModel {
+        val model = request.toModel()
+        transactionDb {
+            TrackingSessionsTable.insert {
+                it[id] = model.id
+                it[sessionStartTime] = model.sessionStartTime
+                it[sessionEndTime] = model.sessionEndTime
+                it[name] = model.name
+                it[surname] = model.surname
+                it[birthDate] = model.birthDate
+                it[additionalNotes] = model.additionalNotes
             }
-            request.toModel()
         }
+        return model
+    }
 
     override suspend fun update(
         id: String,

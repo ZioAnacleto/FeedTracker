@@ -18,26 +18,26 @@ fun Application.configureExceptions() {
         exception<ResourceNotFoundException> { call, cause ->
             call.respond(
                 cause.statusCode,
-                ApiResponse<Nothing>("ERROR", cause.message ?: "Resource not found")
+                ApiResponse<Unit>("ERROR", cause.message ?: "Resource not found")
             )
         }
         exception<ValidationException> { call, cause ->
             call.respond(
                 cause.statusCode,
-                ApiResponse<Nothing>("ERROR", cause.message ?: "Validation error")
+                ApiResponse<Unit>("ERROR", cause.message ?: "Validation error")
             )
         }
         exception<ApplicationException> { call, cause ->
             call.respond(
                 cause.statusCode,
-                ApiResponse<Nothing>("ERROR", cause.message ?: "Application error")
+                ApiResponse<Unit>("ERROR", cause.message ?: "Application error")
             )
         }
         exception<Throwable> { call, cause ->
             logger.error(cause) { "Unhandled exception" }
             call.respond(
                 HttpStatusCode.InternalServerError,
-                ApiResponse<Nothing>("ERROR", "An internal error occurred"),
+                ApiResponse<Unit>("ERROR", "An internal error occurred"),
             )
         }
     }

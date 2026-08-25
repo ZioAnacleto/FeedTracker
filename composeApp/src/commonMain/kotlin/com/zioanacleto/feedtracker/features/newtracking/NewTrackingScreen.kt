@@ -41,7 +41,26 @@ import androidx.compose.ui.unit.dp
 import com.zioanacleto.feedtracker.components.AnimatedTimer
 import com.zioanacleto.feedtracker.components.hideKeyboardOnTouch
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
+import feedtracker.composeapp.generated.resources.Res
+import feedtracker.composeapp.generated.resources.cancel
+import feedtracker.composeapp.generated.resources.clear_date_of_birth
+import feedtracker.composeapp.generated.resources.clear_name
+import feedtracker.composeapp.generated.resources.clear_surname
+import feedtracker.composeapp.generated.resources.date_of_birth
+import feedtracker.composeapp.generated.resources.date_of_birth_placeholder
+import feedtracker.composeapp.generated.resources.name
+import feedtracker.composeapp.generated.resources.name_placeholder
+import feedtracker.composeapp.generated.resources.new_tracking_session
+import feedtracker.composeapp.generated.resources.notes
+import feedtracker.composeapp.generated.resources.notes_placeholder
+import feedtracker.composeapp.generated.resources.ok
+import feedtracker.composeapp.generated.resources.save_new_tracking
+import feedtracker.composeapp.generated.resources.save_tracking_confirmation
+import feedtracker.composeapp.generated.resources.surname
+import feedtracker.composeapp.generated.resources.surname_placeholder
+import feedtracker.composeapp.generated.resources.unable_to_save
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -72,6 +91,14 @@ fun NewTrackingScreen(
 
     val viewModel = koinViewModel<NewTrackingViewModel>()
     val showPopup by viewModel.showPopup.collectAsState()
+    val saveState by viewModel.saveState.collectAsState()
+
+    LaunchedEffect(saveState) {
+        if (saveState is SaveTrackingUiState.Saved) {
+            viewModel.consumeSaveState()
+            onBackButtonClick()
+        }
+    }
 
     val localFocusManager = LocalFocusManager.current
 
@@ -96,7 +123,7 @@ fun NewTrackingScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "New Tracking Session",
+                text = stringResource(Res.string.new_tracking_session),
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(vertical = 16.dp)
             )
@@ -117,14 +144,14 @@ fun NewTrackingScreen(
                     },
                 value = nameTextField,
                 onValueChange = { nameTextField = it },
-                label = { Text("Name") },
-                placeholder = { Text("John") },
+                label = { Text(stringResource(Res.string.name)) },
+                placeholder = { Text(stringResource(Res.string.name_placeholder)) },
                 singleLine = true,
                 trailingIcon = {
                     if (hasNameFocus && nameTextField.text.isNotEmpty()) {
                         Icon(
                             painter = rememberVectorPainter(Icons.Rounded.Clear),
-                            contentDescription = "Clear Name",
+                            contentDescription = stringResource(Res.string.clear_name),
                             modifier = Modifier
                                 .padding(end = 8.dp)
                                 .clickable { nameTextField = TextFieldValue("") }
@@ -150,14 +177,14 @@ fun NewTrackingScreen(
                     },
                 value = surnameTextField,
                 onValueChange = { surnameTextField = it },
-                label = { Text("Surname") },
-                placeholder = { Text("Doe") },
+                label = { Text(stringResource(Res.string.surname)) },
+                placeholder = { Text(stringResource(Res.string.surname_placeholder)) },
                 singleLine = true,
                 trailingIcon = {
                     if (hasSurnameFocus && surnameTextField.text.isNotEmpty()) {
                         Icon(
                             painter = rememberVectorPainter(Icons.Rounded.Clear),
-                            contentDescription = "Clear Surname",
+                            contentDescription = stringResource(Res.string.clear_surname),
                             modifier = Modifier
                                 .padding(end = 8.dp)
                                 .clickable { surnameTextField = TextFieldValue("") }
@@ -211,14 +238,14 @@ fun NewTrackingScreen(
                         }
                     }
                 },
-                label = { Text("Date of birth") },
-                placeholder = { Text("DD/MM/YYYY") },
+                label = { Text(stringResource(Res.string.date_of_birth)) },
+                placeholder = { Text(stringResource(Res.string.date_of_birth_placeholder)) },
                 singleLine = true,
                 trailingIcon = {
                     if (hasBirthDateFocus && birthDateTextField.text.isNotEmpty()) {
                         Icon(
                             painter = rememberVectorPainter(Icons.Rounded.Clear),
-                            contentDescription = "Clear Surname",
+                            contentDescription = stringResource(Res.string.clear_date_of_birth),
                             modifier = Modifier
                                 .padding(end = 8.dp)
                                 .clickable { birthDateTextField = TextFieldValue("") }
@@ -240,8 +267,8 @@ fun NewTrackingScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 value = additionalNotesTextField,
                 onValueChange = { additionalNotesTextField = it },
-                label = { Text("Notes") },
-                placeholder = { Text("Insert your notes") },
+                label = { Text(stringResource(Res.string.notes)) },
+                placeholder = { Text(stringResource(Res.string.notes_placeholder)) },
                 singleLine = false,
                 minLines = 6,
                 keyboardOptions = KeyboardOptions.Default.copy(
@@ -262,17 +289,18 @@ fun NewTrackingScreen(
                 .padding(bottom = 24.dp)
                 .align(Alignment.BottomCenter)
         ) {
-            Text("Save new tracking")
+            Text(stringResource(Res.string.save_new_tracking))
         }
     }
 
     if (showPopup) {
         AlertDialog(
             onDismissRequest = { viewModel.hidePopup() },
-            title = { Text("Save new tracking") },
-            text = { Text("Are you sure you want to save this tracking?") },
+            title = { Text(stringResource(Res.string.save_new_tracking)) },
+            text = { Text(stringResource(Res.string.save_tracking_confirmation)) },
             confirmButton = {
                 Button(
+                    enabled = saveState !is SaveTrackingUiState.Saving,
                     onClick = {
                         if (isTimerRunning) {
                             isTimerRunning = false
@@ -285,19 +313,33 @@ fun NewTrackingScreen(
                             birthDate = birthDateTextField.text,
                             additionalNotes = additionalNotesTextField.text,
                             startTime = startTime,
-                            endTime = stopTime
+                            endTime = stopTime,
                         )
                         viewModel.hidePopup()
-                    }
+                    },
                 ) {
-                    Text("OK")
+                    Text(stringResource(Res.string.ok))
                 }
             },
             dismissButton = {
                 Button(onClick = { viewModel.hidePopup() }) {
-                    Text("Cancel")
+                    Text(stringResource(Res.string.cancel))
                 }
             }
+        )
+    }
+
+    val saveError = saveState as? SaveTrackingUiState.Error
+    if (saveError != null) {
+        AlertDialog(
+            onDismissRequest = viewModel::consumeSaveState,
+            title = { Text(stringResource(Res.string.unable_to_save)) },
+            text = { Text(saveError.message) },
+            confirmButton = {
+                Button(onClick = viewModel::consumeSaveState) {
+                    Text(stringResource(Res.string.ok))
+                }
+            },
         )
     }
 }

@@ -14,9 +14,14 @@ kotlin {
 
 application {
     mainClass.set("com.zioanacleto.feedtracker.ApplicationKt")
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=false")
+}
 
-    val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+ktor {
+    development.set(false)
+    fatJar {
+        archiveFileName.set("feedtracker-server.jar")
+    }
 }
 
 dependencies {
@@ -49,4 +54,10 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.named<JavaExec>("run") {
+    systemProperty("io.ktor.development", "false")
+    val sharedJvmClasses = project(":shared").layout.buildDirectory.dir("classes/kotlin/jvm/main")
+    classpath = files(sharedJvmClasses) + classpath
 }

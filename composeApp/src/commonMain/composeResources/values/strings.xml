@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">FeedTracker</string>
+    <string name="hello">Hello, </string>
+    <string name="retry">Retry</string>
+    <string name="no_tracking_sessions_yet">No tracking sessions yet</string>
+    <string name="add">Add</string>
+    <string name="born_date">Born %1$s</string>
+    <string name="duration">Duration %1$s</string>
+    <string name="duration_format">%1$dm %2$ds</string>
+    <string name="new_tracking_session">New Tracking Session</string>
+    <string name="name">Name</string>
+    <string name="name_placeholder">John</string>
+    <string name="clear_name">Clear Name</string>
+    <string name="surname">Surname</string>
+    <string name="surname_placeholder">Doe</string>
+    <string name="clear_surname">Clear Surname</string>
+    <string name="date_of_birth">Date of birth</string>
+    <string name="date_of_birth_placeholder">DD/MM/YYYY</string>
+    <string name="clear_date_of_birth">Clear Date of birth</string>
+    <string name="notes">Notes</string>
+    <string name="notes_placeholder">Insert your notes</string>
+    <string name="save_new_tracking">Save new tracking</string>
+    <string name="save_tracking_confirmation">Are you sure you want to save this tracking?</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="unable_to_save">Unable to save</string>
+    <string name="unable_to_save_tracking_session">Unable to save tracking session</string>
+</resources>

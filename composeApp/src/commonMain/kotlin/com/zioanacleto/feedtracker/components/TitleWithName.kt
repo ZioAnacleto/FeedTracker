@@ -12,7 +12,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import feedtracker.composeapp.generated.resources.Res
+import feedtracker.composeapp.generated.resources.hello
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun TitleWithName(
@@ -28,7 +31,7 @@ fun TitleWithName(
     Row(modifier = modifier) {
         Text(
             style = MaterialTheme.typography.titleLarge,
-            text = "Hello, "
+            text = stringResource(Res.string.hello)
         )
         AnimatedVisibility(
             showName,

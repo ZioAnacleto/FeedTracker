@@ -44,15 +44,30 @@ class HoconAppConfig(private val config: ApplicationConfig) : AppConfig {
         passwordFromConfig: String?,
         dbUrl: String,
     ): Pair<String, String> {
-        if (!userFromConfig.isNullOrBlank()) {
-            return userFromConfig to (passwordFromConfig ?: "")
+        val urlCredentials = dbUrl.toUriOrNull()?.extractCredentialsFromUserInfo()
+        val envUser = firstNonBlankEnv("DATABASE_USER", "PGUSER", "POSTGRES_USER", "DB_USER")
+        val envPassword = firstNonBlankEnv("DATABASE_PASSWORD", "PGPASSWORD", "POSTGRES_PASSWORD", "DB_PASSWORD")
+
+        // Railway/Heroku inject DATABASE_URL with userinfo. Those credentials must win over
+        // HOCON defaults (user=feedtracker), which would otherwise always be present.
+        if (urlCredentials != null && urlCredentials.first.isNotBlank()) {
+            return urlCredentials
         }
 
-        val parsedUri = dbUrl.toUriOrNull() ?: return "" to ""
-        val userInfo = parsedUri.userInfo ?: return "" to ""
-        val decoded = URLDecoder.decode(userInfo, StandardCharsets.UTF_8)
-        val parts = decoded.split(":", limit = 2)
-        return parts[0] to parts.getOrElse(1) { "" }
+        val resolvedUser = when {
+            !envUser.isNullOrBlank() -> envUser
+            !userFromConfig.isNullOrBlank() -> userFromConfig
+            else -> throw IllegalStateException(
+                "Database username is missing. Set one of: database.user, DATABASE_USER, PGUSER, POSTGRES_USER, or include user info in DATABASE_URL."
+            )
+        }
+        val resolvedPassword = when {
+            !envPassword.isNullOrBlank() -> envPassword
+            passwordFromConfig != null -> passwordFromConfig
+            else -> ""
+        }
+
+        return resolvedUser to resolvedPassword
     }
 
     private fun String.toJdbcUrl(): String {
@@ -65,12 +80,34 @@ class HoconAppConfig(private val config: ApplicationConfig) : AppConfig {
                 val path = parsedUri.path ?: ""
                 val query = parsedUri.query?.let { "?$it" } ?: ""
                 "jdbc:postgresql://$host:$port$path$query"
+                    .withSslRequiredIfRemote(host)
             }
 
             else -> this
         }
     }
 
+    private fun String.withSslRequiredIfRemote(host: String): String {
+        if (host == "localhost" || host == "127.0.0.1" || host == "::1") return this
+        if (contains("sslmode=", ignoreCase = true)) return this
+        val separator = if (contains("?")) "&" else "?"
+        return "${this}${separator}sslmode=require"
+    }
+
     private fun String.toUriOrNull(): URI? =
         runCatching { URI(this) }.getOrNull()
+
+    private fun URI.extractCredentialsFromUserInfo(): Pair<String, String>? {
+        val userInfo = userInfo ?: return null
+        val decoded = URLDecoder.decode(userInfo, StandardCharsets.UTF_8)
+        val parts = decoded.split(":", limit = 2)
+        val user = parts.firstOrNull().orEmpty()
+        if (user.isBlank()) return null
+        return user to parts.getOrElse(1) { "" }
+    }
+
+    private fun firstNonBlankEnv(vararg keys: String): String? =
+        keys.asSequence()
+            .mapNotNull { key -> System.getenv(key) }
+            .firstOrNull { value -> value.isNotBlank() }
 }

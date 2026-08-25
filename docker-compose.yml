@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: feedtracker
+      POSTGRES_USER: feedtracker
+      POSTGRES_PASSWORD: feedtracker
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - feedtracker_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U feedtracker -d feedtracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${SERVER_PORT:-8090}:8080"
+    environment:
+      PORT: "8080"
+      DATABASE_URL: jdbc:postgresql://postgres:5432/feedtracker
+      DATABASE_USER: feedtracker
+      DATABASE_PASSWORD: feedtracker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  feedtracker_pgdata:

@@ -1,0 +1,14 @@
+.gradle
+**/.gradle
+**/build
+.idea
+.kotlin
+.git
+.DS_Store
+local.properties
+*.iml
+iosApp
+composeApp
+captures
+node_modules
+.env

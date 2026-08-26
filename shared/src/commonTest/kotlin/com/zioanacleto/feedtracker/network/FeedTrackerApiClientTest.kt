@@ -70,6 +70,17 @@ class FeedTrackerApiClientTest {
     }
 
     @Test
+    fun deleteTrackingSessionSucceedsWhenPayloadHasNoData() = runTest {
+        val client = apiClient(
+            expectedMethod = HttpMethod.Delete,
+            expectedPath = "/api/tracking-sessions/session-1",
+            body = json.encodeToString(ApiResponse<Unit>(status = "SUCCESS", message = "deleted")),
+        )
+
+        client.deleteTrackingSession("session-1")
+    }
+
+    @Test
     fun throwsApiExceptionWhenHttpStatusIsNotSuccessful() = runTest {
         val client = apiClient(
             expectedMethod = HttpMethod.Get,

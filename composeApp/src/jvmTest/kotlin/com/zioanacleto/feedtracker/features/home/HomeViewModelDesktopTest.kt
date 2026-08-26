@@ -41,6 +41,8 @@ class HomeViewModelDesktopTest {
         val viewModel = HomeViewModel(repository)
         viewModel.loadSessions()
 
-        viewModel.uiState.value shouldBe HomeUiState.Ready(sessions)
+        viewModel.uiState.value shouldBe HomeUiState.Ready(
+            listOf(HomeSessionListItem.Single(sessions.first())),
+        )
     }
 }

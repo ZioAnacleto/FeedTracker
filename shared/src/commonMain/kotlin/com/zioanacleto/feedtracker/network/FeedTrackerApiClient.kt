@@ -5,6 +5,7 @@ import com.zioanacleto.feedtracker.domain.CreateTrackingSessionRequest
 import com.zioanacleto.feedtracker.domain.TrackingSessionModel
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -27,6 +28,10 @@ class FeedTrackerApiClient(val httpClient: HttpClient, private val baseUrl: Stri
         }
     }
 
+    suspend fun deleteTrackingSession(id: String) {
+        executeNoContent { httpClient.delete("$trackingSessionsUrl/$id") }
+    }
+
     private suspend inline fun <reified T> execute(crossinline request: suspend () -> HttpResponse): T {
         val response = request()
         if (!response.status.isSuccess()) {
@@ -42,6 +47,21 @@ class FeedTrackerApiClient(val httpClient: HttpClient, private val baseUrl: Stri
         }
 
         return apiResponse.data
+    }
+
+    private suspend inline fun executeNoContent(crossinline request: suspend () -> HttpResponse) {
+        val response = request()
+        if (!response.status.isSuccess()) {
+            val errorMessage = runCatching {
+                response.body<ApiResponse<String?>>().message
+            }.getOrElse { response.status.description }
+            throw ApiException(errorMessage)
+        }
+
+        val apiResponse = response.body<ApiResponse<String?>>()
+        if (apiResponse.status != SUCCESS_STATUS) {
+            throw ApiException(apiResponse.message)
+        }
     }
 
     companion object {

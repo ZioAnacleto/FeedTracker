@@ -47,4 +47,31 @@ class TrackingSessionNetworkDataSourceTest {
 
         posted shouldBe true
     }
+
+    @Test
+    fun deleteTrackingSessionSendsDeleteRequest() = runTest {
+        var deleted = false
+        val engine = MockEngine { request ->
+            request.method shouldBe HttpMethod.Delete
+            request.url.encodedPath shouldBe "/api/tracking-sessions/session-1"
+            deleted = true
+            respond(
+                content = ByteReadChannel(
+                    json.encodeToString(ApiResponse<Unit>(status = "SUCCESS", message = "deleted")),
+                ),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+            )
+        }
+        val dataSource = TrackingSessionNetworkDataSource(
+            FeedTrackerApiClient(
+                httpClient = HttpClient(engine) { installFeedTrackerJson() },
+                baseUrl = "http://test-host:8080",
+            ),
+        )
+
+        dataSource.deleteTrackingSession("session-1")
+
+        deleted shouldBe true
+    }
 }

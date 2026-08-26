@@ -8,4 +8,5 @@ interface TrackingSessionsRepository {
     suspend fun getTrackingSessions(): Flow<Resource<List<TrackingSessionModel>>>
     suspend fun getTrackingSession(id: String): Flow<Resource<TrackingSessionModel>>
     suspend fun saveTrackingSession(trackingSession: TrackingSessionModel)
+    suspend fun deleteTrackingSession(id: String)
 }

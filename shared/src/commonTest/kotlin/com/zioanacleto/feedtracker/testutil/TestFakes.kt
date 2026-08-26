@@ -16,6 +16,8 @@ class FakeTrackingSessionDataSource(initial: List<TrackingSessionModel> = emptyL
     var getSessionsError: Throwable? = null
     var getSessionError: Throwable? = null
     var saveError: Throwable? = null
+    var deleteError: Throwable? = null
+    val deletedIds = mutableListOf<String>()
 
     override suspend fun getTrackingSessions(): List<TrackingSessionModel> {
         getSessionsError?.let { throw it }
@@ -32,6 +34,14 @@ class FakeTrackingSessionDataSource(initial: List<TrackingSessionModel> = emptyL
         saved += sessionModel
         sessions.removeAll { it.id == sessionModel.id }
         sessions += sessionModel
+    }
+
+    override suspend fun deleteTrackingSession(id: String) {
+        deleteError?.let { throw it }
+        if (!sessions.removeAll { it.id == id }) {
+            error("Tracking session not found: $id")
+        }
+        deletedIds += id
     }
 }
 

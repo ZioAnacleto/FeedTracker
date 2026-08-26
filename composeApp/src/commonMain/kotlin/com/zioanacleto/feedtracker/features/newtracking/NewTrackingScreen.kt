@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -28,7 +30,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalFocusManager
@@ -42,12 +46,16 @@ import com.zioanacleto.feedtracker.components.AnimatedTimer
 import com.zioanacleto.feedtracker.components.hideKeyboardOnTouch
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
 import feedtracker.composeapp.generated.resources.Res
+import feedtracker.composeapp.generated.resources.back
 import feedtracker.composeapp.generated.resources.cancel
 import feedtracker.composeapp.generated.resources.clear_date_of_birth
 import feedtracker.composeapp.generated.resources.clear_name
 import feedtracker.composeapp.generated.resources.clear_surname
 import feedtracker.composeapp.generated.resources.date_of_birth
 import feedtracker.composeapp.generated.resources.date_of_birth_placeholder
+import feedtracker.composeapp.generated.resources.discard_session_confirmation
+import feedtracker.composeapp.generated.resources.discard_session_title
+import feedtracker.composeapp.generated.resources.leave
 import feedtracker.composeapp.generated.resources.name
 import feedtracker.composeapp.generated.resources.name_placeholder
 import feedtracker.composeapp.generated.resources.new_tracking_session
@@ -63,6 +71,7 @@ import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun NewTrackingScreen(modifier: Modifier = Modifier, onBackButtonClick: () -> Unit) {
     var nameTextField by remember { mutableStateOf(TextFieldValue("")) }
@@ -85,6 +94,7 @@ fun NewTrackingScreen(modifier: Modifier = Modifier, onBackButtonClick: () -> Un
     var stopTime by remember { mutableLongStateOf(0L) }
     var elapsedTime by remember { mutableLongStateOf(0L) }
     var isTimerRunning by remember { mutableStateOf(true) }
+    var showDiscardDialog by remember { mutableStateOf(false) }
 
     val viewModel = koinViewModel<NewTrackingViewModel>()
     val showPopup by viewModel.showPopup.collectAsState()
@@ -98,6 +108,10 @@ fun NewTrackingScreen(modifier: Modifier = Modifier, onBackButtonClick: () -> Un
     }
 
     val localFocusManager = LocalFocusManager.current
+
+    BackHandler(enabled = !showDiscardDialog) {
+        showDiscardDialog = true
+    }
 
     LaunchedEffect(Unit) {
         startTime = getCurrentTimeMillis()
@@ -119,11 +133,28 @@ fun NewTrackingScreen(modifier: Modifier = Modifier, onBackButtonClick: () -> Un
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(
-                text = stringResource(Res.string.new_tracking_session),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(vertical = 16.dp),
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+            ) {
+                IconButton(
+                    onClick = { showDiscardDialog = true },
+                    modifier = Modifier.align(Alignment.CenterStart),
+                ) {
+                    Icon(
+                        painter = rememberVectorPainter(Icons.AutoMirrored.Rounded.ArrowBack),
+                        contentDescription = stringResource(Res.string.back),
+                    )
+                }
+                Text(
+                    text = stringResource(Res.string.new_tracking_session),
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(horizontal = 48.dp, vertical = 8.dp),
+                )
+            }
 
             // Timer Display
             AnimatedTimer(
@@ -288,6 +319,29 @@ fun NewTrackingScreen(modifier: Modifier = Modifier, onBackButtonClick: () -> Un
         ) {
             Text(stringResource(Res.string.save_new_tracking))
         }
+    }
+
+    if (showDiscardDialog) {
+        AlertDialog(
+            onDismissRequest = { showDiscardDialog = false },
+            title = { Text(stringResource(Res.string.discard_session_title)) },
+            text = { Text(stringResource(Res.string.discard_session_confirmation)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDiscardDialog = false
+                        onBackButtonClick()
+                    },
+                ) {
+                    Text(stringResource(Res.string.leave))
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDiscardDialog = false }) {
+                    Text(stringResource(Res.string.cancel))
+                }
+            },
+        )
     }
 
     if (showPopup) {

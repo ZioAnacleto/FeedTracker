@@ -103,6 +103,32 @@ class TrackingSessionsRepositoryImplTest {
         network.saved.shouldBeEmpty()
     }
 
+    @Test
+    fun deleteTrackingSessionUsesNetworkWhenOnline() = runTest {
+        val session = trackingSession("to-delete")
+        val network = FakeTrackingSessionDataSource(listOf(session))
+        val local = FakeTrackingSessionDataSource(listOf(session))
+        val repository = repository(online = true, network = network, local = local)
+
+        repository.deleteTrackingSession(session.id)
+
+        network.deletedIds shouldBe listOf(session.id)
+        local.deletedIds.shouldBeEmpty()
+    }
+
+    @Test
+    fun deleteTrackingSessionUsesLocalWhenOffline() = runTest {
+        val session = trackingSession("offline-delete")
+        val network = FakeTrackingSessionDataSource(listOf(session))
+        val local = FakeTrackingSessionDataSource(listOf(session))
+        val repository = repository(online = false, network = network, local = local)
+
+        repository.deleteTrackingSession(session.id)
+
+        local.deletedIds shouldBe listOf(session.id)
+        network.deletedIds.shouldBeEmpty()
+    }
+
     private fun repository(
         online: Boolean,
         network: TrackingSessionDataSource = FakeTrackingSessionDataSource(),

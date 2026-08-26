@@ -7,6 +7,9 @@
     <string name="born_date">Born %1$s</string>
     <string name="duration">Duration %1$s</string>
     <string name="duration_format">%1$dm %2$ds</string>
+    <string name="session_count">%1$d sessions</string>
+    <string name="expand_person_sessions">Show sessions</string>
+    <string name="collapse_person_sessions">Hide sessions</string>
     <string name="new_tracking_session">New Tracking Session</string>
     <string name="name">Name</string>
     <string name="name_placeholder">John</string>
@@ -25,4 +28,15 @@
     <string name="cancel">Cancel</string>
     <string name="unable_to_save">Unable to save</string>
     <string name="unable_to_save_tracking_session">Unable to save tracking session</string>
+    <string name="back">Back</string>
+    <string name="discard_session_title">Leave this session?</string>
+    <string name="discard_session_confirmation">If you leave now, all data from this session will be discarded.</string>
+    <string name="leave">Leave</string>
+    <string name="session_date">Session date %1$s</string>
+    <string name="session_details">Session details</string>
+    <string name="delete_session">Delete</string>
+    <string name="close">Close</string>
+    <string name="unable_to_delete_tracking_session">Unable to delete tracking session</string>
+    <string name="session_deleted">Session deleted</string>
+    <string name="undo">Undo</string>
 </resources>

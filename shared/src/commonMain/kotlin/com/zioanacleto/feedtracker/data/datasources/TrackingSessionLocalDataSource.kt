@@ -21,4 +21,13 @@ class TrackingSessionLocalDataSource : TrackingSessionDataSource {
             sessions.add(sessionModel)
         }
     }
+
+    override suspend fun deleteTrackingSession(id: String) {
+        mutex.withLock {
+            val removed = sessions.removeAll { it.id == id }
+            if (!removed) {
+                error("Tracking session not found: $id")
+            }
+        }
+    }
 }

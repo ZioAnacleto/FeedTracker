@@ -48,6 +48,7 @@ kotlin {
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
+            implementation(libs.compose.ui.backhandler)
             implementation(libs.compose.components.resources)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.icons)
@@ -158,6 +159,12 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.zioanacleto.feedtracker"
             packageVersion = feedtrackerVersionName
+        }
+
+        // packageRelease* enables ProGuard by default, which drops Ktor's
+        // JSON ServiceLoader provider and crashes the packaged app on launch.
+        buildTypes.release.proguard {
+            isEnabled.set(false)
         }
     }
 }

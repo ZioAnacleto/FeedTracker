@@ -31,6 +31,12 @@ class TrackingSessionsRepositoryImpl(
         }
     }
 
+    override suspend fun deleteTrackingSession(id: String) {
+        withContext(dispatcherProvider.io()) {
+            preferredDataSource().deleteTrackingSession(id)
+        }
+    }
+
     private fun <T> loadFromPreferredSource(block: suspend TrackingSessionDataSource.() -> T): Flow<Resource<T>> = flow {
         emit(Resource.Loading)
         emit(Resource.Success(preferredDataSource().block()))

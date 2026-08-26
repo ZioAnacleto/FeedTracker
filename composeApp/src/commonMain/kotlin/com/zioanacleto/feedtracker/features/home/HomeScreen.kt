@@ -46,11 +46,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun HomeScreen(
-    modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = koinViewModel(),
-    onNewTrackingClick: () -> Unit,
-) {
+fun HomeScreen(modifier: Modifier = Modifier, viewModel: HomeViewModel = koinViewModel(), onNewTrackingClick: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
 

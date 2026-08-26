@@ -10,5 +10,5 @@ data class TrackingSessionModel(
     val name: String,
     val surname: String,
     val birthDate: String, // format: DD/MM/YYYY
-    val additionalNotes: String? = null
+    val additionalNotes: String? = null,
 )

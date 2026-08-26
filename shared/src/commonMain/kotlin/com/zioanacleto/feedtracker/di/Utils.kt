@@ -6,5 +6,4 @@ import org.koin.core.qualifier.StringQualifier
 
 expect inline fun <reified T> getNamedClass(): StringQualifier
 
-expect inline fun <reified Interface: Any, reified Implementation : Interface>
-        Module.factoryNamedClass(): KoinDefinition<Interface>
+expect inline fun <reified Interface : Any, reified Implementation : Interface> Module.factoryNamedClass(): KoinDefinition<Interface>

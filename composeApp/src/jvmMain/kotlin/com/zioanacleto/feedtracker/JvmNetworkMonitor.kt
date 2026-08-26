@@ -8,9 +8,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import java.net.NetworkInterface
 
-class JvmNetworkMonitor(
-    private val dispatcherProvider: DispatcherProvider
-) : NetworkMonitor {
+class JvmNetworkMonitor(private val dispatcherProvider: DispatcherProvider) : NetworkMonitor {
     override val isOnline: Flow<Boolean> = flow {
         while (true) {
             emit(checkIsOnline())

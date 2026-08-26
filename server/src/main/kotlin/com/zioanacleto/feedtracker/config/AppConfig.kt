@@ -9,13 +9,7 @@ interface AppConfig {
     val database: DatabaseConfig
 }
 
-data class DatabaseConfig(
-    val driver: String,
-    val url: String,
-    val user: String,
-    val password: String,
-    val maxPoolSize: Int,
-)
+data class DatabaseConfig(val driver: String, val url: String, val user: String, val password: String, val maxPoolSize: Int)
 
 class HoconAppConfig(private val config: ApplicationConfig) : AppConfig {
     private val configuredUrl = config.property("database.url").getString()
@@ -39,11 +33,7 @@ class HoconAppConfig(private val config: ApplicationConfig) : AppConfig {
             )
         }
 
-    private fun resolveCredentials(
-        userFromConfig: String?,
-        passwordFromConfig: String?,
-        dbUrl: String,
-    ): Pair<String, String> {
+    private fun resolveCredentials(userFromConfig: String?, passwordFromConfig: String?, dbUrl: String): Pair<String, String> {
         val urlCredentials = dbUrl.toUriOrNull()?.extractCredentialsFromUserInfo()
         val envUser = firstNonBlankEnv("DATABASE_USER", "PGUSER", "POSTGRES_USER", "DB_USER")
         val envPassword = firstNonBlankEnv("DATABASE_PASSWORD", "PGPASSWORD", "POSTGRES_PASSWORD", "DB_PASSWORD")
@@ -58,7 +48,7 @@ class HoconAppConfig(private val config: ApplicationConfig) : AppConfig {
             !envUser.isNullOrBlank() -> envUser
             !userFromConfig.isNullOrBlank() -> userFromConfig
             else -> throw IllegalStateException(
-                "Database username is missing. Set one of: database.user, DATABASE_USER, PGUSER, POSTGRES_USER, or include user info in DATABASE_URL."
+                "Database username is missing. Set one of: database.user, DATABASE_USER, PGUSER, POSTGRES_USER, or include user info in DATABASE_URL.",
             )
         }
         val resolvedPassword = when {
@@ -94,8 +84,7 @@ class HoconAppConfig(private val config: ApplicationConfig) : AppConfig {
         return "${this}${separator}sslmode=require"
     }
 
-    private fun String.toUriOrNull(): URI? =
-        runCatching { URI(this) }.getOrNull()
+    private fun String.toUriOrNull(): URI? = runCatching { URI(this) }.getOrNull()
 
     private fun URI.extractCredentialsFromUserInfo(): Pair<String, String>? {
         val userInfo = userInfo ?: return null
@@ -106,8 +95,7 @@ class HoconAppConfig(private val config: ApplicationConfig) : AppConfig {
         return user to parts.getOrElse(1) { "" }
     }
 
-    private fun firstNonBlankEnv(vararg keys: String): String? =
-        keys.asSequence()
-            .mapNotNull { key -> System.getenv(key) }
-            .firstOrNull { value -> value.isNotBlank() }
+    private fun firstNonBlankEnv(vararg keys: String): String? = keys.asSequence()
+        .mapNotNull { key -> System.getenv(key) }
+        .firstOrNull { value -> value.isNotBlank() }
 }

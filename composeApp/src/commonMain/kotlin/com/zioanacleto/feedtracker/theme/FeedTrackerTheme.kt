@@ -6,10 +6,10 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun FeedTrackerTheme(content: @Composable () -> Unit) {
-    val colors = if(isSystemInDarkTheme()) darkColorScheme else lightColorScheme
+    val colors = if (isSystemInDarkTheme()) darkColorScheme else lightColorScheme
 
     MaterialTheme(
         colorScheme = colors,
-        content = content
+        content = content,
     )
 }

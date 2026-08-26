@@ -22,10 +22,7 @@ fun Application.module() {
     configureRouting()
 }
 
-fun Application.testModule(
-    initDatabase: Boolean = false,
-    configureDependencies: Application.() -> Unit = { configureDI() },
-) {
+fun Application.testModule(initDatabase: Boolean = false, configureDependencies: Application.() -> Unit = { configureDI() }) {
     configureSerialization()
     configureExceptions()
     configureSecurity()

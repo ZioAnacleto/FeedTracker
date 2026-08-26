@@ -24,14 +24,13 @@ class TrackingSessionRepositoryImpl : TrackingSessionRepository {
             .map { it.toTrackingSessionModel() }
     }
 
-    override suspend fun findById(id: String): TrackingSessionModel? =
-        transactionDb {
-            TrackingSessionsTable
-                .selectAll()
-                .where { TrackingSessionsTable.id eq id }
-                .map { it.toTrackingSessionModel() }
-                .singleOrNull()
-        }
+    override suspend fun findById(id: String): TrackingSessionModel? = transactionDb {
+        TrackingSessionsTable
+            .selectAll()
+            .where { TrackingSessionsTable.id eq id }
+            .map { it.toTrackingSessionModel() }
+            .singleOrNull()
+    }
 
     override suspend fun create(request: CreateTrackingSessionRequest): TrackingSessionModel {
         val model = request.toModel()
@@ -49,24 +48,20 @@ class TrackingSessionRepositoryImpl : TrackingSessionRepository {
         return model
     }
 
-    override suspend fun update(
-        id: String,
-        request: UpdateTrackingSessionRequest
-    ): TrackingSessionModel? =
-        withContext(Dispatchers.IO) {
-            val model = request.toModel(id)
-            val updatedRows = transaction {
-                TrackingSessionsTable.update({ TrackingSessionsTable.id eq id }) {
-                    it[TrackingSessionsTable.sessionStartTime] = model.sessionStartTime
-                    it[TrackingSessionsTable.sessionEndTime] = model.sessionEndTime
-                    it[TrackingSessionsTable.name] = model.name
-                    it[TrackingSessionsTable.surname] = model.surname
-                    it[TrackingSessionsTable.birthDate] = model.birthDate
-                    it[TrackingSessionsTable.additionalNotes] = model.additionalNotes
-                }
+    override suspend fun update(id: String, request: UpdateTrackingSessionRequest): TrackingSessionModel? = withContext(Dispatchers.IO) {
+        val model = request.toModel(id)
+        val updatedRows = transaction {
+            TrackingSessionsTable.update({ TrackingSessionsTable.id eq id }) {
+                it[TrackingSessionsTable.sessionStartTime] = model.sessionStartTime
+                it[TrackingSessionsTable.sessionEndTime] = model.sessionEndTime
+                it[TrackingSessionsTable.name] = model.name
+                it[TrackingSessionsTable.surname] = model.surname
+                it[TrackingSessionsTable.birthDate] = model.birthDate
+                it[TrackingSessionsTable.additionalNotes] = model.additionalNotes
             }
-            if (updatedRows == 0) null else model
         }
+        if (updatedRows == 0) null else model
+    }
 
     override suspend fun delete(id: String): Boolean = transactionDb {
         TrackingSessionsTable.deleteWhere { TrackingSessionsTable.id eq id } > 0

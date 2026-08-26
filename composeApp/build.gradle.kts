@@ -19,19 +19,23 @@ kotlin {
             }
         }
     }
-    
+
     listOf(
         iosArm64(),
-        iosSimulatorArm64()
+        iosSimulatorArm64(),
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
         }
     }
-    
-    jvm()
-    
+
+    jvm {
+        mainRun {
+            mainClass.set("com.zioanacleto.feedtracker.DesktopMainKt")
+        }
+    }
+
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
@@ -58,13 +62,46 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.kotest.assertions.core)
+            implementation(libs.turbine)
+        }
+        androidUnitTest.dependencies {
+            implementation(libs.mockk)
+            implementation(libs.junit)
+            implementation(libs.androidx.testExt.junit)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.kotest.assertions.core)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
         }
+        jvmTest.dependencies {
+            implementation(libs.mockk)
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.kotest.assertions.core)
+        }
     }
 }
+
+val feedtrackerVersionCode =
+    (findProperty("feedtracker.versionCode") as String?)?.toIntOrNull() ?: 1
+val feedtrackerVersionName =
+    (findProperty("feedtracker.versionName") as String?) ?: "1.0.0"
+
+val androidKeystoreFile = providers.environmentVariable("ANDROID_KEYSTORE_FILE")
+val androidKeystorePassword = providers.environmentVariable("ANDROID_KEYSTORE_PASSWORD")
+val androidKeyAlias = providers.environmentVariable("ANDROID_KEY_ALIAS")
+val androidKeyPassword = providers.environmentVariable("ANDROID_KEY_PASSWORD")
+val androidKeystorePath = androidKeystoreFile.orNull
+val canSignAndroidRelease =
+    !androidKeystorePath.isNullOrBlank() &&
+        androidKeystorePassword.orNull?.isNotBlank() == true &&
+        androidKeyAlias.orNull?.isNotBlank() == true &&
+        androidKeyPassword.orNull?.isNotBlank() == true &&
+        file(androidKeystorePath).exists()
 
 android {
     namespace = "com.zioanacleto.feedtracker"
@@ -74,22 +111,38 @@ android {
         applicationId = "com.zioanacleto.feedtracker"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = feedtrackerVersionCode
+        versionName = feedtrackerVersionName
     }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    if (canSignAndroidRelease) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(androidKeystorePath!!)
+                storePassword = androidKeystorePassword.get()
+                keyAlias = androidKeyAlias.get()
+                keyPassword = androidKeyPassword.get()
+            }
+        }
+    }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            if (canSignAndroidRelease) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
     }
 }
 
@@ -99,12 +152,12 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "com.zioanacleto.feedtracker.MainKt"
+        mainClass = "com.zioanacleto.feedtracker.DesktopMainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.zioanacleto.feedtracker"
-            packageVersion = "1.0.0"
+            packageVersion = feedtrackerVersionName
         }
     }
 }

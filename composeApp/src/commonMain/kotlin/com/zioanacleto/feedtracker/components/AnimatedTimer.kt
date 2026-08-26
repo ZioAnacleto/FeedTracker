@@ -22,9 +22,9 @@ fun AnimatedTimer(time: Long, modifier: Modifier = Modifier) {
     val (hours, minutes, seconds) = formatElapsedTime(time)
     Row(
         modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        if(hours != "0") {
+        if (hours != "0") {
             AnimatedTextView(text = hours, name = "Hours")
             Text(
                 text = ":",
@@ -43,29 +43,25 @@ fun AnimatedTimer(time: Long, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun AnimatedTextView(
-    text: String,
-    name: String,
-    modifier: Modifier = Modifier
-) {
+private fun AnimatedTextView(text: String, name: String, modifier: Modifier = Modifier) {
     AnimatedContent(
         targetState = text,
         transitionSpec = {
             (slideInVertically { height -> height } + fadeIn())
                 .togetherWith(slideOutVertically { height -> -height } + fadeOut())
         },
-        label = "AnimatedTextView_$name"
+        label = "AnimatedTextView_$name",
     ) {
         Text(
             text = it,
             fontSize = 48.sp,
             fontWeight = FontWeight.Bold,
-            modifier = modifier
+            modifier = modifier,
         )
     }
 }
 
-private fun formatElapsedTime(millis: Long): List<String> {
+internal fun formatElapsedTime(millis: Long): List<String> {
     fun Long.formatTime() = toString().padStart(2, '0')
 
     val totalSeconds = millis / 1000
@@ -73,17 +69,19 @@ private fun formatElapsedTime(millis: Long): List<String> {
     val minutes = (totalSeconds % 3600) / 60
     val seconds = totalSeconds % 60
 
-    return if (hours > 0)
+    return if (hours > 0) {
         listOf(
             hours.formatTime(),
             minutes.formatTime(),
-            seconds.formatTime()
+            seconds.formatTime(),
         )
-    else listOf(
-        "0",
-        minutes.formatTime(),
-        seconds.formatTime()
-    )
+    } else {
+        listOf(
+            "0",
+            minutes.formatTime(),
+            seconds.formatTime(),
+        )
+    }
 }
 
 @Preview

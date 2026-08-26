@@ -41,7 +41,7 @@ fun Route.trackingSessionRoutes(trackingSessionService: TrackingSessionService) 
             val session = trackingSessionService.create(request)
             call.respond(
                 HttpStatusCode.Created,
-                ApiResponse("SUCCESS", "Tracking session created", session)
+                ApiResponse("SUCCESS", "Tracking session created", session),
             )
         }
 

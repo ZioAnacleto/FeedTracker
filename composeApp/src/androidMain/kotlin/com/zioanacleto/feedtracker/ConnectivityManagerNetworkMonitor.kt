@@ -14,10 +14,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
 
-class ConnectivityManagerNetworkMonitor(
-    private val context: Context,
-    val dispatcherProvider: DispatcherProvider
-) : NetworkMonitor {
+class ConnectivityManagerNetworkMonitor(private val context: Context, val dispatcherProvider: DispatcherProvider) : NetworkMonitor {
     override val isOnline: Flow<Boolean> = callbackFlow {
         // Get the ConnectivityManager from the Context
         val connectivityManager = context.getSystemService<ConnectivityManager>()

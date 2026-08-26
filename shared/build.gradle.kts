@@ -8,8 +8,10 @@ plugins {
 }
 
 val serverOnlyBuild =
-    (providers.gradleProperty("feedtracker.serverOnly").orNull
-        ?: providers.environmentVariable("FEEDTRACKER_SERVER_ONLY").orNull)
+    (
+        providers.gradleProperty("feedtracker.serverOnly").orNull
+            ?: providers.environmentVariable("FEEDTRACKER_SERVER_ONLY").orNull
+        )
         ?.equals("true", ignoreCase = true) == true
 
 if (!serverOnlyBuild) {
@@ -44,6 +46,14 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.kotest.assertions.core)
+            implementation(libs.turbine)
+            implementation(libs.ktor.clientMock)
+            implementation(libs.kotlinx.serialization.json)
+        }
+        jvmTest.dependencies {
+            implementation(libs.mockk)
         }
         if (!serverOnlyBuild) {
             androidMain.dependencies {
@@ -51,6 +61,9 @@ kotlin {
             }
             iosMain.dependencies {
                 implementation(libs.ktor.clientDarwin)
+            }
+            androidUnitTest.dependencies {
+                implementation(libs.mockk)
             }
         }
     }

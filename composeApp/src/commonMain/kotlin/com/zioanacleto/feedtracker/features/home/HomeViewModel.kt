@@ -16,9 +16,7 @@ sealed interface HomeUiState {
     data class Error(val message: String) : HomeUiState
 }
 
-class HomeViewModel(
-    private val trackingSessionsRepository: TrackingSessionsRepository,
-) : ViewModel() {
+class HomeViewModel(private val trackingSessionsRepository: TrackingSessionsRepository) : ViewModel() {
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 

@@ -426,11 +426,7 @@ private fun TrackingSessionCard(session: TrackingSessionModel, onClick: () -> Un
 }
 
 @Composable
-private fun TrackingSessionDetails(
-    session: TrackingSessionModel,
-    modifier: Modifier = Modifier,
-    showIdentity: Boolean,
-) {
+private fun TrackingSessionDetails(session: TrackingSessionModel, modifier: Modifier = Modifier, showIdentity: Boolean) {
     Column(modifier = modifier) {
         if (showIdentity) {
             Text(

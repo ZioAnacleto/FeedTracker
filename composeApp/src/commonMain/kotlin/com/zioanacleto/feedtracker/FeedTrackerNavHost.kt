@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.zioanacleto.feedtracker.features.home.HomeScreen
 import com.zioanacleto.feedtracker.features.home.navigation.HomeRoute
 import com.zioanacleto.feedtracker.features.newtracking.NewTrackingScreen
@@ -19,10 +20,24 @@ fun FeedTrackerNavHost(modifier: Modifier, navController: NavHostController = re
         startDestination = HomeRoute,
     ) {
         composable<HomeRoute> {
-            HomeScreen(modifier) { navController.navigate(NewTrackingRoute) }
+            HomeScreen(modifier) { name, surname, birthDate ->
+                navController.navigate(
+                    NewTrackingRoute(
+                        name = name,
+                        surname = surname,
+                        birthDate = birthDate,
+                    ),
+                )
+            }
         }
-        composable<NewTrackingRoute> {
-            NewTrackingScreen { navController.popBackStack() }
+        composable<NewTrackingRoute> { entry ->
+            val route = entry.toRoute<NewTrackingRoute>()
+            NewTrackingScreen(
+                initialName = route.name,
+                initialSurname = route.surname,
+                initialBirthDate = route.birthDate,
+                onBackButtonClick = { navController.popBackStack() },
+            )
         }
     }
 }

@@ -5,6 +5,7 @@ import com.zioanacleto.feedtracker.domain.core.Resource
 import com.zioanacleto.feedtracker.domain.repositories.TrackingSessionsRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 
 class FakeTrackingSessionsRepository(
@@ -13,6 +14,7 @@ class FakeTrackingSessionsRepository(
     private val saveError: Throwable? = null,
     private val deleteError: Throwable? = null,
     private val deleteSuspends: Boolean = false,
+    override val syncedPendingCount: Flow<Int> = emptyFlow(),
 ) : TrackingSessionsRepository {
     val saved = mutableListOf<TrackingSessionModel>()
     val deletedIds = mutableListOf<String>()

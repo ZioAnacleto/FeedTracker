@@ -6,7 +6,9 @@ import com.zioanacleto.feedtracker.domain.repositories.TrackingSessionsRepositor
 import com.zioanacleto.feedtracker.testutil.runViewModelTest
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlin.test.Test
 
@@ -15,6 +17,7 @@ class HomeViewModelDesktopTest {
     @Test
     fun mapsRepositoryErrorWithMockk() = runViewModelTest {
         val repository = mockk<TrackingSessionsRepository>()
+        every { repository.syncedPendingCount } returns emptyFlow()
         coEvery { repository.getTrackingSessions() } returns flowOf(Resource.Error("desktop offline"))
 
         val viewModel = HomeViewModel(repository)
@@ -36,13 +39,15 @@ class HomeViewModelDesktopTest {
             ),
         )
         val repository = mockk<TrackingSessionsRepository>()
+        every { repository.syncedPendingCount } returns emptyFlow()
         coEvery { repository.getTrackingSessions() } returns flowOf(Resource.Success(sessions))
 
         val viewModel = HomeViewModel(repository)
         viewModel.loadSessions()
 
         viewModel.uiState.value shouldBe HomeUiState.Ready(
-            listOf(HomeSessionListItem.Single(sessions.first())),
+            items = listOf(HomeSessionListItem.Single(sessions.first())),
+            recentSessions = sessions,
         )
     }
 }

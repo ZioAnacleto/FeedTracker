@@ -73,10 +73,16 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun NewTrackingScreen(modifier: Modifier = Modifier, onBackButtonClick: () -> Unit) {
-    var nameTextField by remember { mutableStateOf(TextFieldValue("")) }
-    var surnameTextField by remember { mutableStateOf(TextFieldValue("")) }
-    var birthDateTextField by remember { mutableStateOf(TextFieldValue("")) }
+fun NewTrackingScreen(
+    modifier: Modifier = Modifier,
+    initialName: String = "",
+    initialSurname: String = "",
+    initialBirthDate: String = "",
+    onBackButtonClick: () -> Unit,
+) {
+    var nameTextField by remember { mutableStateOf(TextFieldValue(initialName)) }
+    var surnameTextField by remember { mutableStateOf(TextFieldValue(initialSurname)) }
+    var birthDateTextField by remember { mutableStateOf(TextFieldValue(initialBirthDate)) }
     var additionalNotesTextField by remember { mutableStateOf(TextFieldValue("")) }
 
     val isButtonEnabled by remember {

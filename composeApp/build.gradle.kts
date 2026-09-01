@@ -32,7 +32,7 @@ kotlin {
 
     jvm {
         mainRun {
-            mainClass.set("com.zioanacleto.feedtracker.DesktopMainKt")
+            mainClass.set("com.zioanacleto.feedtracker.MainKt")
         }
     }
 
@@ -153,7 +153,7 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "com.zioanacleto.feedtracker.DesktopMainKt"
+        mainClass = "com.zioanacleto.feedtracker.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)

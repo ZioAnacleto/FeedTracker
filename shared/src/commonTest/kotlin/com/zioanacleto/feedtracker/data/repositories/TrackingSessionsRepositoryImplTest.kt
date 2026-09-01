@@ -21,13 +21,12 @@ class TrackingSessionsRepositoryImplTest {
         val repository = repository(
             online = true,
             network = FakeTrackingSessionDataSource(listOf(networkSession)),
-            local = FakeTrackingSessionDataSource(listOf(trackingSession("local"))),
         )
 
         repository.getTrackingSessions().test {
             awaitItem() shouldBe Resource.Loading
             awaitItem() shouldBe Resource.Success(listOf(networkSession))
-            awaitComplete()
+            cancelAndIgnoreRemainingEvents()
         }
     }
 
@@ -43,7 +42,7 @@ class TrackingSessionsRepositoryImplTest {
         repository.getTrackingSessions().test {
             awaitItem() shouldBe Resource.Loading
             awaitItem() shouldBe Resource.Success(listOf(localSession))
-            awaitComplete()
+            cancelAndIgnoreRemainingEvents()
         }
     }
 
@@ -58,7 +57,7 @@ class TrackingSessionsRepositoryImplTest {
             awaitItem() shouldBe Resource.Loading
             val error = awaitItem().shouldBeInstanceOf<Resource.Error>()
             error.message shouldBe "network down"
-            awaitComplete()
+            cancelAndIgnoreRemainingEvents()
         }
     }
 
@@ -87,7 +86,7 @@ class TrackingSessionsRepositoryImplTest {
         repository.saveTrackingSession(session)
 
         network.saved shouldBe listOf(session)
-        local.saved.shouldBeEmpty()
+        local.getTrackingSessions().shouldBeEmpty()
     }
 
     @Test
@@ -129,14 +128,148 @@ class TrackingSessionsRepositoryImplTest {
         network.deletedIds.shouldBeEmpty()
     }
 
+    @Test
+    fun syncsPendingLocalSessionsWhenConnectivityReturns() = runTest {
+        val network = FakeTrackingSessionDataSource()
+        val local = FakeTrackingSessionDataSource()
+        val networkMonitor = FakeNetworkMonitor(online = false)
+        val repository = repository(
+            networkMonitor = networkMonitor,
+            network = network,
+            local = local,
+        )
+        val session = trackingSession("offline")
+
+        repository.saveTrackingSession(session)
+        network.saved.shouldBeEmpty()
+
+        networkMonitor.setOnline(true)
+        repository.getTrackingSessions().test {
+            awaitItem() shouldBe Resource.Loading
+            awaitItem() shouldBe Resource.Success(listOf(session))
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        network.saved shouldBe listOf(session)
+        local.getTrackingSessions().shouldBeEmpty()
+    }
+
+    @Test
+    fun emitsSyncedCountWhenPendingSessionsAreUploaded() = runTest {
+        val network = FakeTrackingSessionDataSource()
+        val local = FakeTrackingSessionDataSource()
+        val networkMonitor = FakeNetworkMonitor(online = false)
+        val repository = repository(
+            networkMonitor = networkMonitor,
+            network = network,
+            local = local,
+        )
+        val session = trackingSession("offline")
+
+        repository.saveTrackingSession(session)
+        networkMonitor.setOnline(true)
+
+        repository.syncedPendingCount.test {
+            repository.getTrackingSessions().test {
+                awaitItem() shouldBe Resource.Loading
+                awaitItem() shouldBe Resource.Success(listOf(session))
+                cancelAndIgnoreRemainingEvents()
+            }
+            awaitItem() shouldBe 1
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun saveWhileOnlineFlushesPendingLocalSessionsFirst() = runTest {
+        val network = FakeTrackingSessionDataSource()
+        val local = FakeTrackingSessionDataSource()
+        val networkMonitor = FakeNetworkMonitor(online = false)
+        val repository = repository(
+            networkMonitor = networkMonitor,
+            network = network,
+            local = local,
+        )
+        val pending = trackingSession("pending")
+        val onlineSession = trackingSession("online")
+
+        repository.saveTrackingSession(pending)
+        networkMonitor.setOnline(true)
+        repository.saveTrackingSession(onlineSession)
+
+        network.saved shouldBe listOf(pending, onlineSession)
+        local.getTrackingSessions().shouldBeEmpty()
+    }
+
+    @Test
+    fun keepsFailedSessionsLocallyAndStillListsThemWhenOnline() = runTest {
+        val network = FakeTrackingSessionDataSource().apply {
+            saveError = IllegalStateException("upload failed")
+        }
+        val local = FakeTrackingSessionDataSource()
+        val networkMonitor = FakeNetworkMonitor(online = false)
+        val repository = repository(
+            networkMonitor = networkMonitor,
+            network = network,
+            local = local,
+        )
+        val session = trackingSession("offline")
+
+        repository.saveTrackingSession(session)
+        networkMonitor.setOnline(true)
+
+        repository.getTrackingSessions().test {
+            awaitItem() shouldBe Resource.Loading
+            awaitItem() shouldBe Resource.Success(listOf(session))
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        local.getTrackingSessions() shouldBe listOf(session)
+    }
+
+    @Test
+    fun saveFallsBackToLocalWhenNetworkIsUnreachable() = runTest {
+        val network = FakeTrackingSessionDataSource().apply {
+            saveError = IllegalStateException("unreachable")
+        }
+        val local = FakeTrackingSessionDataSource()
+        val repository = repository(online = true, network = network, local = local)
+        val session = trackingSession("offline")
+
+        repository.saveTrackingSession(session)
+
+        network.saved.shouldBeEmpty()
+        local.getTrackingSessions() shouldBe listOf(session)
+    }
+
+    @Test
+    fun getTrackingSessionsFallsBackToLocalWhenNetworkListFails() = runTest {
+        val localSession = trackingSession("local")
+        val network = FakeTrackingSessionDataSource().apply {
+            getSessionsError = IllegalStateException("network down")
+        }
+        val repository = repository(
+            online = true,
+            network = network,
+            local = FakeTrackingSessionDataSource(listOf(localSession)),
+        )
+
+        repository.getTrackingSessions().test {
+            awaitItem() shouldBe Resource.Loading
+            awaitItem() shouldBe Resource.Success(listOf(localSession))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     private fun repository(
-        online: Boolean,
+        online: Boolean = true,
         network: TrackingSessionDataSource = FakeTrackingSessionDataSource(),
         local: TrackingSessionDataSource = FakeTrackingSessionDataSource(),
+        networkMonitor: FakeNetworkMonitor = FakeNetworkMonitor(online),
     ) = TrackingSessionsRepositoryImpl(
         localDataSource = local,
         networkDataSource = network,
         dispatcherProvider = ImmediateDispatcherProvider,
-        networkMonitor = FakeNetworkMonitor(online),
+        networkMonitor = networkMonitor,
     )
 }

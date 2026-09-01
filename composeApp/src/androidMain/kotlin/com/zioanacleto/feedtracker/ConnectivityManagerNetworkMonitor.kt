@@ -41,6 +41,7 @@ class ConnectivityManagerNetworkMonitor(private val context: Context, val dispat
         // we need to register the callback to the connectivityManager
         val request = Builder()
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
             .build()
         connectivityManager.registerNetworkCallback(request, callback)
 
@@ -57,6 +58,7 @@ class ConnectivityManagerNetworkMonitor(private val context: Context, val dispat
     // If network has internet capability, returns true
     private fun ConnectivityManager.isCurrentlyConnected(): Boolean {
         val networkCapabilities = getNetworkCapabilities(activeNetwork) ?: return false
-        return networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        return networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+            networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 }

@@ -2,9 +2,11 @@ package com.zioanacleto.feedtracker.features.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zioanacleto.feedtracker.components.startOfLocalDayMillis
 import com.zioanacleto.feedtracker.domain.TrackingSessionModel
 import com.zioanacleto.feedtracker.domain.core.Resource
 import com.zioanacleto.feedtracker.domain.repositories.TrackingSessionsRepository
+import com.zioanacleto.feedtracker.getCurrentTimeMillis
 import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.unable_to_delete_tracking_session
 import kotlinx.coroutines.CancellationException
@@ -22,15 +24,22 @@ sealed interface HomeUiState {
     data object Loading : HomeUiState
     data class Ready(
         val items: List<HomeSessionListItem>,
+        val recentSessions: List<TrackingSessionModel> = emptyList(),
+        val stats: HomeStats = HomeStats.Empty,
         val selectedSession: TrackingSessionModel? = null,
         val isDeleting: Boolean = false,
         val deleteError: String? = null,
         val undoableDeletedSession: TrackingSessionModel? = null,
+        val syncedSessionCount: Int? = null,
     ) : HomeUiState
     data class Error(val message: String) : HomeUiState
 }
 
-class HomeViewModel(private val trackingSessionsRepository: TrackingSessionsRepository) : ViewModel() {
+class HomeViewModel(
+    private val trackingSessionsRepository: TrackingSessionsRepository,
+    private val clock: () -> Long = { getCurrentTimeMillis() },
+    private val startOfLocalDay: (Long) -> Long = { startOfLocalDayMillis(it) },
+) : ViewModel() {
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
@@ -38,6 +47,16 @@ class HomeViewModel(private val trackingSessionsRepository: TrackingSessionsRepo
     private var expandedGroupKeys: Set<String> = emptySet()
     private var pendingDeletedSession: TrackingSessionModel? = null
     private var pendingDeleteJob: Job? = null
+    private var syncedSessionCount: Int? = null
+    private var syncMessageJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            trackingSessionsRepository.syncedPendingCount.collect { count ->
+                showSyncedMessage(count)
+            }
+        }
+    }
 
     fun loadSessions() {
         viewModelScope.launch {
@@ -145,16 +164,38 @@ class HomeViewModel(private val trackingSessionsRepository: TrackingSessionsRepo
         } else {
             selectedSession
         }
+        val now = clock()
+        val overview = buildHomeOverview(sessions, now, startOfLocalDay(now))
         return HomeUiState.Ready(
             items = buildHomeSessionListItems(sessions, expandedGroupKeys),
+            recentSessions = overview.recentSessions,
+            stats = overview.stats,
             selectedSession = resolvedSelection,
             isDeleting = isDeleting,
             deleteError = deleteError,
             undoableDeletedSession = pendingDeletedSession,
+            syncedSessionCount = syncedSessionCount,
         )
+    }
+
+    private fun showSyncedMessage(count: Int) {
+        if (count <= 0) return
+        syncedSessionCount = count
+        syncMessageJob?.cancel()
+        syncMessageJob = viewModelScope.launch {
+            if (_uiState.value is HomeUiState.Ready) {
+                _uiState.value = readyState(keepSelection = true)
+            }
+            delay(SYNC_MESSAGE_WINDOW_MS)
+            syncedSessionCount = null
+            if (_uiState.value is HomeUiState.Ready) {
+                _uiState.value = readyState(keepSelection = true)
+            }
+        }
     }
 
     companion object {
         const val DELETE_UNDO_WINDOW_MS = 5_000L
+        const val SYNC_MESSAGE_WINDOW_MS = 4_000L
     }
 }

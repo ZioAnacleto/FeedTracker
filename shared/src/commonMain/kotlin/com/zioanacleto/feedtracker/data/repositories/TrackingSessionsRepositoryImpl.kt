@@ -32,21 +32,21 @@ class TrackingSessionsRepositoryImpl(
     override val syncedPendingCount: SharedFlow<Int> = _syncedPendingCount.asSharedFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override suspend fun getTrackingSessions(): Flow<Resource<List<TrackingSessionModel>>> =
-        networkMonitor.isOnline
-            .distinctUntilChanged()
-            .flatMapLatest { online ->
-                flow {
-                    emit(Resource.Loading)
-                    emit(Resource.Success(loadSessions(online)))
-                }.catch { throwable ->
-                    emit(Resource.Error(throwable.message ?: "Unknown error"))
-                }
+    override suspend fun getTrackingSessions(): Flow<Resource<List<TrackingSessionModel>>> = networkMonitor.isOnline
+        .distinctUntilChanged()
+        .flatMapLatest { online ->
+            flow {
+                emit(Resource.Loading)
+                emit(Resource.Success(loadSessions(online)))
+            }.catch { throwable ->
+                emit(Resource.Error(throwable.message ?: "Unknown error"))
             }
-            .flowOn(dispatcherProvider.io())
+        }
+        .flowOn(dispatcherProvider.io())
 
-    override suspend fun getTrackingSession(id: String): Flow<Resource<TrackingSessionModel>> =
-        loadFromPreferredSource { getTrackingSession(id) }
+    override suspend fun getTrackingSession(id: String): Flow<Resource<TrackingSessionModel>> = loadFromPreferredSource {
+        getTrackingSession(id)
+    }
 
     override suspend fun saveTrackingSession(trackingSession: TrackingSessionModel) {
         withContext(dispatcherProvider.io()) {
@@ -115,6 +115,5 @@ class TrackingSessionsRepositoryImpl(
 
     private suspend fun isOnline(): Boolean = networkMonitor.isOnline.first()
 
-    private suspend fun preferredDataSource(): TrackingSessionDataSource =
-        if (isOnline()) networkDataSource else localDataSource
+    private suspend fun preferredDataSource(): TrackingSessionDataSource = if (isOnline()) networkDataSource else localDataSource
 }

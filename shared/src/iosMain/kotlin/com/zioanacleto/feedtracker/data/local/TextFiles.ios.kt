@@ -11,8 +11,7 @@ import platform.Foundation.create
 import platform.Foundation.stringWithContentsOfFile
 import platform.Foundation.writeToFile
 
-internal actual fun readTextFile(path: String): String? =
-    NSString.stringWithContentsOfFile(path, NSUTF8StringEncoding, null)
+internal actual fun readTextFile(path: String): String? = NSString.stringWithContentsOfFile(path, NSUTF8StringEncoding, null)
 
 internal actual fun writeTextFile(path: String, content: String) {
     NSString.create(string = content).writeToFile(

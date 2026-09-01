@@ -83,9 +83,9 @@ import feedtracker.composeapp.generated.resources.retry
 import feedtracker.composeapp.generated.resources.session_count
 import feedtracker.composeapp.generated.resources.session_date
 import feedtracker.composeapp.generated.resources.session_deleted
+import feedtracker.composeapp.generated.resources.session_details
 import feedtracker.composeapp.generated.resources.session_synced
 import feedtracker.composeapp.generated.resources.sessions_synced
-import feedtracker.composeapp.generated.resources.session_details
 import feedtracker.composeapp.generated.resources.start_first_session
 import feedtracker.composeapp.generated.resources.start_session_for
 import feedtracker.composeapp.generated.resources.stats_average_duration

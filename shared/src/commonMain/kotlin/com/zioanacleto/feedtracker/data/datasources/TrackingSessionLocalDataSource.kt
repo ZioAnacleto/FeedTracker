@@ -6,9 +6,8 @@ import com.zioanacleto.feedtracker.domain.TrackingSessionModel
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class TrackingSessionLocalDataSource(
-    private val pendingSessionsStore: PendingSessionsStore = InMemoryPendingSessionsStore(),
-) : TrackingSessionDataSource {
+class TrackingSessionLocalDataSource(private val pendingSessionsStore: PendingSessionsStore = InMemoryPendingSessionsStore()) :
+    TrackingSessionDataSource {
     private val mutex = Mutex()
     private var sessions: MutableList<TrackingSessionModel>? = null
 

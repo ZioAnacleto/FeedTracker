@@ -3,6 +3,21 @@
     <string name="hello">Hello, </string>
     <string name="retry">Retry</string>
     <string name="no_tracking_sessions_yet">No tracking sessions yet</string>
+    <string name="start_first_session">Start first session</string>
+    <string name="last_session">Last session</string>
+    <string name="time_ago_just_now">Just now</string>
+    <string name="time_ago_minutes">%1$dm ago</string>
+    <string name="time_ago_hours">%1$dh %2$dm ago</string>
+    <string name="time_ago_days">%1$dd ago</string>
+    <string name="start_session_for">New session for %1$s</string>
+    <string name="home_tab_overview">Overview</string>
+    <string name="home_tab_all_sessions">All sessions</string>
+    <string name="recent_sessions">Recent sessions</string>
+    <string name="stats_today">Today</string>
+    <string name="stats_last_7_days">Last 7 days</string>
+    <string name="stats_total_duration">Total %1$s</string>
+    <string name="stats_average_duration">Avg %1$s</string>
+    <string name="stats_no_average">Avg —</string>
     <string name="add">Add</string>
     <string name="born_date">Born %1$s</string>
     <string name="duration">Duration %1$s</string>
@@ -39,4 +54,6 @@
     <string name="unable_to_delete_tracking_session">Unable to delete tracking session</string>
     <string name="session_deleted">Session deleted</string>
     <string name="undo">Undo</string>
+    <string name="session_synced">Session synced to the server</string>
+    <string name="sessions_synced">%1$d sessions synced to the server</string>
 </resources>

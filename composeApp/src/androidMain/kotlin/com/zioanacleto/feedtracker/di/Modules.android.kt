@@ -1,11 +1,21 @@
 package com.zioanacleto.feedtracker.di
 
 import com.zioanacleto.feedtracker.ConnectivityManagerNetworkMonitor
+import com.zioanacleto.feedtracker.data.local.FileTextStore
+import com.zioanacleto.feedtracker.data.local.JsonPendingSessionsStore
+import com.zioanacleto.feedtracker.data.local.PENDING_TRACKING_SESSIONS_FILE_NAME
+import com.zioanacleto.feedtracker.data.local.PendingSessionsStore
 import com.zioanacleto.feedtracker.network.NetworkMonitor
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.dsl.module
+import java.io.File
 
 actual val platformModule: Module = module {
     single<NetworkMonitor> { ConnectivityManagerNetworkMonitor(androidContext(), get()) }
+    single<PendingSessionsStore> {
+        JsonPendingSessionsStore(
+            FileTextStore(File(androidContext().filesDir, PENDING_TRACKING_SESSIONS_FILE_NAME).absolutePath),
+        )
+    }
 }

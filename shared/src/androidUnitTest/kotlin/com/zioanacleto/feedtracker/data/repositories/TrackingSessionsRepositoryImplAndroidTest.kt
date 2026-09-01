@@ -24,10 +24,12 @@ class TrackingSessionsRepositoryImplAndroidTest {
         val networkMonitor = mockk<NetworkMonitor>()
         every { dispatcherProvider.io() } returns Dispatchers.Unconfined
         every { networkMonitor.isOnline } returns flowOf(true)
+        val local = mockk<TrackingSessionDataSource>()
+        coEvery { local.getTrackingSessions() } returns emptyList()
         coEvery { network.getTrackingSessions() } throws IllegalStateException("timeout")
 
         val repository = TrackingSessionsRepositoryImpl(
-            localDataSource = mockk(),
+            localDataSource = local,
             networkDataSource = network,
             dispatcherProvider = dispatcherProvider,
             networkMonitor = networkMonitor,

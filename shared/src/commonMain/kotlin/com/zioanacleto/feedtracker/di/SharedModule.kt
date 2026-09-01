@@ -16,10 +16,10 @@ val sharedModule = module {
     single { createFeedTrackerHttpClient() }
     single { FeedTrackerApiClient(get()) }
 
-    factory { TrackingSessionNetworkDataSource(get()) }
-    factory { TrackingSessionLocalDataSource() }
+    single { TrackingSessionNetworkDataSource(get()) }
+    single { TrackingSessionLocalDataSource(get()) }
 
-    factory<TrackingSessionsRepository> {
+    single<TrackingSessionsRepository> {
         TrackingSessionsRepositoryImpl(
             localDataSource = get<TrackingSessionLocalDataSource>(),
             networkDataSource = get<TrackingSessionNetworkDataSource>(),

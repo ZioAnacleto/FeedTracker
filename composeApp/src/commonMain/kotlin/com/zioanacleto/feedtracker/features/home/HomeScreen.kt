@@ -29,6 +29,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
@@ -39,6 +40,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -76,6 +78,7 @@ import feedtracker.composeapp.generated.resources.expand_person_sessions
 import feedtracker.composeapp.generated.resources.home_tab_all_sessions
 import feedtracker.composeapp.generated.resources.home_tab_overview
 import feedtracker.composeapp.generated.resources.last_session
+import feedtracker.composeapp.generated.resources.log_past_session
 import feedtracker.composeapp.generated.resources.no_tracking_sessions_yet
 import feedtracker.composeapp.generated.resources.notes
 import feedtracker.composeapp.generated.resources.recent_sessions
@@ -107,6 +110,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = koinViewModel(),
     onNewTrackingClick: (name: String, surname: String, birthDate: String) -> Unit,
+    onPastTrackingClick: (name: String, surname: String, birthDate: String) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -168,6 +172,7 @@ fun HomeScreen(
                         onToggleGroup = viewModel::toggleGroup,
                         onSessionClick = viewModel::selectSession,
                         onNewTrackingClick = onNewTrackingClick,
+                        onPastTrackingClick = onPastTrackingClick,
                     )
 
                     state.selectedSession?.let { session ->
@@ -183,18 +188,38 @@ fun HomeScreen(
             }
         }
 
-        FloatingActionButton(
+        val lastPerson = (uiState as? HomeUiState.Ready)?.recentSessions?.firstOrNull()
+        Column(
             modifier = Modifier
                 .padding(end = 10.dp, bottom = 20.dp)
                 .align(Alignment.BottomEnd),
-            containerColor = MaterialTheme.colorScheme.primary,
-            onClick = { onNewTrackingClick("", "", "") },
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Icon(
-                painter = rememberVectorPainter(Icons.Filled.Add),
-                contentDescription = stringResource(Res.string.add),
-                tint = MaterialTheme.colorScheme.background,
-            )
+            SmallFloatingActionButton(
+                onClick = {
+                    onPastTrackingClick(
+                        lastPerson?.name.orEmpty(),
+                        lastPerson?.surname.orEmpty(),
+                        lastPerson?.birthDate.orEmpty(),
+                    )
+                },
+            ) {
+                Icon(
+                    painter = rememberVectorPainter(Icons.Filled.DateRange),
+                    contentDescription = stringResource(Res.string.log_past_session),
+                )
+            }
+            FloatingActionButton(
+                containerColor = MaterialTheme.colorScheme.primary,
+                onClick = { onNewTrackingClick("", "", "") },
+            ) {
+                Icon(
+                    painter = rememberVectorPainter(Icons.Filled.Add),
+                    contentDescription = stringResource(Res.string.add),
+                    tint = MaterialTheme.colorScheme.background,
+                )
+            }
         }
 
         AnimatedVisibility(
@@ -233,6 +258,7 @@ private fun HomeReadyTabs(
     onToggleGroup: (String) -> Unit,
     onSessionClick: (TrackingSessionModel) -> Unit,
     onNewTrackingClick: (String, String, String) -> Unit,
+    onPastTrackingClick: (String, String, String) -> Unit,
 ) {
     var selectedTab by remember { mutableIntStateOf(TAB_OVERVIEW) }
 
@@ -246,12 +272,14 @@ private fun HomeReadyTabs(
                 state = state,
                 onSessionClick = onSessionClick,
                 onNewTrackingClick = onNewTrackingClick,
+                onPastTrackingClick = onPastTrackingClick,
             )
             else -> AllSessionsTab(
                 state = state,
                 onToggleGroup = onToggleGroup,
                 onSessionClick = onSessionClick,
                 onStartFirstSession = { onNewTrackingClick("", "", "") },
+                onLogPastSession = { onPastTrackingClick("", "", "") },
             )
         }
     }
@@ -318,9 +346,13 @@ private fun OverviewTab(
     state: HomeUiState.Ready,
     onSessionClick: (TrackingSessionModel) -> Unit,
     onNewTrackingClick: (String, String, String) -> Unit,
+    onPastTrackingClick: (String, String, String) -> Unit,
 ) {
     if (state.recentSessions.isEmpty()) {
-        EmptySessionsState(onStartFirstSession = { onNewTrackingClick("", "", "") })
+        EmptySessionsState(
+            onStartFirstSession = { onNewTrackingClick("", "", "") },
+            onLogPastSession = { onPastTrackingClick("", "", "") },
+        )
         return
     }
 
@@ -352,6 +384,13 @@ private fun OverviewTab(
                         lastSession.birthDate,
                     )
                 },
+                onLogPastSession = {
+                    onPastTrackingClick(
+                        lastSession.name,
+                        lastSession.surname,
+                        lastSession.birthDate,
+                    )
+                },
                 onClick = { onSessionClick(lastSession) },
             )
         }
@@ -373,9 +412,13 @@ private fun AllSessionsTab(
     onToggleGroup: (String) -> Unit,
     onSessionClick: (TrackingSessionModel) -> Unit,
     onStartFirstSession: () -> Unit,
+    onLogPastSession: () -> Unit,
 ) {
     if (state.items.isEmpty()) {
-        EmptySessionsState(onStartFirstSession = onStartFirstSession)
+        EmptySessionsState(
+            onStartFirstSession = onStartFirstSession,
+            onLogPastSession = onLogPastSession,
+        )
         return
     }
 
@@ -409,7 +452,7 @@ private fun AllSessionsTab(
 }
 
 @Composable
-private fun EmptySessionsState(onStartFirstSession: () -> Unit) {
+private fun EmptySessionsState(onStartFirstSession: () -> Unit, onLogPastSession: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -425,11 +468,15 @@ private fun EmptySessionsState(onStartFirstSession: () -> Unit) {
         Button(onClick = onStartFirstSession) {
             Text(stringResource(Res.string.start_first_session))
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        TextButton(onClick = onLogPastSession) {
+            Text(stringResource(Res.string.log_past_session))
+        }
     }
 }
 
 @Composable
-private fun LastSessionCard(session: TrackingSessionModel, onQuickStart: () -> Unit, onClick: () -> Unit) {
+private fun LastSessionCard(session: TrackingSessionModel, onQuickStart: () -> Unit, onLogPastSession: () -> Unit, onClick: () -> Unit) {
     var nowMillis by remember { mutableLongStateOf(getCurrentTimeMillis()) }
     LaunchedEffect(session.id) {
         while (true) {
@@ -483,6 +530,12 @@ private fun LastSessionCard(session: TrackingSessionModel, onQuickStart: () -> U
                         session.name,
                     ),
                 )
+            }
+            TextButton(
+                onClick = onLogPastSession,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(text = stringResource(Res.string.log_past_session))
             }
         }
     }

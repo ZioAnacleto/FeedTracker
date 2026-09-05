@@ -54,13 +54,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.zioanacleto.feedtracker.components.DurationDial
+import com.zioanacleto.feedtracker.components.birthDateChange
 import com.zioanacleto.feedtracker.components.civilDateFromUtcEpochMillis
 import com.zioanacleto.feedtracker.components.formatCivilDate
 import com.zioanacleto.feedtracker.components.formatClockTime
 import com.zioanacleto.feedtracker.components.hideKeyboardOnTouch
 import com.zioanacleto.feedtracker.components.isPastSessionInRange
+import com.zioanacleto.feedtracker.components.isPastTrackingSaveEnabled
+import com.zioanacleto.feedtracker.components.isSelectablePastUtcDate
 import com.zioanacleto.feedtracker.components.localDateTimeFromEpochMillis
 import com.zioanacleto.feedtracker.components.localDateTimeToEpochMillis
+import com.zioanacleto.feedtracker.components.startPartsAfterDurationChange
 import com.zioanacleto.feedtracker.components.startPartsKeepingSessionInPast
 import com.zioanacleto.feedtracker.components.utcEpochMillisFromCivilDate
 import com.zioanacleto.feedtracker.features.newtracking.NewTrackingViewModel
@@ -135,10 +139,12 @@ fun PastTrackingScreen(
         durationMs = durationMs,
         nowMillis = nowMillisForValidation,
     )
-    val isButtonEnabled = nameTextField.text.isNotEmpty() &&
-        surnameTextField.text.isNotEmpty() &&
-        birthDateTextField.text.length == 10 &&
-        isPastSession
+    val isButtonEnabled = isPastTrackingSaveEnabled(
+        name = nameTextField.text,
+        surname = surnameTextField.text,
+        birthDate = birthDateTextField.text,
+        isPastSession = isPastSession,
+    )
 
     val viewModel = koinViewModel<NewTrackingViewModel>()
     val showPopup by viewModel.showPopup.collectAsState()
@@ -203,18 +209,17 @@ fun PastTrackingScreen(
             DurationDial(
                 durationMs = durationMs,
                 onDurationChange = { newDuration ->
-                    if (newDuration > durationMs) {
-                        val shifted = startPartsKeepingSessionInPast(
-                            date = sessionDate,
-                            hour = startHour,
-                            minute = startMinute,
-                            durationMs = newDuration,
-                            nowMillis = getCurrentTimeMillis(),
-                        )
-                        sessionDate = shifted.date
-                        startHour = shifted.hour
-                        startMinute = shifted.minute
-                    }
+                    val shifted = startPartsAfterDurationChange(
+                        date = sessionDate,
+                        hour = startHour,
+                        minute = startMinute,
+                        previousDurationMs = durationMs,
+                        newDurationMs = newDuration,
+                        nowMillis = getCurrentTimeMillis(),
+                    )
+                    sessionDate = shifted.date
+                    startHour = shifted.hour
+                    startMinute = shifted.minute
                     durationMs = newDuration
                 },
                 modifier = Modifier
@@ -320,7 +325,16 @@ fun PastTrackingScreen(
                 TextButton(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
-                            sessionDate = civilDateFromUtcEpochMillis(millis)
+                            val shifted = startPartsKeepingSessionInPast(
+                                date = civilDateFromUtcEpochMillis(millis),
+                                hour = startHour,
+                                minute = startMinute,
+                                durationMs = durationMs,
+                                nowMillis = getCurrentTimeMillis(),
+                            )
+                            sessionDate = shifted.date
+                            startHour = shifted.hour
+                            startMinute = shifted.minute
                         }
                         showDatePicker = false
                     },
@@ -349,8 +363,16 @@ fun PastTrackingScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        startHour = timePickerState.hour
-                        startMinute = timePickerState.minute
+                        val shifted = startPartsKeepingSessionInPast(
+                            date = sessionDate,
+                            hour = timePickerState.hour,
+                            minute = timePickerState.minute,
+                            durationMs = durationMs,
+                            nowMillis = getCurrentTimeMillis(),
+                        )
+                        sessionDate = shifted.date
+                        startHour = shifted.hour
+                        startMinute = shifted.minute
                         showTimePicker = false
                     },
                 ) {
@@ -438,7 +460,7 @@ fun PastTrackingScreen(
 }
 
 private object PastSelectableDates : SelectableDates {
-    override fun isSelectableDate(utcTimeMillis: Long): Boolean = utcTimeMillis <= getCurrentTimeMillis()
+    override fun isSelectableDate(utcTimeMillis: Long): Boolean = isSelectablePastUtcDate(utcTimeMillis, getCurrentTimeMillis())
 }
 
 @Composable
@@ -521,28 +543,14 @@ private fun PersonNameFields(
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .onFocusChanged { onBirthDateFocus(it.hasFocus) },
         value = birthDateTextField,
-        onValueChange = { input ->
-            val oldText = birthDateTextField.text
-            val newText = input.text
-            if (newText.length <= 10) {
-                if (newText.length > oldText.length) {
-                    val digits = newText.filter { it.isDigit() }
-                    val formatted = buildString {
-                        for (i in digits.indices) {
-                            append(digits[i])
-                            if ((i == 1 || i == 3) && i == digits.lastIndex && i < 4) {
-                                append("/")
-                            } else if ((i == 1 || i == 3) && i < digits.lastIndex) {
-                                append("/")
-                            }
-                        }
-                    }
-                    onBirthDateChange(input.copy(text = formatted, selection = TextRange(formatted.length)))
-                    if (newText.length == 10) onBirthDateComplete()
-                } else {
-                    onBirthDateChange(input)
-                }
+        onValueChange = fun(input: TextFieldValue) {
+            val change = birthDateChange(birthDateTextField.text, input.text) ?: return
+            if (change.placeCursorAtEnd) {
+                onBirthDateChange(input.copy(text = change.text, selection = TextRange(change.text.length)))
+            } else {
+                onBirthDateChange(input)
             }
+            if (change.complete) onBirthDateComplete()
         },
         label = { Text(stringResource(Res.string.date_of_birth)) },
         placeholder = { Text(stringResource(Res.string.date_of_birth_placeholder)) },

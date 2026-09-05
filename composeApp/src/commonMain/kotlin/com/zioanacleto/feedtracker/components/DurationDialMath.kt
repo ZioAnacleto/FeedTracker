@@ -68,3 +68,22 @@ internal fun startPartsKeepingSessionInPast(
     val clampedDuration = durationMs.coerceAtLeast(MIN_DURATION_MS)
     return localDateTimeFromEpochMillis((nowMillis - clampedDuration).coerceAtLeast(0L))
 }
+
+internal fun startPartsAfterDurationChange(
+    date: CivilDate,
+    hour: Int,
+    minute: Int,
+    previousDurationMs: Long,
+    newDurationMs: Long,
+    nowMillis: Long,
+): LocalDateTimeParts {
+    if (newDurationMs <= previousDurationMs) {
+        return LocalDateTimeParts(date, hour, minute)
+    }
+    return startPartsKeepingSessionInPast(date, hour, minute, newDurationMs, nowMillis)
+}
+
+internal fun isPastTrackingSaveEnabled(name: String, surname: String, birthDate: String, isPastSession: Boolean): Boolean =
+    name.isNotEmpty() && surname.isNotEmpty() && birthDate.length == 10 && isPastSession
+
+internal fun isSelectablePastUtcDate(utcTimeMillis: Long, nowMillis: Long): Boolean = utcTimeMillis <= nowMillis

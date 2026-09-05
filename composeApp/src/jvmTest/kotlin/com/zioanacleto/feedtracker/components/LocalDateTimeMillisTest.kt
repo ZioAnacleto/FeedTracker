@@ -9,6 +9,15 @@ class LocalDateTimeMillisTest {
     fun formatsCivilDateAndClockTime() {
         formatCivilDate(CivilDate(2026, 9, 1)) shouldBe "01/09/2026"
         formatClockTime(8, 5) shouldBe "08:05"
+        formatClockTime(0, 0) shouldBe "00:00"
+        formatClockTime(23, 59) shouldBe "23:59"
+    }
+
+    @Test
+    fun localDateTimeRoundTripsThroughEpochMillis() {
+        val date = CivilDate(2026, 3, 15)
+        val millis = localDateTimeToEpochMillis(date, hour = 9, minute = 41)
+        localDateTimeFromEpochMillis(millis) shouldBe LocalDateTimeParts(date, hour = 9, minute = 41)
     }
 
     @Test

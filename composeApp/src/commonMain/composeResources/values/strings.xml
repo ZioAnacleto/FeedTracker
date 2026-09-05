@@ -56,4 +56,10 @@
     <string name="undo">Undo</string>
     <string name="session_synced">Session synced to the server</string>
     <string name="sessions_synced">%1$d sessions synced to the server</string>
+    <string name="past_tracking_session">Past tracking session</string>
+    <string name="log_past_session">Log past session</string>
+    <string name="past_session_date">Session date</string>
+    <string name="past_session_start_time">Start time</string>
+    <string name="past_session_duration">Duration</string>
+    <string name="past_session_must_be_in_the_past">Start time plus duration must be in the past.</string>
 </resources>

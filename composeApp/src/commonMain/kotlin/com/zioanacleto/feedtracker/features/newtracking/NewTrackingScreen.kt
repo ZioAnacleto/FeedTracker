@@ -43,6 +43,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.zioanacleto.feedtracker.components.AnimatedTimer
+import com.zioanacleto.feedtracker.components.birthDateChange
 import com.zioanacleto.feedtracker.components.hideKeyboardOnTouch
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
 import feedtracker.composeapp.generated.resources.Res
@@ -243,34 +244,14 @@ fun NewTrackingScreen(
                         hasBirthDateFocus = it.hasFocus
                     },
                 value = birthDateTextField,
-                onValueChange = { input ->
-                    val oldText = birthDateTextField.text
-                    val newText = input.text
-
-                    if (newText.length <= 10) {
-                        if (newText.length > oldText.length) {
-                            // Adding characters: format with slashes
-                            val digits = newText.filter { it.isDigit() }
-                            val formatted = buildString {
-                                for (i in digits.indices) {
-                                    append(digits[i])
-                                    if ((i == 1 || i == 3) && i == digits.lastIndex && i < 4) {
-                                        append("/")
-                                    } else if ((i == 1 || i == 3) && i < digits.lastIndex) {
-                                        append("/")
-                                    }
-                                }
-                            }
-                            birthDateTextField = input.copy(
-                                text = formatted,
-                                selection = TextRange(formatted.length),
-                            )
-                            if (newText.length == 10) localFocusManager.clearFocus()
-                        } else {
-                            // Deleting characters: allow standard deletion
-                            birthDateTextField = input
-                        }
+                onValueChange = fun(input: TextFieldValue) {
+                    val change = birthDateChange(birthDateTextField.text, input.text) ?: return
+                    birthDateTextField = if (change.placeCursorAtEnd) {
+                        input.copy(text = change.text, selection = TextRange(change.text.length))
+                    } else {
+                        input
                     }
+                    if (change.complete) localFocusManager.clearFocus()
                 },
                 label = { Text(stringResource(Res.string.date_of_birth)) },
                 placeholder = { Text(stringResource(Res.string.date_of_birth_placeholder)) },

@@ -55,4 +55,19 @@ class HoconAppConfigTest {
         database.password shouldBe "p@ss:word"
         database.url shouldBe "jdbc:postgresql://db.example.com:5432/app?sslmode=require"
     }
+
+    @Test
+    fun authConfigUsesDefaultsWhenSectionIsMissing() {
+        val auth = HoconAppConfig(
+            MapApplicationConfig(
+                "database.driver" to "org.postgresql.Driver",
+                "database.url" to "jdbc:postgresql://localhost:5433/feedtracker",
+                "database.user" to "feedtracker",
+                "database.password" to "feedtracker",
+            ),
+        ).auth
+
+        auth.verificationLinkBase shouldBe "feedtracker://auth/verify"
+        auth.accessTokenTtlSeconds shouldBe 604_800L
+    }
 }

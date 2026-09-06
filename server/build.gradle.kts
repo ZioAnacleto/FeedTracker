@@ -43,6 +43,9 @@ dependencies {
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger)
     implementation(libs.kotlinx.coroutines)
+    implementation(libs.nimbus.jose.jwt)
+    implementation(libs.bcrypt)
+    implementation(libs.angus.mail)
 
     testImplementation(libs.ktor.serverTestHost)
     testImplementation(libs.kotest.runner.junit5)

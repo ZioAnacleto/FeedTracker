@@ -1,14 +1,11 @@
 package com.zioanacleto.feedtracker.features.newtracking
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -46,6 +43,9 @@ import com.zioanacleto.feedtracker.components.AnimatedTimer
 import com.zioanacleto.feedtracker.components.birthDateChange
 import com.zioanacleto.feedtracker.components.hideKeyboardOnTouch
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
+import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
+import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
+import com.zioanacleto.feedtracker.theme.feedTrackerTextFieldColors
 import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.back
 import feedtracker.composeapp.generated.resources.cancel
@@ -130,8 +130,7 @@ fun NewTrackingScreen(
 
     Box(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .safeContentPadding()
+            .feedTrackerScreenWindowInsets()
             .fillMaxSize()
             .hideKeyboardOnTouch(),
     ) {
@@ -173,7 +172,7 @@ fun NewTrackingScreen(
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp)
                     .onFocusChanged {
                         hasNameFocus = it.hasFocus
                     },
@@ -199,14 +198,15 @@ fun NewTrackingScreen(
                     showKeyboardOnFocus = true,
                     imeAction = ImeAction.Next,
                 ),
-                shape = RoundedCornerShape(10.dp),
+                colors = feedTrackerTextFieldColors(),
+                shape = MaterialTheme.shapes.medium,
             )
 
             // Surname
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp)
                     .onFocusChanged {
                         hasSurnameFocus = it.hasFocus
                     },
@@ -232,14 +232,15 @@ fun NewTrackingScreen(
                     showKeyboardOnFocus = true,
                     imeAction = ImeAction.Next,
                 ),
-                shape = RoundedCornerShape(10.dp),
+                colors = feedTrackerTextFieldColors(),
+                shape = MaterialTheme.shapes.medium,
             )
 
             // Date of birth
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp)
                     .onFocusChanged {
                         hasBirthDateFocus = it.hasFocus
                     },
@@ -272,14 +273,15 @@ fun NewTrackingScreen(
                     showKeyboardOnFocus = true,
                     imeAction = ImeAction.Done,
                 ),
-                shape = RoundedCornerShape(10.dp),
+                colors = feedTrackerTextFieldColors(),
+                shape = MaterialTheme.shapes.medium,
             )
 
             // Additional notes
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp),
                 value = additionalNotesTextField,
                 onValueChange = { additionalNotesTextField = it },
                 label = { Text(stringResource(Res.string.notes)) },
@@ -291,7 +293,8 @@ fun NewTrackingScreen(
                     showKeyboardOnFocus = true,
                     imeAction = ImeAction.Done,
                 ),
-                shape = RoundedCornerShape(10.dp),
+                colors = feedTrackerTextFieldColors(),
+                shape = MaterialTheme.shapes.medium,
             )
         }
 

@@ -19,6 +19,8 @@
     <string name="stats_average_duration">Avg %1$s</string>
     <string name="stats_no_average">Avg —</string>
     <string name="add">Add</string>
+    <string name="start_new_session">Start new session</string>
+    <string name="close_add_session_menu">Close add session menu</string>
     <string name="born_date">Born %1$s</string>
     <string name="duration">Duration %1$s</string>
     <string name="duration_format">%1$dm %2$ds</string>

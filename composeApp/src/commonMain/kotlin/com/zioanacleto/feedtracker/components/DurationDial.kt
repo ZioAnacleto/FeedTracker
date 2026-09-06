@@ -43,7 +43,7 @@ fun DurationDial(durationMs: Long, onDurationChange: (Long) -> Unit, modifier: M
     val colors = MaterialTheme.colorScheme
     val numberColor = colors.onSurface
     val tickColor = colors.onSurface.copy(alpha = 0.85f)
-    val ringColor = colors.surface.copy(alpha = 0.4f)
+    val ringColor = colors.onSurface.copy(alpha = 0.16f)
     val markerColor = colors.primary
     val durationLabel = formatDurationHm(durationMs)
     val durationState = rememberUpdatedState(durationMs)

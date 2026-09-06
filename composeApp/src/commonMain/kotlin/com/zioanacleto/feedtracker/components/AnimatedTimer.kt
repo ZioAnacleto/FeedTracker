@@ -12,7 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
@@ -30,6 +29,7 @@ fun AnimatedTimer(time: Long, modifier: Modifier = Modifier) {
                 text = ":",
                 fontSize = 44.sp,
                 fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
             )
         }
         AnimatedTextView(text = minutes, name = "Minutes")
@@ -37,6 +37,7 @@ fun AnimatedTimer(time: Long, modifier: Modifier = Modifier) {
             text = ":",
             fontSize = 44.sp,
             fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
         )
         AnimatedTextView(text = seconds, name = "Seconds")
     }
@@ -56,6 +57,7 @@ private fun AnimatedTextView(text: String, name: String, modifier: Modifier = Mo
             text = it,
             fontSize = 48.sp,
             fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = modifier,
         )
     }

@@ -2,6 +2,8 @@ package com.zioanacleto.feedtracker.config
 
 import com.zioanacleto.feedtracker.common.models.ApiResponse
 import com.zioanacleto.feedtracker.common.models.HealthStatus
+import com.zioanacleto.feedtracker.features.auth.routes.authRoutes
+import com.zioanacleto.feedtracker.features.auth.services.AuthService
 import com.zioanacleto.feedtracker.features.trackingsessions.routes.trackingSessionRoutes
 import com.zioanacleto.feedtracker.features.trackingsessions.services.TrackingSessionService
 import io.ktor.server.application.Application
@@ -14,6 +16,7 @@ private val applicationStartTime = System.currentTimeMillis()
 
 fun Application.configureRouting() {
     val trackingSessionService by inject<TrackingSessionService>()
+    val authService by inject<AuthService>()
 
     routing {
         get("/health") {
@@ -27,6 +30,7 @@ fun Application.configureRouting() {
             )
         }
 
+        authRoutes(authService)
         trackingSessionRoutes(trackingSessionService)
     }
 }

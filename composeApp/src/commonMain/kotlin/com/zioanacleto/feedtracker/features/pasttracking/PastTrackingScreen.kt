@@ -1,15 +1,12 @@
 package com.zioanacleto.feedtracker.features.pasttracking
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -70,6 +66,10 @@ import com.zioanacleto.feedtracker.components.utcEpochMillisFromCivilDate
 import com.zioanacleto.feedtracker.features.newtracking.NewTrackingViewModel
 import com.zioanacleto.feedtracker.features.newtracking.SaveTrackingUiState
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
+import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
+import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
+import com.zioanacleto.feedtracker.theme.feedTrackerTextButtonColors
+import com.zioanacleto.feedtracker.theme.feedTrackerTextFieldColors
 import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.back
 import feedtracker.composeapp.generated.resources.cancel
@@ -164,8 +164,7 @@ fun PastTrackingScreen(
 
     Box(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .safeContentPadding()
+            .feedTrackerScreenWindowInsets()
             .fillMaxSize()
             .hideKeyboardOnTouch(),
     ) {
@@ -204,7 +203,7 @@ fun PastTrackingScreen(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                    .padding(horizontal = ScreenHorizontalPadding, vertical = 4.dp),
             )
             DurationDial(
                 durationMs = durationMs,
@@ -224,7 +223,7 @@ fun PastTrackingScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = ScreenHorizontalPadding),
             )
 
             PersonNameFields(
@@ -243,40 +242,36 @@ fun PastTrackingScreen(
                 onBirthDateComplete = { localFocusManager.clearFocus() },
             )
 
-            val pickerFieldColors = OutlinedTextFieldDefaults.colors(
-                disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                disabledBorderColor = MaterialTheme.colorScheme.outline,
-                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            val pickerFieldColors = feedTrackerTextFieldColors()
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp)
                     .clickable { showDatePicker = true },
                 value = formatCivilDate(sessionDate),
                 onValueChange = {},
                 enabled = false,
                 colors = pickerFieldColors,
                 label = { Text(stringResource(Res.string.past_session_date)) },
-                shape = RoundedCornerShape(10.dp),
+                shape = MaterialTheme.shapes.medium,
             )
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp)
                     .clickable { showTimePicker = true },
                 value = formatClockTime(startHour, startMinute),
                 onValueChange = {},
                 enabled = false,
                 colors = pickerFieldColors,
                 label = { Text(stringResource(Res.string.past_session_start_time)) },
-                shape = RoundedCornerShape(10.dp),
+                shape = MaterialTheme.shapes.medium,
             )
 
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp),
                 value = additionalNotesTextField,
                 onValueChange = { additionalNotesTextField = it },
                 label = { Text(stringResource(Res.string.notes)) },
@@ -288,7 +283,8 @@ fun PastTrackingScreen(
                     showKeyboardOnFocus = true,
                     imeAction = ImeAction.Done,
                 ),
-                shape = RoundedCornerShape(10.dp),
+                colors = feedTrackerTextFieldColors(),
+                shape = MaterialTheme.shapes.medium,
             )
 
             if (!isPastSession) {
@@ -298,7 +294,7 @@ fun PastTrackingScreen(
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                        .padding(horizontal = ScreenHorizontalPadding, vertical = 4.dp),
                 )
             }
         }
@@ -343,7 +339,10 @@ fun PastTrackingScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
+                TextButton(
+                    onClick = { showDatePicker = false },
+                    colors = feedTrackerTextButtonColors(),
+                ) {
                     Text(stringResource(Res.string.cancel))
                 }
             },
@@ -380,7 +379,10 @@ fun PastTrackingScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) {
+                TextButton(
+                    onClick = { showTimePicker = false },
+                    colors = feedTrackerTextButtonColors(),
+                ) {
                     Text(stringResource(Res.string.cancel))
                 }
             },
@@ -482,7 +484,7 @@ private fun PersonNameFields(
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp)
             .onFocusChanged { onNameFocus(it.hasFocus) },
         value = nameTextField,
         onValueChange = onNameChange,
@@ -506,12 +508,13 @@ private fun PersonNameFields(
             showKeyboardOnFocus = true,
             imeAction = ImeAction.Next,
         ),
-        shape = RoundedCornerShape(10.dp),
+        shape = MaterialTheme.shapes.medium,
+        colors = feedTrackerTextFieldColors(),
     )
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp)
             .onFocusChanged { onSurnameFocus(it.hasFocus) },
         value = surnameTextField,
         onValueChange = onSurnameChange,
@@ -535,12 +538,13 @@ private fun PersonNameFields(
             showKeyboardOnFocus = true,
             imeAction = ImeAction.Next,
         ),
-        shape = RoundedCornerShape(10.dp),
+        shape = MaterialTheme.shapes.medium,
+        colors = feedTrackerTextFieldColors(),
     )
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp)
             .onFocusChanged { onBirthDateFocus(it.hasFocus) },
         value = birthDateTextField,
         onValueChange = fun(input: TextFieldValue) {
@@ -571,6 +575,7 @@ private fun PersonNameFields(
             showKeyboardOnFocus = true,
             imeAction = ImeAction.Done,
         ),
-        shape = RoundedCornerShape(10.dp),
+        shape = MaterialTheme.shapes.medium,
+        colors = feedTrackerTextFieldColors(),
     )
 }

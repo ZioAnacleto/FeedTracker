@@ -2,7 +2,6 @@ package com.zioanacleto.feedtracker.features.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,19 +26,15 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,23 +45,31 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import com.zioanacleto.feedtracker.components.AddSessionExpandableFab
 import com.zioanacleto.feedtracker.components.TitleWithName
 import com.zioanacleto.feedtracker.components.formatSessionDateTime
 import com.zioanacleto.feedtracker.domain.TrackingSessionModel
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
+import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
+import com.zioanacleto.feedtracker.theme.feedTrackerCardColors
+import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
+import com.zioanacleto.feedtracker.theme.feedTrackerTextButtonColors
 import feedtracker.composeapp.generated.resources.Res
-import feedtracker.composeapp.generated.resources.add
 import feedtracker.composeapp.generated.resources.born_date
 import feedtracker.composeapp.generated.resources.close
 import feedtracker.composeapp.generated.resources.collapse_person_sessions
@@ -105,6 +107,7 @@ import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -114,6 +117,7 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
+    var addMenuExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -121,10 +125,13 @@ fun HomeScreen(
         }
     }
 
+    BackHandler(enabled = addMenuExpanded) {
+        addMenuExpanded = false
+    }
+
     Box(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .safeContentPadding()
+            .feedTrackerScreenWindowInsets()
             .fillMaxSize()
             .then(modifier),
     ) {
@@ -133,7 +140,9 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             TitleWithName(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = ScreenHorizontalPadding),
                 name = "Costanza",
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -143,7 +152,7 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center,
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onBackground)
                     }
                 }
 
@@ -151,7 +160,7 @@ fun HomeScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 24.dp),
+                            .padding(horizontal = ScreenHorizontalPadding),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
@@ -188,45 +197,37 @@ fun HomeScreen(
             }
         }
 
+        if (addMenuExpanded) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.32f))
+                    .clickable { addMenuExpanded = false },
+            )
+        }
+
         val lastPerson = (uiState as? HomeUiState.Ready)?.recentSessions?.firstOrNull()
-        Column(
+        AddSessionExpandableFab(
+            expanded = addMenuExpanded,
+            onExpandedChange = { addMenuExpanded = it },
+            onNewSessionClick = { onNewTrackingClick("", "", "") },
+            onPastSessionClick = {
+                onPastTrackingClick(
+                    lastPerson?.name.orEmpty(),
+                    lastPerson?.surname.orEmpty(),
+                    lastPerson?.birthDate.orEmpty(),
+                )
+            },
             modifier = Modifier
                 .padding(end = 10.dp, bottom = 20.dp)
                 .align(Alignment.BottomEnd),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            SmallFloatingActionButton(
-                onClick = {
-                    onPastTrackingClick(
-                        lastPerson?.name.orEmpty(),
-                        lastPerson?.surname.orEmpty(),
-                        lastPerson?.birthDate.orEmpty(),
-                    )
-                },
-            ) {
-                Icon(
-                    painter = rememberVectorPainter(Icons.Filled.DateRange),
-                    contentDescription = stringResource(Res.string.log_past_session),
-                )
-            }
-            FloatingActionButton(
-                containerColor = MaterialTheme.colorScheme.primary,
-                onClick = { onNewTrackingClick("", "", "") },
-            ) {
-                Icon(
-                    painter = rememberVectorPainter(Icons.Filled.Add),
-                    contentDescription = stringResource(Res.string.add),
-                    tint = MaterialTheme.colorScheme.background,
-                )
-            }
-        }
+        )
 
         AnimatedVisibility(
             visible = (uiState as? HomeUiState.Ready)?.undoableDeletedSession != null,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(start = 16.dp, end = 16.dp, bottom = 88.dp),
+                .padding(start = ScreenHorizontalPadding, end = ScreenHorizontalPadding, bottom = 88.dp),
             enter = fadeIn(animationSpec = tween(SNACKBAR_FADE_MS)),
             exit = fadeOut(animationSpec = tween(SNACKBAR_FADE_MS)),
         ) {
@@ -238,7 +239,7 @@ fun HomeScreen(
             visible = syncedCount != null && (uiState as? HomeUiState.Ready)?.undoableDeletedSession == null,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(start = 16.dp, end = 16.dp, bottom = 88.dp),
+                .padding(start = ScreenHorizontalPadding, end = ScreenHorizontalPadding, bottom = 88.dp),
             enter = fadeIn(animationSpec = tween(SNACKBAR_FADE_MS)),
             exit = fadeOut(animationSpec = tween(SNACKBAR_FADE_MS)),
         ) {
@@ -294,9 +295,9 @@ private fun HomeTabChipSelector(selectedTab: Int, onTabSelected: (Int) -> Unit) 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp),
         shape = RoundedCornerShape(percent = 50),
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
         tonalElevation = 2.dp,
     ) {
         Row(
@@ -315,7 +316,7 @@ private fun HomeTabChipSelector(selectedTab: Int, onTabSelected: (Int) -> Unit) 
                             if (selected) {
                                 MaterialTheme.colorScheme.primary
                             } else {
-                                MaterialTheme.colorScheme.surface
+                                Color.Transparent
                             },
                         )
                         .selectable(
@@ -371,7 +372,7 @@ private fun OverviewTab(
             Text(
                 text = stringResource(Res.string.recent_sessions),
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = Modifier.padding(horizontal = ScreenHorizontalPadding, vertical = 4.dp),
             )
         }
         item(key = "last-session") {
@@ -456,7 +457,7 @@ private fun EmptySessionsState(onStartFirstSession: () -> Unit, onLogPastSession
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = ScreenHorizontalPadding),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -469,7 +470,7 @@ private fun EmptySessionsState(onStartFirstSession: () -> Unit, onLogPastSession
             Text(stringResource(Res.string.start_first_session))
         }
         Spacer(modifier = Modifier.height(8.dp))
-        TextButton(onClick = onLogPastSession) {
+        TextButton(onClick = onLogPastSession, colors = feedTrackerTextButtonColors()) {
             Text(stringResource(Res.string.log_past_session))
         }
     }
@@ -488,8 +489,10 @@ private fun LastSessionCard(session: TrackingSessionModel, onQuickStart: () -> U
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = ScreenHorizontalPadding),
         onClick = onClick,
+        colors = feedTrackerCardColors(),
+        shape = MaterialTheme.shapes.large,
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -534,6 +537,7 @@ private fun LastSessionCard(session: TrackingSessionModel, onQuickStart: () -> U
             TextButton(
                 onClick = onLogPastSession,
                 modifier = Modifier.fillMaxWidth(),
+                colors = feedTrackerTextButtonColors(),
             ) {
                 Text(text = stringResource(Res.string.log_past_session))
             }
@@ -546,7 +550,9 @@ private fun HomeStatsCard(stats: HomeStats) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = ScreenHorizontalPadding),
+        colors = feedTrackerCardColors(),
+        shape = MaterialTheme.shapes.large,
     ) {
         Row(
             modifier = Modifier
@@ -618,7 +624,7 @@ private fun DeletedSessionSnackbar(onUndo: () -> Unit) {
     }
 
     Surface(
-        shape = MaterialTheme.shapes.extraSmall,
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.inverseSurface,
         shadowElevation = 6.dp,
         tonalElevation = 6.dp,
@@ -646,11 +652,11 @@ private fun DeletedSessionSnackbar(onUndo: () -> Unit) {
                     color = MaterialTheme.colorScheme.inverseOnSurface,
                     style = MaterialTheme.typography.bodyMedium,
                 )
-                TextButton(onClick = onUndo) {
-                    Text(
-                        text = stringResource(Res.string.undo),
-                        color = MaterialTheme.colorScheme.inversePrimary,
-                    )
+                TextButton(
+                    onClick = onUndo,
+                    colors = feedTrackerTextButtonColors(),
+                ) {
+                    Text(text = stringResource(Res.string.undo))
                 }
             }
         }
@@ -660,7 +666,7 @@ private fun DeletedSessionSnackbar(onUndo: () -> Unit) {
 @Composable
 private fun SyncedSessionsSnackbar(count: Int) {
     Surface(
-        shape = MaterialTheme.shapes.extraSmall,
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.inverseSurface,
         shadowElevation = 6.dp,
         tonalElevation = 6.dp,
@@ -745,6 +751,7 @@ private fun SessionDetailDialog(
             TextButton(
                 enabled = !isDeleting,
                 onClick = onDismiss,
+                colors = feedTrackerTextButtonColors(),
             ) {
                 Text(stringResource(Res.string.close))
             }
@@ -761,7 +768,9 @@ private fun TrackingSessionGroupCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = ScreenHorizontalPadding),
+        colors = feedTrackerCardColors(),
+        shape = MaterialTheme.shapes.large,
     ) {
         Column {
             Row(
@@ -823,8 +832,10 @@ private fun TrackingSessionCard(session: TrackingSessionModel, onClick: () -> Un
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = ScreenHorizontalPadding),
         onClick = onClick,
+        colors = feedTrackerCardColors(),
+        shape = MaterialTheme.shapes.large,
     ) {
         TrackingSessionDetails(
             session = session,

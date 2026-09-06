@@ -28,6 +28,7 @@ fun TitleWithName(modifier: Modifier = Modifier, name: String) {
     Row(modifier = modifier) {
         Text(
             style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground,
             text = stringResource(Res.string.hello),
         )
         AnimatedVisibility(
@@ -36,6 +37,7 @@ fun TitleWithName(modifier: Modifier = Modifier, name: String) {
         ) {
             Text(
                 style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
                 text = name,
             )
         }

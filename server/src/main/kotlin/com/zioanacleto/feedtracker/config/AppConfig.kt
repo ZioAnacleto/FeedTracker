@@ -23,7 +23,15 @@ data class AuthConfig(
     val appleAudience: String,
 )
 
-data class SmtpConfig(val enabled: Boolean, val host: String, val port: Int, val username: String, val password: String, val from: String)
+data class SmtpConfig(
+    val enabled: Boolean,
+    val host: String,
+    val port: Int,
+    val username: String,
+    val password: String,
+    val from: String,
+    val startTls: Boolean,
+)
 
 class HoconAppConfig(private val config: ApplicationConfig) : AppConfig {
     private val configuredUrl = config.property("database.url").getString()
@@ -51,6 +59,7 @@ class HoconAppConfig(private val config: ApplicationConfig) : AppConfig {
             username = stringOrDefault("smtp.username", ""),
             password = stringOrDefault("smtp.password", ""),
             from = stringOrDefault("smtp.from", "noreply@feedtracker.app"),
+            startTls = booleanOrDefault("smtp.startTls", true),
         )
 
     override val database: DatabaseConfig

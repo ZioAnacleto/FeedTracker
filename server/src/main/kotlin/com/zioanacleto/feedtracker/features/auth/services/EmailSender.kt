@@ -30,15 +30,20 @@ class SmtpEmailSender(private val config: SmtpConfig) : EmailSender {
         val properties = Properties().apply {
             put("mail.smtp.host", config.host)
             put("mail.smtp.port", config.port.toString())
-            put("mail.smtp.auth", "true")
-            put("mail.smtp.starttls.enable", "true")
+            put("mail.smtp.auth", config.username.isNotBlank().toString())
+            put("mail.smtp.starttls.enable", config.startTls.toString())
         }
-        val session = Session.getInstance(
-            properties,
-            object : Authenticator() {
-                override fun getPasswordAuthentication(): PasswordAuthentication = PasswordAuthentication(config.username, config.password)
-            },
-        )
+        val session = if (config.username.isBlank()) {
+            Session.getInstance(properties)
+        } else {
+            Session.getInstance(
+                properties,
+                object : Authenticator() {
+                    override fun getPasswordAuthentication(): PasswordAuthentication =
+                        PasswordAuthentication(config.username, config.password)
+                },
+            )
+        }
         val message = MimeMessage(session).apply {
             setFrom(InternetAddress(config.from))
             setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))

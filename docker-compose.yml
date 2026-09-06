@@ -15,6 +15,11 @@ services:
       timeout: 5s
       retries: 10
 
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "${MAILPIT_UI_PORT:-18025}:8025"
+
   server:
     build:
       context: .
@@ -26,9 +31,19 @@ services:
       DATABASE_URL: jdbc:postgresql://postgres:5432/feedtracker
       DATABASE_USER: feedtracker
       DATABASE_PASSWORD: feedtracker
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:-feedtracker-docker-jwt-secret-change-me!!}
+      SMTP_ENABLED: "true"
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_STARTTLS: "false"
+      SMTP_FROM: noreply@feedtracker.local
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      APPLE_AUDIENCE: ${APPLE_AUDIENCE:-}
     depends_on:
       postgres:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 10s

@@ -12,10 +12,8 @@ import kotlinx.coroutines.launch
 
 data class PersonalSettingsUiState(val isLoggingOut: Boolean = false)
 
-class PersonalSettingsViewModel(
-    private val authRepository: AuthRepository,
-    private val authSessionRepository: AuthSessionRepository,
-) : ViewModel() {
+class PersonalSettingsViewModel(private val authRepository: AuthRepository, private val authSessionRepository: AuthSessionRepository) :
+    ViewModel() {
     private val _uiState = MutableStateFlow(PersonalSettingsUiState())
     val uiState: StateFlow<PersonalSettingsUiState> = _uiState.asStateFlow()
 

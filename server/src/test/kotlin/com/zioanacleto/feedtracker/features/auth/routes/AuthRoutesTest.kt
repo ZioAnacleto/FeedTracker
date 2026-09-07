@@ -3,6 +3,7 @@ package com.zioanacleto.feedtracker.features.auth.routes
 import com.zioanacleto.feedtracker.common.models.ApiResponse
 import com.zioanacleto.feedtracker.config.configureDI
 import com.zioanacleto.feedtracker.domain.auth.AuthMethod
+import com.zioanacleto.feedtracker.domain.auth.AuthMethodsResponse
 import com.zioanacleto.feedtracker.domain.auth.AuthSession
 import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
@@ -12,14 +13,18 @@ import com.zioanacleto.feedtracker.installTestConfig
 import com.zioanacleto.feedtracker.testModule
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
@@ -38,6 +43,33 @@ class AuthRoutesTest :
             ),
             accessToken = "access-token",
         )
+
+        test("GET /api/auth/methods returns configured methods") {
+            val mockAuth = mockk<AuthService>()
+            every { mockAuth.availableAuthMethods() } returns listOf(AuthMethod.EMAIL, AuthMethod.GOOGLE)
+
+            testApplication {
+                installTestConfig()
+                application {
+                    testModule {
+                        configureDI(
+                            extraModules = listOf(
+                                module {
+                                    single<AuthService> { mockAuth }
+                                    single<TrackingSessionService> { mockk(relaxed = true) }
+                                },
+                            ),
+                        )
+                    }
+                }
+
+                client.get("/api/auth/methods").apply {
+                    status shouldBe HttpStatusCode.OK
+                    val response = json.decodeFromString<ApiResponse<AuthMethodsResponse>>(bodyAsText())
+                    response.data?.methods shouldBe listOf(AuthMethod.EMAIL, AuthMethod.GOOGLE)
+                }
+            }
+        }
 
         test("POST /api/auth/email/start returns 202") {
             val mockAuth = mockk<AuthService>()
@@ -125,6 +157,59 @@ class AuthRoutesTest :
                     status shouldBe HttpStatusCode.OK
                     val response = json.decodeFromString<ApiResponse<AuthSession>>(bodyAsText())
                     response.data?.user?.authMethods shouldBe listOf(AuthMethod.GOOGLE)
+                }
+            }
+        }
+
+        test("POST /api/auth/logout revokes the access token") {
+            val mockAuth = mockk<AuthService>()
+            coEvery { mockAuth.logout("access-token") } returns Unit
+
+            testApplication {
+                installTestConfig()
+                application {
+                    testModule {
+                        configureDI(
+                            extraModules = listOf(
+                                module {
+                                    single<AuthService> { mockAuth }
+                                    single<TrackingSessionService> { mockk(relaxed = true) }
+                                },
+                            ),
+                        )
+                    }
+                }
+
+                client.post("/api/auth/logout") {
+                    header(HttpHeaders.Authorization, "Bearer access-token")
+                }.apply {
+                    status shouldBe HttpStatusCode.OK
+                    val response = json.decodeFromString<ApiResponse<Unit>>(bodyAsText())
+                    response.status shouldBe "SUCCESS"
+                }
+            }
+        }
+
+        test("POST /api/auth/logout without a token returns 401") {
+            val mockAuth = mockk<AuthService>()
+
+            testApplication {
+                installTestConfig()
+                application {
+                    testModule {
+                        configureDI(
+                            extraModules = listOf(
+                                module {
+                                    single<AuthService> { mockAuth }
+                                    single<TrackingSessionService> { mockk(relaxed = true) }
+                                },
+                            ),
+                        )
+                    }
+                }
+
+                client.post("/api/auth/logout").apply {
+                    status shouldBe HttpStatusCode.Unauthorized
                 }
             }
         }

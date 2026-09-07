@@ -1,7 +1,10 @@
 package com.zioanacleto.feedtracker.di
 
 import com.zioanacleto.feedtracker.ConnectivityManagerNetworkMonitor
+import com.zioanacleto.feedtracker.data.local.AUTH_SESSION_FILE_NAME
+import com.zioanacleto.feedtracker.data.local.AuthSessionStore
 import com.zioanacleto.feedtracker.data.local.FileTextStore
+import com.zioanacleto.feedtracker.data.local.JsonAuthSessionStore
 import com.zioanacleto.feedtracker.data.local.JsonPendingSessionsStore
 import com.zioanacleto.feedtracker.data.local.PENDING_TRACKING_SESSIONS_FILE_NAME
 import com.zioanacleto.feedtracker.data.local.PendingSessionsStore
@@ -16,6 +19,11 @@ actual val platformModule: Module = module {
     single<PendingSessionsStore> {
         JsonPendingSessionsStore(
             FileTextStore(File(androidContext().filesDir, PENDING_TRACKING_SESSIONS_FILE_NAME).absolutePath),
+        )
+    }
+    single<AuthSessionStore> {
+        JsonAuthSessionStore(
+            FileTextStore(File(androidContext().filesDir, AUTH_SESSION_FILE_NAME).absolutePath),
         )
     }
 }

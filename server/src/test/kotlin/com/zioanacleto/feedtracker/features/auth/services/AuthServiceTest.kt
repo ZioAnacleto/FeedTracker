@@ -15,6 +15,7 @@ import com.zioanacleto.feedtracker.features.auth.models.EmailVerificationCode
 import com.zioanacleto.feedtracker.features.auth.models.NewUser
 import com.zioanacleto.feedtracker.features.auth.models.StoredUser
 import com.zioanacleto.feedtracker.features.auth.repositories.EmailVerificationRepository
+import com.zioanacleto.feedtracker.features.auth.repositories.RevokedAccessTokenRepository
 import com.zioanacleto.feedtracker.features.auth.repositories.UserRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
@@ -37,6 +38,7 @@ class AuthServiceTest :
             val tokens = mockk<TokenService>()
             val codes = mockk<VerificationCodeGenerator>()
             val socialVerifier = mockk<SocialTokenVerifier>()
+            val revokedTokens = mockk<RevokedAccessTokenRepository>(relaxUnitFun = true)
             val timeProvider = TimeProvider { 1_000_000L }
             val authConfig = AuthConfig(
                 jwtSecret = "test-secret-that-is-long-enough-32b",
@@ -57,7 +59,29 @@ class AuthServiceTest :
                 socialVerifier = socialVerifier,
                 timeProvider = timeProvider,
                 authConfig = authConfig,
+                revokedTokens = revokedTokens,
             )
+
+            it("returns email plus configured social methods") {
+                service.availableAuthMethods() shouldBe listOf(AuthMethod.EMAIL, AuthMethod.GOOGLE, AuthMethod.APPLE)
+            }
+
+            it("omits social methods that are not configured") {
+                val emailOnly = AuthServiceImpl(
+                    users = users,
+                    verifications = verifications,
+                    emailSender = emailSender,
+                    passwordHasher = passwordHasher,
+                    tokens = tokens,
+                    codes = codes,
+                    socialVerifier = socialVerifier,
+                    timeProvider = timeProvider,
+                    authConfig = authConfig.copy(googleClientId = "", appleAudience = ""),
+                    revokedTokens = revokedTokens,
+                )
+
+                emailOnly.availableAuthMethods() shouldBe listOf(AuthMethod.EMAIL)
+            }
 
             val user = UserModel(
                 id = "user-1",
@@ -288,6 +312,26 @@ class AuthServiceTest :
                 session.user.id shouldBe "user-1"
                 session.user.authMethods shouldBe listOf(AuthMethod.EMAIL, AuthMethod.GOOGLE)
                 coVerify { users.addAuthMethod("user-1", AuthMethod.GOOGLE, null) }
+            }
+
+            it("revokes a valid access token on logout") {
+                every { tokens.parseAccessToken("access") } returns AccessTokenClaims(
+                    userId = "user-1",
+                    jti = "jti-1",
+                    expiresAtMillis = 2_000_000L,
+                )
+
+                runBlocking { service.logout("access") }
+
+                coVerify { revokedTokens.revoke("jti-1", 2_000_000L, 1_000_000L) }
+            }
+
+            it("rejects logout with an invalid access token") {
+                every { tokens.parseAccessToken("bad") } throws UnauthorizedException("Invalid access token")
+
+                shouldThrow<UnauthorizedException> {
+                    runBlocking { service.logout("bad") }
+                }
             }
         }
     })

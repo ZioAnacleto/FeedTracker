@@ -3,19 +3,69 @@ package com.zioanacleto.feedtracker.network
 import com.zioanacleto.feedtracker.common.models.ApiResponse
 import com.zioanacleto.feedtracker.domain.CreateTrackingSessionRequest
 import com.zioanacleto.feedtracker.domain.TrackingSessionModel
+import com.zioanacleto.feedtracker.domain.auth.AuthMethodsResponse
+import com.zioanacleto.feedtracker.domain.auth.AuthSession
+import com.zioanacleto.feedtracker.domain.auth.CompleteEmailRegistrationRequest
+import com.zioanacleto.feedtracker.domain.auth.EmailLoginRequest
+import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
+import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
+import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 
 class FeedTrackerApiClient(val httpClient: HttpClient, private val baseUrl: String = getServerBaseUrl()) {
     private val trackingSessionsUrl = "$baseUrl/api/tracking-sessions"
+    private val authUrl = "$baseUrl/api/auth"
+
+    suspend fun getAvailableAuthMethods(): AuthMethodsResponse = execute { httpClient.get("$authUrl/methods") }
+
+    suspend fun startEmailRegistration(request: StartEmailAuthRequest) {
+        executeNoContent {
+            httpClient.post("$authUrl/email/start") {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+        }
+    }
+
+    suspend fun verifyEmailCode(request: VerifyEmailCodeRequest): VerifyEmailCodeResponse = execute {
+        httpClient.post("$authUrl/email/verify") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+    }
+
+    suspend fun completeEmailRegistration(request: CompleteEmailRegistrationRequest): AuthSession = execute {
+        httpClient.post("$authUrl/email/complete") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+    }
+
+    suspend fun loginWithEmail(request: EmailLoginRequest): AuthSession = execute {
+        httpClient.post("$authUrl/email/login") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+    }
+
+    suspend fun logout(accessToken: String) {
+        executeNoContent {
+            httpClient.post("$authUrl/logout") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+            }
+        }
+    }
 
     suspend fun getTrackingSessions(): List<TrackingSessionModel> = execute { httpClient.get(trackingSessionsUrl) }
 

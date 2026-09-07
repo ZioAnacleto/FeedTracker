@@ -1,6 +1,8 @@
 package com.zioanacleto.feedtracker.features.auth.routes
 
+import com.zioanacleto.feedtracker.common.exceptions.UnauthorizedException
 import com.zioanacleto.feedtracker.common.models.ApiResponse
+import com.zioanacleto.feedtracker.domain.auth.AuthMethodsResponse
 import com.zioanacleto.feedtracker.domain.auth.AuthSession
 import com.zioanacleto.feedtracker.domain.auth.CompleteEmailRegistrationRequest
 import com.zioanacleto.feedtracker.domain.auth.EmailLoginRequest
@@ -9,15 +11,29 @@ import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
 import com.zioanacleto.feedtracker.features.auth.services.AuthService
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.request.header
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 
 fun Route.authRoutes(authService: AuthService) {
     route("/api/auth") {
+        get("/methods") {
+            call.respond(
+                ApiResponse(
+                    status = "SUCCESS",
+                    message = "Available auth methods",
+                    data = AuthMethodsResponse(authService.availableAuthMethods()),
+                ),
+            )
+        }
+
         post("/email/start") {
             val request = call.receive<StartEmailAuthRequest>()
             authService.startEmailRegistration(request)
@@ -61,5 +77,20 @@ fun Route.authRoutes(authService: AuthService) {
             val session = authService.loginWithApple(request)
             call.respond(ApiResponse<AuthSession>("SUCCESS", "Login successful", session))
         }
+
+        post("/logout") {
+            authService.logout(call.bearerToken())
+            call.respond(ApiResponse<Unit>("SUCCESS", "Logged out"))
+        }
+    }
+}
+
+private fun ApplicationCall.bearerToken(): String {
+    val header = request.header(HttpHeaders.Authorization)?.trim().orEmpty()
+    if (!header.startsWith("Bearer ", ignoreCase = true)) {
+        throw UnauthorizedException("Missing access token")
+    }
+    return header.substringAfter(' ').trim().ifBlank {
+        throw UnauthorizedException("Missing access token")
     }
 }

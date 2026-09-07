@@ -62,8 +62,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.zioanacleto.feedtracker.components.AddSessionExpandableFab
 import com.zioanacleto.feedtracker.components.TitleWithName
+import com.zioanacleto.feedtracker.components.UserAvatarButton
 import com.zioanacleto.feedtracker.components.formatSessionDateTime
+import com.zioanacleto.feedtracker.components.userInitials
 import com.zioanacleto.feedtracker.domain.TrackingSessionModel
+import com.zioanacleto.feedtracker.domain.repositories.AuthSessionRepository
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
 import com.zioanacleto.feedtracker.theme.feedTrackerCardColors
@@ -105,6 +108,7 @@ import feedtracker.composeapp.generated.resources.time_ago_minutes
 import feedtracker.composeapp.generated.resources.undo
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -112,12 +116,19 @@ import org.koin.compose.viewmodel.koinViewModel
 fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = koinViewModel(),
+    authSessionRepository: AuthSessionRepository = koinInject(),
     onNewTrackingClick: (name: String, surname: String, birthDate: String) -> Unit,
     onPastTrackingClick: (name: String, surname: String, birthDate: String) -> Unit,
+    onPersonalSettingsClick: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val session by authSessionRepository.session.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
     var addMenuExpanded by remember { mutableStateOf(false) }
+    val initials = remember(session) {
+        val user = session?.user
+        userInitials(user?.firstName.orEmpty(), user?.lastName.orEmpty(), user?.email.orEmpty())
+    }
 
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -139,12 +150,21 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            TitleWithName(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = ScreenHorizontalPadding),
-                name = "Costanza",
-            )
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TitleWithName(
+                    modifier = Modifier.weight(1f),
+                    name = session?.user?.firstName.orEmpty(),
+                )
+                UserAvatarButton(
+                    initials = initials,
+                    onClick = onPersonalSettingsClick,
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
             when (val state = uiState) {
                 HomeUiState.Loading -> {

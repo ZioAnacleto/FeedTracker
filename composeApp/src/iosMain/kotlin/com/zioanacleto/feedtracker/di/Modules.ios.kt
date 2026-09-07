@@ -1,7 +1,10 @@
 package com.zioanacleto.feedtracker.di
 
 import com.zioanacleto.feedtracker.IosNetworkMonitor
+import com.zioanacleto.feedtracker.data.local.AUTH_SESSION_FILE_NAME
+import com.zioanacleto.feedtracker.data.local.AuthSessionStore
 import com.zioanacleto.feedtracker.data.local.FileTextStore
+import com.zioanacleto.feedtracker.data.local.JsonAuthSessionStore
 import com.zioanacleto.feedtracker.data.local.JsonPendingSessionsStore
 import com.zioanacleto.feedtracker.data.local.PENDING_TRACKING_SESSIONS_FILE_NAME
 import com.zioanacleto.feedtracker.data.local.PendingSessionsStore
@@ -28,5 +31,18 @@ actual val platformModule: Module = module {
             documentsUrl?.URLByAppendingPathComponent(PENDING_TRACKING_SESSIONS_FILE_NAME)?.path,
         )
         JsonPendingSessionsStore(FileTextStore(path))
+    }
+    single<AuthSessionStore> {
+        val documentsUrl = NSFileManager.defaultManager.URLForDirectory(
+            directory = NSDocumentDirectory,
+            inDomain = NSUserDomainMask,
+            appropriateForURL = null,
+            create = true,
+            error = null,
+        )
+        val path = requireNotNull(
+            documentsUrl?.URLByAppendingPathComponent(AUTH_SESSION_FILE_NAME)?.path,
+        )
+        JsonAuthSessionStore(FileTextStore(path))
     }
 }

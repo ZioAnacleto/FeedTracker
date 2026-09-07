@@ -3,6 +3,7 @@ package com.zioanacleto.feedtracker.config
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zioanacleto.feedtracker.features.auth.models.EmailVerificationCodesTable
+import com.zioanacleto.feedtracker.features.auth.models.RevokedAccessTokensTable
 import com.zioanacleto.feedtracker.features.auth.models.UserAuthMethodsTable
 import com.zioanacleto.feedtracker.features.auth.models.UsersTable
 import com.zioanacleto.feedtracker.features.trackingsessions.models.TrackingSessionsTable
@@ -31,6 +32,7 @@ object DatabaseFactory {
                 UsersTable,
                 EmailVerificationCodesTable,
                 UserAuthMethodsTable,
+                RevokedAccessTokensTable,
             )
         }
     }

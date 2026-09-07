@@ -22,6 +22,35 @@ class JwtTokenServiceTest :
             service.createAccessToken("user-1", 3600).shouldNotBeBlank()
         }
 
+        test("round-trips an access token") {
+            val token = service.createAccessToken("user-1", 3600)
+            val claims = service.parseAccessToken(token)
+
+            claims.userId shouldBe "user-1"
+            claims.jti.shouldNotBeBlank()
+            claims.expiresAtMillis shouldBe 1_700_000_000_000L + 3_600_000
+        }
+
+        test("rejects an expired access token") {
+            val token = service.createAccessToken("user-1", 1)
+            val expiredService = JwtTokenService(
+                "feedtracker-test-jwt-secret-32bytes!",
+                TimeProvider { 1_700_000_000_000L + 2_000 },
+            )
+
+            shouldThrow<UnauthorizedException> {
+                expiredService.parseAccessToken(token)
+            }
+        }
+
+        test("rejects a registration token used as access token") {
+            val token = service.createRegistrationToken("mario@example.com", 900)
+
+            shouldThrow<UnauthorizedException> {
+                service.parseAccessToken(token)
+            }
+        }
+
         test("rejects an expired registration token") {
             val token = service.createRegistrationToken("mario@example.com", 1)
             val expiredService = JwtTokenService(

@@ -16,6 +16,7 @@ import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
 import com.zioanacleto.feedtracker.features.auth.models.NewUser
 import com.zioanacleto.feedtracker.features.auth.repositories.EmailVerificationRepository
+import com.zioanacleto.feedtracker.features.auth.repositories.RevokedAccessTokenRepository
 import com.zioanacleto.feedtracker.features.auth.repositories.UserRepository
 import io.ktor.http.HttpStatusCode
 import java.net.URLEncoder
@@ -34,7 +35,14 @@ class AuthServiceImpl(
     private val socialVerifier: SocialTokenVerifier,
     private val timeProvider: TimeProvider,
     private val authConfig: AuthConfig,
+    private val revokedTokens: RevokedAccessTokenRepository,
 ) : AuthService {
+
+    override fun availableAuthMethods(): List<AuthMethod> = buildList {
+        add(AuthMethod.EMAIL)
+        if (authConfig.googleClientId.isNotBlank()) add(AuthMethod.GOOGLE)
+        if (authConfig.appleAudience.isNotBlank()) add(AuthMethod.APPLE)
+    }
 
     override suspend fun startEmailRegistration(request: StartEmailAuthRequest) {
         val email = normalizeEmail(request.email)
@@ -134,6 +142,15 @@ class AuthServiceImpl(
                 lastName = profile.lastName.ifBlank { request.lastName.orEmpty() },
             ),
             method = AuthMethod.GOOGLE,
+        )
+    }
+
+    override suspend fun logout(accessToken: String) {
+        val claims = tokens.parseAccessToken(accessToken)
+        revokedTokens.revoke(
+            jti = claims.jti,
+            expiresAt = claims.expiresAtMillis,
+            revokedAt = timeProvider.nowMillis(),
         )
     }
 

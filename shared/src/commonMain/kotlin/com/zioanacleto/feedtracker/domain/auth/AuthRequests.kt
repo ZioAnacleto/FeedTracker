@@ -24,3 +24,6 @@ data class EmailLoginRequest(val email: String, val password: String)
 
 @Serializable
 data class SocialLoginRequest(val idToken: String, val firstName: String? = null, val lastName: String? = null)
+
+@Serializable
+data class AuthMethodsResponse(val methods: List<AuthMethod>)

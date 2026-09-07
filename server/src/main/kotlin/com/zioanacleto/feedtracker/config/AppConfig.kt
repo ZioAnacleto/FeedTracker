@@ -53,13 +53,13 @@ class HoconAppConfig(private val config: ApplicationConfig) : AppConfig {
 
     override val smtp: SmtpConfig
         get() = SmtpConfig(
-            enabled = booleanOrDefault("smtp.enabled", false),
+            enabled = booleanOrDefault("smtp.enabled", true),
             host = stringOrDefault("smtp.host", "localhost"),
-            port = intOrDefault("smtp.port", 587),
+            port = intOrDefault("smtp.port", 1026),
             username = stringOrDefault("smtp.username", ""),
             password = stringOrDefault("smtp.password", ""),
-            from = stringOrDefault("smtp.from", "noreply@feedtracker.app"),
-            startTls = booleanOrDefault("smtp.startTls", true),
+            from = stringOrDefault("smtp.from", "noreply@feedtracker.local"),
+            startTls = booleanOrDefault("smtp.startTls", false),
         )
 
     override val database: DatabaseConfig

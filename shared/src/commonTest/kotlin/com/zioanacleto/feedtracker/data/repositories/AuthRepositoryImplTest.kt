@@ -150,6 +150,37 @@ class AuthRepositoryImplTest {
     }
 
     @Test
+    fun updateProfilePatchesNamesWithBearerToken() = runTest {
+        var authorization: String? = null
+        val engine = MockEngine { request ->
+            request.method shouldBe HttpMethod.Patch
+            request.url.encodedPath shouldBe "/api/auth/profile"
+            authorization = request.headers[HttpHeaders.Authorization]
+            respond(
+                content = ByteReadChannel(
+                    json.encodeToString(
+                        ApiResponse(
+                            status = "SUCCESS",
+                            message = "ok",
+                            data = session.user.copy(firstName = "Luigi", lastName = "Bianchi"),
+                        ),
+                    ),
+                ),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+            )
+        }
+
+        val repository = AuthRepositoryImpl(apiClient(engine))
+
+        repository.updateProfile("access-token", " Luigi ", "Bianchi") shouldBe session.user.copy(
+            firstName = "Luigi",
+            lastName = "Bianchi",
+        )
+        authorization shouldBe "Bearer access-token"
+    }
+
+    @Test
     fun logoutPostsBearerToken() = runTest {
         var authorization: String? = null
         val engine = MockEngine { request ->

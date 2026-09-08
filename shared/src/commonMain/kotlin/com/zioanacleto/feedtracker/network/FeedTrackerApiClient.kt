@@ -8,6 +8,8 @@ import com.zioanacleto.feedtracker.domain.auth.AuthSession
 import com.zioanacleto.feedtracker.domain.auth.CompleteEmailRegistrationRequest
 import com.zioanacleto.feedtracker.domain.auth.EmailLoginRequest
 import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
+import com.zioanacleto.feedtracker.domain.auth.UpdateProfileRequest
+import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
 import io.ktor.client.HttpClient
@@ -15,6 +17,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -54,6 +57,14 @@ class FeedTrackerApiClient(val httpClient: HttpClient, private val baseUrl: Stri
 
     suspend fun loginWithEmail(request: EmailLoginRequest): AuthSession = execute {
         httpClient.post("$authUrl/email/login") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+    }
+
+    suspend fun updateProfile(accessToken: String, request: UpdateProfileRequest): UserModel = execute {
+        httpClient.patch("$authUrl/profile") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
             contentType(ContentType.Application.Json)
             setBody(request)
         }

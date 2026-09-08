@@ -11,6 +11,7 @@ import com.zioanacleto.feedtracker.domain.auth.CompleteEmailRegistrationRequest
 import com.zioanacleto.feedtracker.domain.auth.EmailLoginRequest
 import com.zioanacleto.feedtracker.domain.auth.SocialLoginRequest
 import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
+import com.zioanacleto.feedtracker.domain.auth.UpdateProfileRequest
 import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
@@ -143,6 +144,17 @@ class AuthServiceImpl(
             ),
             method = AuthMethod.GOOGLE,
         )
+    }
+
+    override suspend fun updateProfile(accessToken: String, request: UpdateProfileRequest): UserModel {
+        val claims = tokens.parseAccessToken(accessToken)
+        if (revokedTokens.isRevoked(claims.jti)) {
+            throw UnauthorizedException("Invalid access token")
+        }
+        validateName(request.firstName, "firstName")
+        validateName(request.lastName, "lastName")
+        users.findById(claims.userId) ?: throw UnauthorizedException("Invalid access token")
+        return users.updateNames(claims.userId, request.firstName.trim(), request.lastName.trim())
     }
 
     override suspend fun logout(accessToken: String) {

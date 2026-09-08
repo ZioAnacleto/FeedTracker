@@ -5,6 +5,8 @@ import com.zioanacleto.feedtracker.domain.auth.AuthSession
 import com.zioanacleto.feedtracker.domain.auth.CompleteEmailRegistrationRequest
 import com.zioanacleto.feedtracker.domain.auth.EmailLoginRequest
 import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
+import com.zioanacleto.feedtracker.domain.auth.UpdateProfileRequest
+import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.domain.repositories.AuthRepository
 import com.zioanacleto.feedtracker.network.FeedTrackerApiClient
@@ -35,6 +37,11 @@ class AuthRepositoryImpl(private val apiClient: FeedTrackerApiClient) : AuthRepo
 
     override suspend fun loginWithEmail(email: String, password: String): AuthSession =
         apiClient.loginWithEmail(EmailLoginRequest(email = email.trim(), password = password))
+
+    override suspend fun updateProfile(accessToken: String, firstName: String, lastName: String): UserModel = apiClient.updateProfile(
+        accessToken = accessToken,
+        request = UpdateProfileRequest(firstName = firstName.trim(), lastName = lastName.trim()),
+    )
 
     override suspend fun logout(accessToken: String) {
         apiClient.logout(accessToken)

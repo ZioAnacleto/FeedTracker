@@ -27,8 +27,11 @@ class FakeAuthRepository(
     private val startRegistrationDelayMillis: Long = 0,
     private val verifyDelayMillis: Long = 0,
     private val logoutDelayMillis: Long = 0,
+    private val updateProfileDelayMillis: Long = 0,
     private val registrationToken: String = "reg-token",
     private val logoutError: Throwable? = null,
+    private val updateProfileError: Throwable? = null,
+    private val updatedUser: UserModel? = null,
 ) : AuthRepository {
     var loginCalls = 0
         private set
@@ -45,6 +48,14 @@ class FakeAuthRepository(
     var logoutCalls = 0
         private set
     var lastLogoutToken: String? = null
+        private set
+    var updateProfileCalls = 0
+        private set
+    var lastUpdatedFirstName: String? = null
+        private set
+    var lastUpdatedLastName: String? = null
+        private set
+    var lastUpdateToken: String? = null
         private set
 
     override suspend fun getAvailableAuthMethods(): List<AuthMethod> {
@@ -89,6 +100,18 @@ class FakeAuthRepository(
         }
         loginError?.let { throw it }
         return session
+    }
+
+    override suspend fun updateProfile(accessToken: String, firstName: String, lastName: String): UserModel {
+        updateProfileCalls += 1
+        lastUpdateToken = accessToken
+        lastUpdatedFirstName = firstName
+        lastUpdatedLastName = lastName
+        if (updateProfileDelayMillis > 0) {
+            delay(updateProfileDelayMillis)
+        }
+        updateProfileError?.let { throw it }
+        return updatedUser ?: session.user.copy(firstName = firstName, lastName = lastName)
     }
 
     override suspend fun logout(accessToken: String) {

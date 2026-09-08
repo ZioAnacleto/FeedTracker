@@ -65,6 +65,77 @@ class PersonalSettingsViewModelTest {
     }
 
     @Test
+    fun loadsProfileFieldsFromTheCurrentSession() = runViewModelTest {
+        val viewModel = PersonalSettingsViewModel(
+            FakeAuthRepository(),
+            FakeAuthSessionRepository(session),
+        )
+
+        viewModel.uiState.value.email shouldBe "mario@example.com"
+        viewModel.uiState.value.firstName shouldBe "Mario"
+        viewModel.uiState.value.lastName shouldBe "Rossi"
+    }
+
+    @Test
+    fun saveProfileUpdatesSessionAndKeepsAccessToken() = runViewModelTest {
+        val repository = FakeAuthRepository()
+        val sessionRepository = FakeAuthSessionRepository(session)
+        val viewModel = PersonalSettingsViewModel(repository, sessionRepository)
+
+        viewModel.onFirstNameChange("Luigi")
+        viewModel.onLastNameChange("Bianchi")
+        viewModel.saveProfile()
+
+        repository.updateProfileCalls shouldBe 1
+        repository.lastUpdateToken shouldBe "access-token"
+        repository.lastUpdatedFirstName shouldBe "Luigi"
+        repository.lastUpdatedLastName shouldBe "Bianchi"
+        sessionRepository.session.value?.user?.firstName shouldBe "Luigi"
+        sessionRepository.session.value?.user?.lastName shouldBe "Bianchi"
+        sessionRepository.session.value?.accessToken shouldBe "access-token"
+        viewModel.uiState.value.isSaving shouldBe false
+        viewModel.uiState.value.firstName shouldBe "Luigi"
+    }
+
+    @Test
+    fun saveProfileIgnoresBlankNames() = runViewModelTest {
+        val repository = FakeAuthRepository()
+        val viewModel = PersonalSettingsViewModel(repository, FakeAuthSessionRepository(session))
+
+        viewModel.onFirstNameChange("  ")
+        viewModel.saveProfile()
+
+        repository.updateProfileCalls shouldBe 0
+    }
+
+    @Test
+    fun saveProfileShowsErrorWhenRequestFails() = runViewModelTest {
+        val viewModel = PersonalSettingsViewModel(
+            FakeAuthRepository(updateProfileError = IllegalStateException("offline")),
+            FakeAuthSessionRepository(session),
+        )
+
+        viewModel.onFirstNameChange("Luigi")
+        viewModel.saveProfile()
+
+        viewModel.uiState.value.error shouldBe "offline"
+        viewModel.uiState.value.isSaving shouldBe false
+    }
+
+    @Test
+    fun saveProfileShowsLoadingWhileRequestIsInFlight() = runViewModelTest {
+        val viewModel = PersonalSettingsViewModel(
+            FakeAuthRepository(updateProfileDelayMillis = 1_000),
+            FakeAuthSessionRepository(session),
+        )
+
+        viewModel.saveProfile()
+        testScheduler.runCurrent()
+
+        viewModel.uiState.value.isSaving shouldBe true
+    }
+
+    @Test
     fun logoutWithoutSessionDoesNotCallServer() = runViewModelTest {
         val repository = FakeAuthRepository()
         val sessionRepository = FakeAuthSessionRepository()

@@ -28,6 +28,9 @@ kotlin-logging = "7.0.7"
 kotest = "5.9.1"
 mockk = "1.14.2"
 ktlint-gradle = "14.2.0"
+nimbus-jose-jwt = "10.3"
+bcrypt = "0.10.2"
+angus-mail = "2.0.4"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -100,6 +103,9 @@ kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.
 kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 h2 = { module = "com.h2database:h2", version = "2.3.232" }
+nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version.ref = "nimbus-jose-jwt" }
+bcrypt = { module = "at.favre.lib:bcrypt", version.ref = "bcrypt" }
+angus-mail = { module = "org.eclipse.angus:angus-mail", version.ref = "angus-mail" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

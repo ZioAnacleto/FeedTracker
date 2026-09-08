@@ -7,13 +7,60 @@ import java.nio.charset.StandardCharsets
 
 interface AppConfig {
     val database: DatabaseConfig
+    val auth: AuthConfig
+    val smtp: SmtpConfig
 }
 
 data class DatabaseConfig(val driver: String, val url: String, val user: String, val password: String, val maxPoolSize: Int)
 
+data class AuthConfig(
+    val jwtSecret: String,
+    val accessTokenTtlSeconds: Long,
+    val registrationTokenTtlSeconds: Long,
+    val verificationCodeTtlSeconds: Long,
+    val verificationLinkBase: String,
+    val googleClientId: String,
+    val appleAudience: String,
+)
+
+data class SmtpConfig(
+    val enabled: Boolean,
+    val host: String,
+    val port: Int,
+    val username: String,
+    val password: String,
+    val from: String,
+    val startTls: Boolean,
+)
+
 class HoconAppConfig(private val config: ApplicationConfig) : AppConfig {
     private val configuredUrl = config.property("database.url").getString()
     private val resolvedJdbcUrl = configuredUrl.toJdbcUrl()
+
+    override val auth: AuthConfig
+        get() = AuthConfig(
+            jwtSecret = stringOrDefault(
+                "auth.jwtSecret",
+                "feedtracker-dev-jwt-secret-change-me!!",
+            ),
+            accessTokenTtlSeconds = longOrDefault("auth.accessTokenTtlSeconds", 604_800L),
+            registrationTokenTtlSeconds = longOrDefault("auth.registrationTokenTtlSeconds", 900L),
+            verificationCodeTtlSeconds = longOrDefault("auth.verificationCodeTtlSeconds", 900L),
+            verificationLinkBase = stringOrDefault("auth.verificationLinkBase", "feedtracker://auth/verify"),
+            googleClientId = stringOrDefault("auth.googleClientId", ""),
+            appleAudience = stringOrDefault("auth.appleAudience", ""),
+        )
+
+    override val smtp: SmtpConfig
+        get() = SmtpConfig(
+            enabled = booleanOrDefault("smtp.enabled", true),
+            host = stringOrDefault("smtp.host", "localhost"),
+            port = intOrDefault("smtp.port", 1026),
+            username = stringOrDefault("smtp.username", ""),
+            password = stringOrDefault("smtp.password", ""),
+            from = stringOrDefault("smtp.from", "noreply@feedtracker.local"),
+            startTls = booleanOrDefault("smtp.startTls", false),
+        )
 
     override val database: DatabaseConfig
         get() {
@@ -98,4 +145,14 @@ class HoconAppConfig(private val config: ApplicationConfig) : AppConfig {
     private fun firstNonBlankEnv(vararg keys: String): String? = keys.asSequence()
         .mapNotNull { key -> System.getenv(key) }
         .firstOrNull { value -> value.isNotBlank() }
+
+    private fun stringOrDefault(path: String, default: String): String =
+        config.propertyOrNull(path)?.getString()?.takeIf { it.isNotBlank() } ?: default
+
+    private fun longOrDefault(path: String, default: Long): Long = config.propertyOrNull(path)?.getString()?.toLongOrNull() ?: default
+
+    private fun intOrDefault(path: String, default: Int): Int = config.propertyOrNull(path)?.getString()?.toIntOrNull() ?: default
+
+    private fun booleanOrDefault(path: String, default: Boolean): Boolean =
+        config.propertyOrNull(path)?.getString()?.toBooleanStrictOrNull() ?: default
 }

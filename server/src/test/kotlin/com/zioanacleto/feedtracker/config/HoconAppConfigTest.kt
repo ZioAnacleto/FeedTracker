@@ -55,4 +55,40 @@ class HoconAppConfigTest {
         database.password shouldBe "p@ss:word"
         database.url shouldBe "jdbc:postgresql://db.example.com:5432/app?sslmode=require"
     }
+
+    @Test
+    fun authConfigUsesDefaultsWhenSectionIsMissing() {
+        val auth = HoconAppConfig(
+            MapApplicationConfig(
+                "database.driver" to "org.postgresql.Driver",
+                "database.url" to "jdbc:postgresql://localhost:5433/feedtracker",
+                "database.user" to "feedtracker",
+                "database.password" to "feedtracker",
+            ),
+        ).auth
+
+        auth.verificationLinkBase shouldBe "feedtracker://auth/verify"
+        auth.accessTokenTtlSeconds shouldBe 604_800L
+    }
+
+    @Test
+    fun smtpConfigDisablesStartTlsWhenConfigured() {
+        val smtp = HoconAppConfig(
+            MapApplicationConfig(
+                "database.driver" to "org.postgresql.Driver",
+                "database.url" to "jdbc:postgresql://localhost:5433/feedtracker",
+                "database.user" to "feedtracker",
+                "database.password" to "feedtracker",
+                "smtp.enabled" to "true",
+                "smtp.host" to "mailpit",
+                "smtp.port" to "1025",
+                "smtp.startTls" to "false",
+            ),
+        ).smtp
+
+        smtp.enabled shouldBe true
+        smtp.host shouldBe "mailpit"
+        smtp.port shouldBe 1025
+        smtp.startTls shouldBe false
+    }
 }

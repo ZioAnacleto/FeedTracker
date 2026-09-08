@@ -6,6 +6,7 @@ import com.zioanacleto.feedtracker.testutil.FakeTrackingSessionsRepository
 import com.zioanacleto.feedtracker.testutil.runViewModelTest
 import com.zioanacleto.feedtracker.testutil.sampleSession
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -25,7 +26,8 @@ class HomeViewModelTest {
             awaitItem() shouldBe HomeUiState.Loading
             viewModel.loadSessions()
             awaitItem() shouldBe HomeUiState.Ready(
-                listOf(HomeSessionListItem.Single(sessions.first())),
+                items = listOf(HomeSessionListItem.Single(sessions.first())),
+                recentSessions = sessions,
             )
         }
     }
@@ -44,7 +46,7 @@ class HomeViewModelTest {
         viewModel.loadSessions()
 
         viewModel.uiState.value shouldBe HomeUiState.Ready(
-            listOf(
+            items = listOf(
                 HomeSessionListItem.Group(
                     key = personGroupingKey(newerMario),
                     name = "Mario",
@@ -55,6 +57,7 @@ class HomeViewModelTest {
                 ),
                 HomeSessionListItem.Single(luigi),
             ),
+            recentSessions = listOf(newerMario, luigi, olderMario),
         )
     }
 
@@ -110,6 +113,7 @@ class HomeViewModelTest {
         repository.deletedIds shouldBe emptyList()
         viewModel.uiState.value shouldBe HomeUiState.Ready(
             items = listOf(HomeSessionListItem.Single(other)),
+            recentSessions = listOf(other),
             selectedSession = null,
             undoableDeletedSession = session,
         )
@@ -133,6 +137,7 @@ class HomeViewModelTest {
         repository.deletedIds shouldBe listOf(session.id)
         viewModel.uiState.value shouldBe HomeUiState.Ready(
             items = emptyList(),
+            recentSessions = emptyList(),
             selectedSession = null,
             undoableDeletedSession = null,
         )
@@ -156,6 +161,7 @@ class HomeViewModelTest {
         repository.deletedIds shouldBe emptyList()
         viewModel.uiState.value shouldBe HomeUiState.Ready(
             items = listOf(HomeSessionListItem.Single(session)),
+            recentSessions = listOf(session),
             selectedSession = null,
             undoableDeletedSession = null,
         )
@@ -185,6 +191,46 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun loadSessionsExposesLastSessionAndTodayStats() = runViewModelTest {
+        val startOfToday = 1_700_000_000_000L
+        val now = startOfToday + 10 * 60 * 60 * 1000L
+        val today = sampleSession(
+            id = "today",
+            sessionStartTime = startOfToday + 60_000L,
+            sessionEndTime = startOfToday + 180_000L,
+        )
+        val older = sampleSession(
+            id = "older",
+            name = "Luigi",
+            sessionStartTime = startOfToday - (8 * 24 * 60 * 60 * 1000L),
+            sessionEndTime = startOfToday - (8 * 24 * 60 * 60 * 1000L) + 30_000L,
+        )
+        val viewModel = HomeViewModel(
+            trackingSessionsRepository = FakeTrackingSessionsRepository(
+                sessions = flowOf(Resource.Success(listOf(today, older))),
+            ),
+            clock = { now },
+            startOfLocalDay = { startOfToday },
+        )
+
+        viewModel.loadSessions()
+
+        viewModel.uiState.value shouldBe HomeUiState.Ready(
+            items = listOf(
+                HomeSessionListItem.Single(today),
+                HomeSessionListItem.Single(older),
+            ),
+            recentSessions = listOf(today, older),
+            stats = HomeStats(
+                sessionsToday = 1,
+                durationTodayMs = 120_000L,
+                sessionsLast7Days = 1,
+                averageDurationLast7DaysMs = 120_000L,
+            ),
+        )
+    }
+
+    @Test
     fun loadSessionsExposesErrorState() = runViewModelTest {
         val viewModel = HomeViewModel(
             FakeTrackingSessionsRepository(sessions = flowOf(Resource.Error("boom"))),
@@ -195,5 +241,28 @@ class HomeViewModelTest {
             viewModel.loadSessions()
             awaitItem() shouldBe HomeUiState.Error("boom")
         }
+    }
+
+    @Test
+    fun loadSessionsShowsSyncedCountThenClearsIt() = runViewModelTest {
+        val synced = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+        val sessions = listOf(sampleSession())
+        val viewModel = HomeViewModel(
+            FakeTrackingSessionsRepository(
+                sessions = flowOf(Resource.Success(sessions)),
+                syncedPendingCount = synced,
+            ),
+        )
+        viewModel.loadSessions()
+        advanceUntilIdle()
+
+        synced.tryEmit(1)
+
+        (viewModel.uiState.value as HomeUiState.Ready).syncedSessionCount shouldBe 1
+
+        advanceTimeBy(HomeViewModel.SYNC_MESSAGE_WINDOW_MS)
+        advanceUntilIdle()
+
+        (viewModel.uiState.value as HomeUiState.Ready).syncedSessionCount shouldBe null
     }
 }

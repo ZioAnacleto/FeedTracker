@@ -1,7 +1,11 @@
 package com.zioanacleto.feedtracker.di
 
 import com.zioanacleto.feedtracker.features.home.HomeViewModel
+import com.zioanacleto.feedtracker.features.login.EmailLoginViewModel
+import com.zioanacleto.feedtracker.features.login.EmailSignUpViewModel
+import com.zioanacleto.feedtracker.features.login.LoginMethodsViewModel
 import com.zioanacleto.feedtracker.features.newtracking.NewTrackingViewModel
+import com.zioanacleto.feedtracker.features.settings.PersonalSettingsViewModel
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -18,6 +22,10 @@ fun initKoin(configuration: KoinAppDeclaration? = null): KoinApplication = start
 val uiModule = module {
     viewModel { HomeViewModel(get()) }
     viewModel { NewTrackingViewModel(get()) }
+    viewModel { LoginMethodsViewModel(get()) }
+    viewModel { EmailLoginViewModel(get(), get()) }
+    viewModel { EmailSignUpViewModel(get(), get()) }
+    viewModel { PersonalSettingsViewModel(get(), get()) }
 }
 
 expect val platformModule: Module

@@ -2,6 +2,10 @@ package com.zioanacleto.feedtracker.config
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import com.zioanacleto.feedtracker.features.auth.models.EmailVerificationCodesTable
+import com.zioanacleto.feedtracker.features.auth.models.RevokedAccessTokensTable
+import com.zioanacleto.feedtracker.features.auth.models.UserAuthMethodsTable
+import com.zioanacleto.feedtracker.features.auth.models.UsersTable
 import com.zioanacleto.feedtracker.features.trackingsessions.models.TrackingSessionsTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -23,7 +27,13 @@ object DatabaseFactory {
         )
         Database.connect(dataSource)
         transaction {
-            SchemaUtils.create(TrackingSessionsTable)
+            SchemaUtils.create(
+                TrackingSessionsTable,
+                UsersTable,
+                EmailVerificationCodesTable,
+                UserAuthMethodsTable,
+                RevokedAccessTokensTable,
+            )
         }
     }
 }

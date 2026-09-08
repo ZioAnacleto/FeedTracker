@@ -1,14 +1,11 @@
 package com.zioanacleto.feedtracker.features.newtracking
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -43,8 +40,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.zioanacleto.feedtracker.components.AnimatedTimer
+import com.zioanacleto.feedtracker.components.birthDateChange
 import com.zioanacleto.feedtracker.components.hideKeyboardOnTouch
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
+import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
+import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
+import com.zioanacleto.feedtracker.theme.feedTrackerTextFieldColors
 import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.back
 import feedtracker.composeapp.generated.resources.cancel
@@ -73,10 +74,16 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun NewTrackingScreen(modifier: Modifier = Modifier, onBackButtonClick: () -> Unit) {
-    var nameTextField by remember { mutableStateOf(TextFieldValue("")) }
-    var surnameTextField by remember { mutableStateOf(TextFieldValue("")) }
-    var birthDateTextField by remember { mutableStateOf(TextFieldValue("")) }
+fun NewTrackingScreen(
+    modifier: Modifier = Modifier,
+    initialName: String = "",
+    initialSurname: String = "",
+    initialBirthDate: String = "",
+    onBackButtonClick: () -> Unit,
+) {
+    var nameTextField by remember { mutableStateOf(TextFieldValue(initialName)) }
+    var surnameTextField by remember { mutableStateOf(TextFieldValue(initialSurname)) }
+    var birthDateTextField by remember { mutableStateOf(TextFieldValue(initialBirthDate)) }
     var additionalNotesTextField by remember { mutableStateOf(TextFieldValue("")) }
 
     val isButtonEnabled by remember {
@@ -123,8 +130,7 @@ fun NewTrackingScreen(modifier: Modifier = Modifier, onBackButtonClick: () -> Un
 
     Box(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .safeContentPadding()
+            .feedTrackerScreenWindowInsets()
             .fillMaxSize()
             .hideKeyboardOnTouch(),
     ) {
@@ -166,7 +172,7 @@ fun NewTrackingScreen(modifier: Modifier = Modifier, onBackButtonClick: () -> Un
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp)
                     .onFocusChanged {
                         hasNameFocus = it.hasFocus
                     },
@@ -192,14 +198,15 @@ fun NewTrackingScreen(modifier: Modifier = Modifier, onBackButtonClick: () -> Un
                     showKeyboardOnFocus = true,
                     imeAction = ImeAction.Next,
                 ),
-                shape = RoundedCornerShape(10.dp),
+                colors = feedTrackerTextFieldColors(),
+                shape = MaterialTheme.shapes.medium,
             )
 
             // Surname
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp)
                     .onFocusChanged {
                         hasSurnameFocus = it.hasFocus
                     },
@@ -225,46 +232,27 @@ fun NewTrackingScreen(modifier: Modifier = Modifier, onBackButtonClick: () -> Un
                     showKeyboardOnFocus = true,
                     imeAction = ImeAction.Next,
                 ),
-                shape = RoundedCornerShape(10.dp),
+                colors = feedTrackerTextFieldColors(),
+                shape = MaterialTheme.shapes.medium,
             )
 
             // Date of birth
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp)
                     .onFocusChanged {
                         hasBirthDateFocus = it.hasFocus
                     },
                 value = birthDateTextField,
-                onValueChange = { input ->
-                    val oldText = birthDateTextField.text
-                    val newText = input.text
-
-                    if (newText.length <= 10) {
-                        if (newText.length > oldText.length) {
-                            // Adding characters: format with slashes
-                            val digits = newText.filter { it.isDigit() }
-                            val formatted = buildString {
-                                for (i in digits.indices) {
-                                    append(digits[i])
-                                    if ((i == 1 || i == 3) && i == digits.lastIndex && i < 4) {
-                                        append("/")
-                                    } else if ((i == 1 || i == 3) && i < digits.lastIndex) {
-                                        append("/")
-                                    }
-                                }
-                            }
-                            birthDateTextField = input.copy(
-                                text = formatted,
-                                selection = TextRange(formatted.length),
-                            )
-                            if (newText.length == 10) localFocusManager.clearFocus()
-                        } else {
-                            // Deleting characters: allow standard deletion
-                            birthDateTextField = input
-                        }
+                onValueChange = fun(input: TextFieldValue) {
+                    val change = birthDateChange(birthDateTextField.text, input.text) ?: return
+                    birthDateTextField = if (change.placeCursorAtEnd) {
+                        input.copy(text = change.text, selection = TextRange(change.text.length))
+                    } else {
+                        input
                     }
+                    if (change.complete) localFocusManager.clearFocus()
                 },
                 label = { Text(stringResource(Res.string.date_of_birth)) },
                 placeholder = { Text(stringResource(Res.string.date_of_birth_placeholder)) },
@@ -285,14 +273,15 @@ fun NewTrackingScreen(modifier: Modifier = Modifier, onBackButtonClick: () -> Un
                     showKeyboardOnFocus = true,
                     imeAction = ImeAction.Done,
                 ),
-                shape = RoundedCornerShape(10.dp),
+                colors = feedTrackerTextFieldColors(),
+                shape = MaterialTheme.shapes.medium,
             )
 
             // Additional notes
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp),
                 value = additionalNotesTextField,
                 onValueChange = { additionalNotesTextField = it },
                 label = { Text(stringResource(Res.string.notes)) },
@@ -304,7 +293,8 @@ fun NewTrackingScreen(modifier: Modifier = Modifier, onBackButtonClick: () -> Un
                     showKeyboardOnFocus = true,
                     imeAction = ImeAction.Done,
                 ),
-                shape = RoundedCornerShape(10.dp),
+                colors = feedTrackerTextFieldColors(),
+                shape = MaterialTheme.shapes.medium,
             )
         }
 

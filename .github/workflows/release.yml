@@ -141,10 +141,11 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Package MSI
+        shell: bash
         run: >
-          .\gradlew.bat :composeApp:packageReleaseMsi
-          -Pfeedtracker.versionCode=$env:VERSION_CODE
-          -Pfeedtracker.versionName=$env:VERSION_NAME
+          ./gradlew :composeApp:packageReleaseMsi
+          -Pfeedtracker.versionCode=$VERSION_CODE
+          -Pfeedtracker.versionName=$VERSION_NAME
           --stacktrace
 
       - name: Upload MSI

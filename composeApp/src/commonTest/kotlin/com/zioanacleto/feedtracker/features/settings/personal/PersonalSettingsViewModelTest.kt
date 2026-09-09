@@ -1,4 +1,4 @@
-package com.zioanacleto.feedtracker.features.settings
+package com.zioanacleto.feedtracker.features.settings.personal
 
 import com.zioanacleto.feedtracker.domain.auth.AuthMethod
 import com.zioanacleto.feedtracker.domain.auth.AuthSession

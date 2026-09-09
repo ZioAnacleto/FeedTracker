@@ -1,4 +1,4 @@
-package com.zioanacleto.feedtracker.features.settings
+package com.zioanacleto.feedtracker.features.settings.personal
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

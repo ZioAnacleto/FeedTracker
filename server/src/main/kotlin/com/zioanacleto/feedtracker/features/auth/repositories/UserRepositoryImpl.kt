@@ -29,6 +29,15 @@ class UserRepositoryImpl : UserRepository {
         )
     }
 
+    override suspend fun findById(userId: String): UserModel? = transactionDb {
+        val row = UsersTable
+            .selectAll()
+            .where { UsersTable.id eq userId }
+            .singleOrNull()
+            ?: return@transactionDb null
+        row.toUserModel(authMethodsFor(userId, row[UsersTable.authMethod]))
+    }
+
     override suspend fun create(user: NewUser): UserModel = transactionDb {
         UsersTable.insert {
             it[id] = user.id
@@ -60,6 +69,18 @@ class UserRepositoryImpl : UserRepository {
                 it[UsersTable.passwordHash] = passwordHash
             }
         }
+        row.toUserModel(authMethodsFor(userId, row[UsersTable.authMethod]))
+    }
+
+    override suspend fun updateNames(userId: String, firstName: String, lastName: String): UserModel = transactionDb {
+        UsersTable.update({ UsersTable.id eq userId }) {
+            it[UsersTable.firstName] = firstName
+            it[UsersTable.lastName] = lastName
+        }
+        val row = UsersTable
+            .selectAll()
+            .where { UsersTable.id eq userId }
+            .single()
         row.toUserModel(authMethodsFor(userId, row[UsersTable.authMethod]))
     }
 

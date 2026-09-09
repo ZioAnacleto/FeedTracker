@@ -9,6 +9,7 @@ import com.zioanacleto.feedtracker.domain.auth.CompleteEmailRegistrationRequest
 import com.zioanacleto.feedtracker.domain.auth.EmailLoginRequest
 import com.zioanacleto.feedtracker.domain.auth.SocialLoginRequest
 import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
+import com.zioanacleto.feedtracker.domain.auth.UpdateProfileRequest
 import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.features.auth.models.EmailVerificationCode
@@ -312,6 +313,50 @@ class AuthServiceTest :
                 session.user.id shouldBe "user-1"
                 session.user.authMethods shouldBe listOf(AuthMethod.EMAIL, AuthMethod.GOOGLE)
                 coVerify { users.addAuthMethod("user-1", AuthMethod.GOOGLE, null) }
+            }
+
+            it("updates first and last name for an authenticated user") {
+                every { tokens.parseAccessToken("access") } returns AccessTokenClaims(
+                    userId = "user-1",
+                    jti = "jti-1",
+                    expiresAtMillis = 2_000_000L,
+                )
+                coEvery { revokedTokens.isRevoked("jti-1") } returns false
+                coEvery { users.findById("user-1") } returns user
+                val updated = user.copy(firstName = "Luigi", lastName = "Bianchi")
+                coEvery { users.updateNames("user-1", "Luigi", "Bianchi") } returns updated
+
+                val result = runBlocking {
+                    service.updateProfile("access", UpdateProfileRequest(" Luigi ", "Bianchi"))
+                }
+
+                result shouldBe updated
+            }
+
+            it("rejects a blank first name when updating the profile") {
+                every { tokens.parseAccessToken("access") } returns AccessTokenClaims(
+                    userId = "user-1",
+                    jti = "jti-1",
+                    expiresAtMillis = 2_000_000L,
+                )
+                coEvery { revokedTokens.isRevoked("jti-1") } returns false
+
+                shouldThrow<ValidationException> {
+                    runBlocking { service.updateProfile("access", UpdateProfileRequest("  ", "Bianchi")) }
+                }
+            }
+
+            it("rejects a revoked access token when updating the profile") {
+                every { tokens.parseAccessToken("access") } returns AccessTokenClaims(
+                    userId = "user-1",
+                    jti = "jti-1",
+                    expiresAtMillis = 2_000_000L,
+                )
+                coEvery { revokedTokens.isRevoked("jti-1") } returns true
+
+                shouldThrow<UnauthorizedException> {
+                    runBlocking { service.updateProfile("access", UpdateProfileRequest("Luigi", "Bianchi")) }
+                }
             }
 
             it("revokes a valid access token on logout") {

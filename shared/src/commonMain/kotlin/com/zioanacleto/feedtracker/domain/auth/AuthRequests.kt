@@ -27,3 +27,6 @@ data class SocialLoginRequest(val idToken: String, val firstName: String? = null
 
 @Serializable
 data class AuthMethodsResponse(val methods: List<AuthMethod>)
+
+@Serializable
+data class UpdateProfileRequest(val firstName: String, val lastName: String)

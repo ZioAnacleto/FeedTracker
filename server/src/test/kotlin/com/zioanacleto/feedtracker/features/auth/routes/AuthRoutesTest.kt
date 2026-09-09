@@ -15,6 +15,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -157,6 +158,41 @@ class AuthRoutesTest :
                     status shouldBe HttpStatusCode.OK
                     val response = json.decodeFromString<ApiResponse<AuthSession>>(bodyAsText())
                     response.data?.user?.authMethods shouldBe listOf(AuthMethod.GOOGLE)
+                }
+            }
+        }
+
+        test("PATCH /api/auth/profile updates the current user") {
+            val mockAuth = mockk<AuthService>()
+            coEvery { mockAuth.updateProfile("access-token", any()) } returns session.user.copy(
+                firstName = "Luigi",
+                lastName = "Bianchi",
+            )
+
+            testApplication {
+                installTestConfig()
+                application {
+                    testModule {
+                        configureDI(
+                            extraModules = listOf(
+                                module {
+                                    single<AuthService> { mockAuth }
+                                    single<TrackingSessionService> { mockk(relaxed = true) }
+                                },
+                            ),
+                        )
+                    }
+                }
+
+                client.patch("/api/auth/profile") {
+                    header(HttpHeaders.Authorization, "Bearer access-token")
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"firstName":"Luigi","lastName":"Bianchi"}""")
+                }.apply {
+                    status shouldBe HttpStatusCode.OK
+                    val response = json.decodeFromString<ApiResponse<UserModel>>(bodyAsText())
+                    response.data?.firstName shouldBe "Luigi"
+                    response.data?.lastName shouldBe "Bianchi"
                 }
             }
         }

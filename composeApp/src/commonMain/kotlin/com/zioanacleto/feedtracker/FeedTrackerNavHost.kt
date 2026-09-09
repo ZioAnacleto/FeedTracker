@@ -2,6 +2,8 @@ package com.zioanacleto.feedtracker
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -21,8 +23,11 @@ import com.zioanacleto.feedtracker.features.newtracking.NewTrackingScreen
 import com.zioanacleto.feedtracker.features.newtracking.navigation.NewTrackingRoute
 import com.zioanacleto.feedtracker.features.pasttracking.PastTrackingScreen
 import com.zioanacleto.feedtracker.features.pasttracking.navigation.PastTrackingRoute
-import com.zioanacleto.feedtracker.features.settings.PersonalSettingsScreen
-import com.zioanacleto.feedtracker.features.settings.navigation.PersonalSettingsRoute
+import com.zioanacleto.feedtracker.features.settings.personal.PersonalSettingsScreen
+import com.zioanacleto.feedtracker.features.settings.personal.navigation.PersonalSettingsRoute
+import com.zioanacleto.feedtracker.features.settings.profile.ProfileSettingsScreen
+import com.zioanacleto.feedtracker.features.settings.profile.navigation.PROFILE_SAVED_RESULT
+import com.zioanacleto.feedtracker.features.settings.profile.navigation.ProfileSettingsRoute
 
 @Composable
 fun FeedTrackerNavHost(isLoggedIn: Boolean, modifier: Modifier = Modifier) {
@@ -95,10 +100,26 @@ private fun LoggedInNavHost(modifier: Modifier, navController: NavHostController
                 onPersonalSettingsClick = { navController.navigate(PersonalSettingsRoute) },
             )
         }
-        composable<PersonalSettingsRoute> {
+        composable<PersonalSettingsRoute> { entry ->
+            val profileSaved by entry.savedStateHandle
+                .getStateFlow(PROFILE_SAVED_RESULT, false)
+                .collectAsState()
             PersonalSettingsScreen(
                 modifier = Modifier.fillMaxSize(),
                 onBackButtonClick = { navController.popBackStack() },
+                onProfileClick = { navController.navigate(ProfileSettingsRoute) },
+                showProfileSavedMessage = profileSaved,
+                onProfileSavedMessageShown = { entry.savedStateHandle[PROFILE_SAVED_RESULT] = false },
+            )
+        }
+        composable<ProfileSettingsRoute> {
+            ProfileSettingsScreen(
+                modifier = Modifier.fillMaxSize(),
+                onBackButtonClick = { navController.popBackStack() },
+                onSaved = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set(PROFILE_SAVED_RESULT, true)
+                    navController.popBackStack()
+                },
             )
         }
         composable<NewTrackingRoute> { entry ->

@@ -6,6 +6,8 @@ import com.zioanacleto.feedtracker.domain.auth.CompleteEmailRegistrationRequest
 import com.zioanacleto.feedtracker.domain.auth.EmailLoginRequest
 import com.zioanacleto.feedtracker.domain.auth.SocialLoginRequest
 import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
+import com.zioanacleto.feedtracker.domain.auth.UpdateProfileRequest
+import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
 
@@ -17,5 +19,6 @@ interface AuthService {
     suspend fun loginWithEmail(request: EmailLoginRequest): AuthSession
     suspend fun loginWithGoogle(request: SocialLoginRequest): AuthSession
     suspend fun loginWithApple(request: SocialLoginRequest): AuthSession
+    suspend fun updateProfile(accessToken: String, request: UpdateProfileRequest): UserModel
     suspend fun logout(accessToken: String)
 }

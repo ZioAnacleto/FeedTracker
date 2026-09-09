@@ -103,6 +103,10 @@
     <string name="settings_placeholder_privacy">Privacy</string>
     <string name="settings_placeholder_language">Language</string>
     <string name="settings_placeholder_coming_soon">Coming soon</string>
+    <string name="save_profile">Save profile</string>
+    <string name="saving_profile">Saving profile</string>
+    <string name="unable_to_update_profile">Unable to update profile</string>
+    <string name="profile_saved">Profile saved</string>
     <string name="log_out">Log out</string>
     <string name="logging_out">Logging out</string>
     <string name="logout_confirmation">Are you sure you want to log out?</string>

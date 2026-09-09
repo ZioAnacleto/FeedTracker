@@ -93,6 +93,31 @@ class UserRepositoryTest :
                 val found = runBlocking { repository.findByEmail("missing@example.com") }
                 found.shouldBeNull()
             }
+
+            it("updates first and last name") {
+                runBlocking {
+                    repository.create(
+                        NewUser(
+                            id = "user-1",
+                            email = "mario@example.com",
+                            passwordHash = "hashed",
+                            authMethod = AuthMethod.EMAIL.name,
+                            firstName = "Mario",
+                            lastName = "Rossi",
+                            createdAt = 1_000L,
+                        ),
+                    )
+                }
+
+                val updated = runBlocking { repository.updateNames("user-1", "Luigi", "Bianchi") }
+                val found = runBlocking { repository.findById("user-1") }
+
+                updated.firstName shouldBe "Luigi"
+                updated.lastName shouldBe "Bianchi"
+                found?.firstName shouldBe "Luigi"
+                found?.lastName shouldBe "Bianchi"
+                found?.email shouldBe "mario@example.com"
+            }
         }
 
         describe("EmailVerificationRepository") {

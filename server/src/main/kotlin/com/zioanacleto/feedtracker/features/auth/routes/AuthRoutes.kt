@@ -8,6 +8,8 @@ import com.zioanacleto.feedtracker.domain.auth.CompleteEmailRegistrationRequest
 import com.zioanacleto.feedtracker.domain.auth.EmailLoginRequest
 import com.zioanacleto.feedtracker.domain.auth.SocialLoginRequest
 import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
+import com.zioanacleto.feedtracker.domain.auth.UpdateProfileRequest
+import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
 import com.zioanacleto.feedtracker.features.auth.services.AuthService
@@ -19,6 +21,7 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 
@@ -76,6 +79,12 @@ fun Route.authRoutes(authService: AuthService) {
             val request = call.receive<SocialLoginRequest>()
             val session = authService.loginWithApple(request)
             call.respond(ApiResponse<AuthSession>("SUCCESS", "Login successful", session))
+        }
+
+        patch("/profile") {
+            val request = call.receive<UpdateProfileRequest>()
+            val user = authService.updateProfile(call.bearerToken(), request)
+            call.respond(ApiResponse<UserModel>("SUCCESS", "Profile updated", user))
         }
 
         post("/logout") {

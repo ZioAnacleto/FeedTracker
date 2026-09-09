@@ -1,4 +1,4 @@
-package com.zioanacleto.feedtracker.features.settings.navigation
+package com.zioanacleto.feedtracker.features.settings.personal.navigation
 
 import kotlinx.serialization.Serializable
 

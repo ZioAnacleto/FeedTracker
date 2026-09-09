@@ -5,7 +5,8 @@ import com.zioanacleto.feedtracker.features.login.EmailLoginViewModel
 import com.zioanacleto.feedtracker.features.login.EmailSignUpViewModel
 import com.zioanacleto.feedtracker.features.login.LoginMethodsViewModel
 import com.zioanacleto.feedtracker.features.newtracking.NewTrackingViewModel
-import com.zioanacleto.feedtracker.features.settings.PersonalSettingsViewModel
+import com.zioanacleto.feedtracker.features.settings.personal.PersonalSettingsViewModel
+import com.zioanacleto.feedtracker.features.settings.profile.ProfileSettingsViewModel
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -26,6 +27,7 @@ val uiModule = module {
     viewModel { EmailLoginViewModel(get(), get()) }
     viewModel { EmailSignUpViewModel(get(), get()) }
     viewModel { PersonalSettingsViewModel(get(), get()) }
+    viewModel { ProfileSettingsViewModel(get(), get()) }
 }
 
 expect val platformModule: Module

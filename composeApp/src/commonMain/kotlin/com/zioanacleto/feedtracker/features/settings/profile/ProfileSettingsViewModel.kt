@@ -1,4 +1,4 @@
-package com.zioanacleto.feedtracker.features.settings
+package com.zioanacleto.feedtracker.features.settings.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,19 +13,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 
-data class PersonalSettingsUiState(
+data class ProfileSettingsUiState(
     val email: String = "",
     val firstName: String = "",
     val lastName: String = "",
-    val isLoggingOut: Boolean = false,
     val isSaving: Boolean = false,
+    val saveSucceeded: Boolean = false,
     val error: String? = null,
 )
 
-class PersonalSettingsViewModel(private val authRepository: AuthRepository, private val authSessionRepository: AuthSessionRepository) :
+class ProfileSettingsViewModel(private val authRepository: AuthRepository, private val authSessionRepository: AuthSessionRepository) :
     ViewModel() {
     private val _uiState = MutableStateFlow(initialState())
-    val uiState: StateFlow<PersonalSettingsUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ProfileSettingsUiState> = _uiState.asStateFlow()
 
     fun onFirstNameChange(value: String) {
         _uiState.update { it.copy(firstName = value, error = null) }
@@ -39,7 +39,7 @@ class PersonalSettingsViewModel(private val authRepository: AuthRepository, priv
         val current = _uiState.value
         val session = authSessionRepository.session.value
         if (current.isSaving ||
-            current.isLoggingOut ||
+            current.saveSucceeded ||
             session == null ||
             current.firstName.isBlank() ||
             current.lastName.isBlank()
@@ -56,6 +56,7 @@ class PersonalSettingsViewModel(private val authRepository: AuthRepository, priv
                 _uiState.update {
                     it.copy(
                         isSaving = false,
+                        saveSucceeded = true,
                         email = user.email,
                         firstName = user.firstName,
                         lastName = user.lastName,
@@ -72,25 +73,9 @@ class PersonalSettingsViewModel(private val authRepository: AuthRepository, priv
         }
     }
 
-    fun logout() {
-        if (_uiState.value.isLoggingOut || _uiState.value.isSaving) return
-        val accessToken = authSessionRepository.session.value?.accessToken
-        if (accessToken.isNullOrBlank()) {
-            authSessionRepository.clearSession()
-            return
-        }
-
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoggingOut = true) }
-            runCatching { authRepository.logout(accessToken) }
-            authSessionRepository.clearSession()
-            _uiState.update { it.copy(isLoggingOut = false) }
-        }
-    }
-
-    private fun initialState(): PersonalSettingsUiState {
+    private fun initialState(): ProfileSettingsUiState {
         val user = authSessionRepository.session.value?.user
-        return PersonalSettingsUiState(
+        return ProfileSettingsUiState(
             email = user?.email.orEmpty(),
             firstName = user?.firstName.orEmpty(),
             lastName = user?.lastName.orEmpty(),

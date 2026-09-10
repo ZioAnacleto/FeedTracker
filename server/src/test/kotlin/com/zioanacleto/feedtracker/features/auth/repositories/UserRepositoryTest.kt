@@ -118,6 +118,29 @@ class UserRepositoryTest :
                 found?.lastName shouldBe "Bianchi"
                 found?.email shouldBe "mario@example.com"
             }
+
+            it("updates the password and links email login") {
+                runBlocking {
+                    repository.create(
+                        NewUser(
+                            id = "user-1",
+                            email = "mario@example.com",
+                            passwordHash = null,
+                            authMethod = AuthMethod.GOOGLE.name,
+                            firstName = "Mario",
+                            lastName = "Rossi",
+                            createdAt = 1_000L,
+                        ),
+                    )
+                }
+
+                val updated = runBlocking { repository.updatePassword("user-1", "new-hash", 2_000L) }
+                val found = runBlocking { repository.findByEmail("mario@example.com") }
+
+                updated.authMethods shouldBe listOf(AuthMethod.EMAIL, AuthMethod.GOOGLE)
+                found?.passwordHash shouldBe "new-hash"
+                found?.tokensValidAfter shouldBe 2_000L
+            }
         }
 
         describe("EmailVerificationRepository") {
@@ -142,6 +165,44 @@ class UserRepositoryTest :
                 val active = runBlocking { verificationRepository.findActiveByEmail("mario@example.com") }
 
                 active.shouldBeNull()
+            }
+
+            it("increments attempt count on an active code") {
+                val created = runBlocking {
+                    verificationRepository.replaceActiveCode("mario@example.com", "hash-1", 2_000L, 1_000L)
+                }
+
+                runBlocking { verificationRepository.incrementAttempts(created.id) }
+                val active = runBlocking { verificationRepository.findActiveByEmail("mario@example.com") }
+
+                active.shouldNotBeNull()
+                active.attemptCount shouldBe 1
+            }
+
+            it("keeps registration and password reset codes independent") {
+                runBlocking {
+                    verificationRepository.replaceActiveCode(
+                        email = "mario@example.com",
+                        codeHash = "reg-hash",
+                        expiresAt = 2_000L,
+                        createdAt = 1_000L,
+                    )
+                    verificationRepository.replaceActiveCode(
+                        email = "mario@example.com",
+                        codeHash = "reset-hash",
+                        expiresAt = 2_000L,
+                        createdAt = 1_000L,
+                        purpose = "password_reset",
+                    )
+                }
+
+                val registration = runBlocking { verificationRepository.findActiveByEmail("mario@example.com") }
+                val reset = runBlocking {
+                    verificationRepository.findActiveByEmail("mario@example.com", "password_reset")
+                }
+
+                registration?.codeHash shouldBe "reg-hash"
+                reset?.codeHash shouldBe "reset-hash"
             }
         }
     })

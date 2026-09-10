@@ -12,12 +12,14 @@ import java.nio.charset.StandardCharsets
 import java.util.Date
 import java.util.UUID
 
-data class AccessTokenClaims(val userId: String, val jti: String, val expiresAtMillis: Long)
+data class AccessTokenClaims(val userId: String, val jti: String, val expiresAtMillis: Long, val issuedAtMillis: Long)
 
 interface TokenService {
     fun createAccessToken(userId: String, ttlSeconds: Long): String
     fun createRegistrationToken(email: String, ttlSeconds: Long): String
+    fun createPasswordResetToken(email: String, ttlSeconds: Long): String
     fun parseRegistrationToken(token: String): String
+    fun parsePasswordResetToken(token: String): String
     fun parseAccessToken(token: String): AccessTokenClaims
 }
 
@@ -32,12 +34,23 @@ class JwtTokenService(secret: String, private val timeProvider: TimeProvider) : 
     override fun createRegistrationToken(email: String, ttlSeconds: Long): String =
         signedToken(subject = email, type = REGISTRATION, ttlSeconds = ttlSeconds)
 
+    override fun createPasswordResetToken(email: String, ttlSeconds: Long): String =
+        signedToken(subject = email, type = PASSWORD_RESET, ttlSeconds = ttlSeconds)
+
     override fun parseRegistrationToken(token: String): String {
         val claims = parseAndVerify(token, invalidMessage = INVALID_REGISTRATION, expiredMessage = EXPIRED_REGISTRATION)
         if (claims.getStringClaim(TYPE_CLAIM) != REGISTRATION) {
             throw UnauthorizedException(INVALID_REGISTRATION)
         }
         return claims.subject ?: throw UnauthorizedException(INVALID_REGISTRATION)
+    }
+
+    override fun parsePasswordResetToken(token: String): String {
+        val claims = parseAndVerify(token, invalidMessage = INVALID_RESET, expiredMessage = EXPIRED_RESET)
+        if (claims.getStringClaim(TYPE_CLAIM) != PASSWORD_RESET) {
+            throw UnauthorizedException(INVALID_RESET)
+        }
+        return claims.subject ?: throw UnauthorizedException(INVALID_RESET)
     }
 
     override fun parseAccessToken(token: String): AccessTokenClaims {
@@ -48,7 +61,13 @@ class JwtTokenService(secret: String, private val timeProvider: TimeProvider) : 
         val userId = claims.subject ?: throw UnauthorizedException(INVALID_ACCESS)
         val jti = claims.jwtid ?: throw UnauthorizedException(INVALID_ACCESS)
         val expiresAt = claims.expirationTime?.time ?: throw UnauthorizedException(INVALID_ACCESS)
-        return AccessTokenClaims(userId = userId, jti = jti, expiresAtMillis = expiresAt)
+        val issuedAt = claims.issueTime?.time ?: throw UnauthorizedException(INVALID_ACCESS)
+        return AccessTokenClaims(
+            userId = userId,
+            jti = jti,
+            expiresAtMillis = expiresAt,
+            issuedAtMillis = issuedAt,
+        )
     }
 
     private fun signedToken(subject: String, type: String, ttlSeconds: Long, jwtId: String? = null): String {
@@ -88,8 +107,11 @@ class JwtTokenService(secret: String, private val timeProvider: TimeProvider) : 
         private const val TYPE_CLAIM = "typ"
         private const val ACCESS = "access"
         private const val REGISTRATION = "email_registration"
+        private const val PASSWORD_RESET = "password_reset"
         private const val INVALID_REGISTRATION = "Invalid registration token"
         private const val EXPIRED_REGISTRATION = "Registration token expired"
+        private const val INVALID_RESET = "Invalid or expired reset token"
+        private const val EXPIRED_RESET = "Invalid or expired reset token"
         private const val INVALID_ACCESS = "Invalid access token"
         private const val EXPIRED_ACCESS = "Access token expired"
         private const val MIN_SECRET_BYTES = 32

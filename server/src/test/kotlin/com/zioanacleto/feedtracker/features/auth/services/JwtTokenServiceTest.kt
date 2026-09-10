@@ -29,6 +29,41 @@ class JwtTokenServiceTest :
             claims.userId shouldBe "user-1"
             claims.jti.shouldNotBeBlank()
             claims.expiresAtMillis shouldBe 1_700_000_000_000L + 3_600_000
+            claims.issuedAtMillis shouldBe 1_700_000_000_000L
+        }
+
+        test("round-trips a password reset token") {
+            val token = service.createPasswordResetToken("mario@example.com", 900)
+
+            service.parsePasswordResetToken(token) shouldBe "mario@example.com"
+        }
+
+        test("rejects a registration token used as a password reset token") {
+            val token = service.createRegistrationToken("mario@example.com", 900)
+
+            shouldThrow<UnauthorizedException> {
+                service.parsePasswordResetToken(token)
+            }
+        }
+
+        test("rejects an access token used as a password reset token") {
+            val token = service.createAccessToken("user-1", 3600)
+
+            shouldThrow<UnauthorizedException> {
+                service.parsePasswordResetToken(token)
+            }
+        }
+
+        test("rejects an expired password reset token") {
+            val token = service.createPasswordResetToken("mario@example.com", 1)
+            val expiredService = JwtTokenService(
+                "feedtracker-test-jwt-secret-32bytes!",
+                TimeProvider { 1_700_000_000_000L + 2_000 },
+            )
+
+            shouldThrow<UnauthorizedException> {
+                expiredService.parsePasswordResetToken(token)
+            }
         }
 
         test("rejects an expired access token") {

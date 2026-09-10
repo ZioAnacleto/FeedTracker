@@ -15,6 +15,7 @@ fun ResultRow.toUserModel(authMethods: List<AuthMethod>): UserModel = UserModel(
 fun ResultRow.toEmailVerificationCode(): EmailVerificationCode = EmailVerificationCode(
     id = this[EmailVerificationCodesTable.id],
     email = this[EmailVerificationCodesTable.email],
+    purpose = this[EmailVerificationCodesTable.purpose],
     codeHash = this[EmailVerificationCodesTable.codeHash],
     expiresAt = this[EmailVerificationCodesTable.expiresAt],
     attemptCount = this[EmailVerificationCodesTable.attemptCount],

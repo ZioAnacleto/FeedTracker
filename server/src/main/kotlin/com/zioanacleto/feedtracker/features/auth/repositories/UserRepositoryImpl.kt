@@ -26,16 +26,23 @@ class UserRepositoryImpl : UserRepository {
         StoredUser(
             model = row.toUserModel(authMethodsFor(row[UsersTable.id], row[UsersTable.authMethod])),
             passwordHash = row[UsersTable.passwordHash],
+            tokensValidAfter = row[UsersTable.tokensValidAfter],
         )
     }
 
-    override suspend fun findById(userId: String): UserModel? = transactionDb {
+    override suspend fun findById(userId: String): UserModel? = findStoredById(userId)?.model
+
+    override suspend fun findStoredById(userId: String): StoredUser? = transactionDb {
         val row = UsersTable
             .selectAll()
             .where { UsersTable.id eq userId }
             .singleOrNull()
             ?: return@transactionDb null
-        row.toUserModel(authMethodsFor(userId, row[UsersTable.authMethod]))
+        StoredUser(
+            model = row.toUserModel(authMethodsFor(userId, row[UsersTable.authMethod])),
+            passwordHash = row[UsersTable.passwordHash],
+            tokensValidAfter = row[UsersTable.tokensValidAfter],
+        )
     }
 
     override suspend fun create(user: NewUser): UserModel = transactionDb {
@@ -47,6 +54,7 @@ class UserRepositoryImpl : UserRepository {
             it[firstName] = user.firstName
             it[lastName] = user.lastName
             it[createdAt] = user.createdAt
+            it[tokensValidAfter] = 0
         }
         insertAuthMethod(user.id, user.authMethod)
         UserModel(
@@ -77,6 +85,19 @@ class UserRepositoryImpl : UserRepository {
             it[UsersTable.firstName] = firstName
             it[UsersTable.lastName] = lastName
         }
+        val row = UsersTable
+            .selectAll()
+            .where { UsersTable.id eq userId }
+            .single()
+        row.toUserModel(authMethodsFor(userId, row[UsersTable.authMethod]))
+    }
+
+    override suspend fun updatePassword(userId: String, passwordHash: String, tokensValidAfter: Long): UserModel = transactionDb {
+        UsersTable.update({ UsersTable.id eq userId }) {
+            it[UsersTable.passwordHash] = passwordHash
+            it[UsersTable.tokensValidAfter] = tokensValidAfter
+        }
+        insertAuthMethod(userId, AuthMethod.EMAIL.name)
         val row = UsersTable
             .selectAll()
             .where { UsersTable.id eq userId }

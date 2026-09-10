@@ -6,12 +6,14 @@ import com.zioanacleto.feedtracker.domain.auth.AuthMethodsResponse
 import com.zioanacleto.feedtracker.domain.auth.AuthSession
 import com.zioanacleto.feedtracker.domain.auth.CompleteEmailRegistrationRequest
 import com.zioanacleto.feedtracker.domain.auth.EmailLoginRequest
+import com.zioanacleto.feedtracker.domain.auth.ResetPasswordRequest
 import com.zioanacleto.feedtracker.domain.auth.SocialLoginRequest
 import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
 import com.zioanacleto.feedtracker.domain.auth.UpdateProfileRequest
 import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
+import com.zioanacleto.feedtracker.domain.auth.VerifyPasswordResetResponse
 import com.zioanacleto.feedtracker.features.auth.services.AuthService
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -67,6 +69,29 @@ fun Route.authRoutes(authService: AuthService) {
             val request = call.receive<EmailLoginRequest>()
             val session = authService.loginWithEmail(request)
             call.respond(ApiResponse<AuthSession>("SUCCESS", "Login successful", session))
+        }
+
+        post("/email/forgot-password") {
+            val request = call.receive<StartEmailAuthRequest>()
+            authService.startPasswordReset(request)
+            call.respond(
+                HttpStatusCode.Accepted,
+                ApiResponse<Unit>("SUCCESS", "If an account exists, a reset email has been sent"),
+            )
+        }
+
+        post("/email/reset/verify") {
+            val request = call.receive<VerifyEmailCodeRequest>()
+            val result = authService.verifyPasswordResetCode(request)
+            call.respond(
+                ApiResponse<VerifyPasswordResetResponse>("SUCCESS", "Reset code verified", result),
+            )
+        }
+
+        post("/email/reset") {
+            val request = call.receive<ResetPasswordRequest>()
+            val session = authService.resetPassword(request)
+            call.respond(ApiResponse<AuthSession>("SUCCESS", "Password updated", session))
         }
 
         post("/google") {

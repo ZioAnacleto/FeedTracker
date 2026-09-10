@@ -76,6 +76,7 @@ kotlin {
             implementation(libs.kotest.assertions.core)
         }
         jvmMain.dependencies {
+            implementation(projects.shared)
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
         }

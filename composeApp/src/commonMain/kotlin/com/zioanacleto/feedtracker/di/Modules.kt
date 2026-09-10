@@ -7,6 +7,8 @@ import com.zioanacleto.feedtracker.features.login.LoginMethodsViewModel
 import com.zioanacleto.feedtracker.features.newtracking.NewTrackingViewModel
 import com.zioanacleto.feedtracker.features.settings.personal.PersonalSettingsViewModel
 import com.zioanacleto.feedtracker.features.settings.profile.ProfileSettingsViewModel
+import com.zioanacleto.feedtracker.getCurrentTimeMillis
+import com.zioanacleto.feedtracker.widget.ActiveTrackingSessionController
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -21,6 +23,13 @@ fun initKoin(configuration: KoinAppDeclaration? = null): KoinApplication = start
 }
 
 val uiModule = module {
+    single {
+        ActiveTrackingSessionController(
+            store = get(),
+            notifier = get(),
+            clock = { getCurrentTimeMillis() },
+        )
+    }
     viewModel { HomeViewModel(get()) }
     viewModel { NewTrackingViewModel(get()) }
     viewModel { LoginMethodsViewModel(get()) }

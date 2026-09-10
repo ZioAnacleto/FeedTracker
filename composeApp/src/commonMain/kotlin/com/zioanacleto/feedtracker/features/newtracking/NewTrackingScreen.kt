@@ -46,6 +46,8 @@ import com.zioanacleto.feedtracker.getCurrentTimeMillis
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import com.zioanacleto.feedtracker.theme.feedTrackerTextFieldColors
+import com.zioanacleto.feedtracker.widget.ActiveTrackingSessionController
+import com.zioanacleto.feedtracker.widget.TrackingSessionNotificationPermissionEffect
 import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.back
 import feedtracker.composeapp.generated.resources.cancel
@@ -70,6 +72,7 @@ import feedtracker.composeapp.generated.resources.surname_placeholder
 import feedtracker.composeapp.generated.resources.unable_to_save
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -104,11 +107,13 @@ fun NewTrackingScreen(
     var showDiscardDialog by remember { mutableStateOf(false) }
 
     val viewModel = koinViewModel<NewTrackingViewModel>()
+    val activeTrackingSession = koinInject<ActiveTrackingSessionController>()
     val showPopup by viewModel.showPopup.collectAsState()
     val saveState by viewModel.saveState.collectAsState()
 
     LaunchedEffect(saveState) {
         if (saveState is SaveTrackingUiState.Saved) {
+            activeTrackingSession.clear()
             viewModel.consumeSaveState()
             onBackButtonClick()
         }
@@ -121,12 +126,19 @@ fun NewTrackingScreen(
     }
 
     LaunchedEffect(Unit) {
-        startTime = getCurrentTimeMillis()
+        startTime = activeTrackingSession.startOrResume()
         while (isTimerRunning) {
             elapsedTime = getCurrentTimeMillis() - startTime
             delay(10)
         }
     }
+
+    LaunchedEffect(nameTextField.text, surnameTextField.text) {
+        delay(250)
+        activeTrackingSession.updatePerson(nameTextField.text, surnameTextField.text)
+    }
+
+    TrackingSessionNotificationPermissionEffect()
 
     Box(
         modifier = modifier
@@ -320,6 +332,7 @@ fun NewTrackingScreen(
                 Button(
                     onClick = {
                         showDiscardDialog = false
+                        activeTrackingSession.clear()
                         onBackButtonClick()
                     },
                 ) {

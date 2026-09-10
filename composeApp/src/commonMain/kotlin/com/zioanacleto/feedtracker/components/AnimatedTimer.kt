@@ -63,6 +63,15 @@ private fun AnimatedTextView(text: String, name: String, modifier: Modifier = Mo
     }
 }
 
+fun formatElapsedTimerText(millis: Long): String {
+    val (hours, minutes, seconds) = formatElapsedTime(millis)
+    return if (hours != "0") {
+        "$hours:$minutes:$seconds"
+    } else {
+        "$minutes:$seconds"
+    }
+}
+
 internal fun formatElapsedTime(millis: Long): List<String> {
     fun Long.formatTime() = toString().padStart(2, '0')
 

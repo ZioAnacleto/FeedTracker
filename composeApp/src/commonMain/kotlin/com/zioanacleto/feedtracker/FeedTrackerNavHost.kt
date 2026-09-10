@@ -2,10 +2,12 @@ package com.zioanacleto.feedtracker
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -28,6 +30,7 @@ import com.zioanacleto.feedtracker.features.settings.personal.navigation.Persona
 import com.zioanacleto.feedtracker.features.settings.profile.ProfileSettingsScreen
 import com.zioanacleto.feedtracker.features.settings.profile.navigation.PROFILE_SAVED_RESULT
 import com.zioanacleto.feedtracker.features.settings.profile.navigation.ProfileSettingsRoute
+import com.zioanacleto.feedtracker.widget.NewTrackingNavigator
 
 @Composable
 fun FeedTrackerNavHost(isLoggedIn: Boolean, modifier: Modifier = Modifier) {
@@ -71,6 +74,12 @@ private fun LoggedOutNavHost(modifier: Modifier, navController: NavHostControlle
 
 @Composable
 private fun LoggedInNavHost(modifier: Modifier, navController: NavHostController = rememberNavController()) {
+    val openNewTracking by NewTrackingNavigator.openRequested.collectAsState()
+    LaunchedEffect(openNewTracking) {
+        if (!openNewTracking) return@LaunchedEffect
+        navController.openNewTrackingSession()
+        NewTrackingNavigator.consume()
+    }
     NavHost(
         navController = navController,
         modifier = modifier.fillMaxSize(),
@@ -141,4 +150,9 @@ private fun LoggedInNavHost(modifier: Modifier, navController: NavHostController
             )
         }
     }
+}
+
+private fun NavHostController.openNewTrackingSession() {
+    if (currentDestination?.hasRoute<NewTrackingRoute>() == true) return
+    navigate(NewTrackingRoute())
 }

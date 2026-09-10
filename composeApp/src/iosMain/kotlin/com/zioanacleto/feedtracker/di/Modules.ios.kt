@@ -9,6 +9,10 @@ import com.zioanacleto.feedtracker.data.local.JsonPendingSessionsStore
 import com.zioanacleto.feedtracker.data.local.PENDING_TRACKING_SESSIONS_FILE_NAME
 import com.zioanacleto.feedtracker.data.local.PendingSessionsStore
 import com.zioanacleto.feedtracker.network.NetworkMonitor
+import com.zioanacleto.feedtracker.widget.ActiveTrackingSessionNotifier
+import com.zioanacleto.feedtracker.widget.ActiveTrackingSessionStore
+import com.zioanacleto.feedtracker.widget.IosActiveTrackingSessionNotifier
+import com.zioanacleto.feedtracker.widget.IosActiveTrackingSessionStore
 import kotlinx.cinterop.ExperimentalForeignApi
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -19,6 +23,8 @@ import platform.Foundation.NSUserDomainMask
 @OptIn(ExperimentalForeignApi::class)
 actual val platformModule: Module = module {
     single<NetworkMonitor> { IosNetworkMonitor() }
+    single<ActiveTrackingSessionStore> { IosActiveTrackingSessionStore() }
+    single<ActiveTrackingSessionNotifier> { IosActiveTrackingSessionNotifier() }
     single<PendingSessionsStore> {
         val documentsUrl = NSFileManager.defaultManager.URLForDirectory(
             directory = NSDocumentDirectory,

@@ -17,4 +17,10 @@ class ElapsedTimeFormatterTest {
         formatElapsedTime(3_600_000L) shouldBe listOf("01", "00", "00")
         formatElapsedTime(3_661_000L) shouldBe listOf("01", "01", "01")
     }
+
+    @Test
+    fun formatsElapsedTimerTextForWidgetAndDesktop() {
+        formatElapsedTimerText(10_000L) shouldBe "00:10"
+        formatElapsedTimerText(3_661_000L) shouldBe "01:01:01"
+    }
 }

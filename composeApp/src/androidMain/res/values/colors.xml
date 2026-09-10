@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="feedtracker_vermilion_deep">#FF5E0B0B</color>
+    <color name="feedtracker_orange_deep">#FF7A2E0E</color>
+    <color name="feedtracker_bright_orange">#FFFB8C00</color>
+    <color name="feedtracker_on_background">#FFFFFFFF</color>
+</resources>

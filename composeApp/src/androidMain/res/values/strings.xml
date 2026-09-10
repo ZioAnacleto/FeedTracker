@@ -1,3 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">FeedTracker</string>
+    <string name="widget_name">FeedTracker timer</string>
+    <string name="widget_description">Shows the live timer for the active tracking session</string>
+    <string name="widget_tracking_label">Tracking</string>
+    <string name="widget_idle_label">Tap to start</string>
+    <string name="widget_idle_timer">--:--</string>
+    <string name="notification_channel_name">Tracking timer</string>
+    <string name="notification_channel_description">Shows the live timer for the active tracking session</string>
 </resources>

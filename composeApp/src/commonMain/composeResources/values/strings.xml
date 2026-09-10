@@ -110,4 +110,13 @@
     <string name="log_out">Log out</string>
     <string name="logging_out">Logging out</string>
     <string name="logout_confirmation">Are you sure you want to log out?</string>
+    <string name="widget_name">FeedTracker timer</string>
+    <string name="widget_description">Shows the live timer for the active tracking session</string>
+    <string name="widget_tracking_label">Tracking</string>
+    <string name="widget_idle_label">Tap to start</string>
+    <string name="widget_idle_timer">--:--</string>
+    <string name="widget_window_title">FeedTracker timer</string>
+    <string name="tray_new_tracking_session">New tracking session</string>
+    <string name="tray_show_timer_widget">Show timer widget</string>
+    <string name="tray_quit">Quit</string>
 </resources>

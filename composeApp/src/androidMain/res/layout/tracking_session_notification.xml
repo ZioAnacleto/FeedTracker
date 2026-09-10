@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:minHeight="64dp"
+    android:orientation="vertical"
+    android:paddingStart="8dp"
+    android:paddingTop="4dp"
+    android:paddingEnd="8dp"
+    android:paddingBottom="8dp">
+
+    <TextView
+        android:id="@+id/notification_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/widget_tracking_label"
+        android:textColor="@color/feedtracker_on_background"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/notification_person"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/feedtracker_on_background"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <Chronometer
+        android:id="@+id/notification_timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:countDown="false"
+        android:textColor="@color/feedtracker_on_background"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+</LinearLayout>

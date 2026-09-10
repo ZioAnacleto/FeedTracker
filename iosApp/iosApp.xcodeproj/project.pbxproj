@@ -6,8 +6,37 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C4E1D2A01B8C4F6E9A110001 /* TrackingSessionWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C4E1D2A01B8C4F6E9A110002 /* TrackingSessionWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C4E1D2A01B8C4F6E9A110003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5160F75DE4D9F71F405226C5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C4E1D2A01B8C4F6E9A110004;
+			remoteInfo = TrackingSessionWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C4E1D2A01B8C4F6E9A110005 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C4E1D2A01B8C4F6E9A110001 /* TrackingSessionWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		74BF7137F3A786671A6A72DD /* FeedTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FeedTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C4E1D2A01B8C4F6E9A110002 /* TrackingSessionWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TrackingSessionWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -17,6 +46,13 @@
 				Info.plist,
 			);
 			target = 405F301E1AC084BED0EC371C /* iosApp */;
+		};
+		C4E1D2A01B8C4F6E9A110006 /* Exceptions for "TrackingSessionWidget" folder in "TrackingSessionWidget" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C4E1D2A01B8C4F6E9A110004 /* TrackingSessionWidget */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -34,10 +70,30 @@
 			path = Configuration;
 			sourceTree = "<group>";
 		};
+		C4E1D2A01B8C4F6E9A110007 /* TrackingSessionWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C4E1D2A01B8C4F6E9A110006 /* Exceptions for "TrackingSessionWidget" folder in "TrackingSessionWidget" target */,
+			);
+			path = TrackingSessionWidget;
+			sourceTree = "<group>";
+		};
+		C4E1D2A01B8C4F6E9A11000F /* TrackingSessionShared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = TrackingSessionShared;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		DE40F54D5AA7946ED2F07E39 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C4E1D2A01B8C4F6E9A110008 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -52,6 +108,8 @@
 			children = (
 				155193F735B201AF98530FF5 /* Configuration */,
 				AB0E542947EEBB5466115CC9 /* iosApp */,
+				C4E1D2A01B8C4F6E9A11000F /* TrackingSessionShared */,
+				C4E1D2A01B8C4F6E9A110007 /* TrackingSessionWidget */,
 				83F344E0C39FA65B3CAF8C6E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -60,6 +118,7 @@
 			isa = PBXGroup;
 			children = (
 				74BF7137F3A786671A6A72DD /* FeedTracker.app */,
+				C4E1D2A01B8C4F6E9A110002 /* TrackingSessionWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -75,13 +134,16 @@
 				5D8E2B92FE3DF196723F7822 /* Sources */,
 				DE40F54D5AA7946ED2F07E39 /* Frameworks */,
 				770E846A4F62DF61611237C7 /* Resources */,
+				C4E1D2A01B8C4F6E9A110005 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C4E1D2A01B8C4F6E9A110009 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				AB0E542947EEBB5466115CC9 /* iosApp */,
+				C4E1D2A01B8C4F6E9A11000F /* TrackingSessionShared */,
 			);
 			name = iosApp;
 			packageProductDependencies = (
@@ -89,6 +151,29 @@
 			productName = iosApp;
 			productReference = 74BF7137F3A786671A6A72DD /* FeedTracker.app */;
 			productType = "com.apple.product-type.application";
+		};
+		C4E1D2A01B8C4F6E9A110004 /* TrackingSessionWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C4E1D2A01B8C4F6E9A11000A /* Build configuration list for PBXNativeTarget "TrackingSessionWidget" */;
+			buildPhases = (
+				C4E1D2A01B8C4F6E9A11000B /* Sources */,
+				C4E1D2A01B8C4F6E9A110008 /* Frameworks */,
+				C4E1D2A01B8C4F6E9A11000C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C4E1D2A01B8C4F6E9A110007 /* TrackingSessionWidget */,
+				C4E1D2A01B8C4F6E9A11000F /* TrackingSessionShared */,
+			);
+			name = TrackingSessionWidget;
+			packageProductDependencies = (
+			);
+			productName = TrackingSessionWidget;
+			productReference = C4E1D2A01B8C4F6E9A110002 /* TrackingSessionWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -101,6 +186,9 @@
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					405F301E1AC084BED0EC371C = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					C4E1D2A01B8C4F6E9A110004 = {
 						CreatedOnToolsVersion = 16.2;
 					};
 				};
@@ -120,12 +208,20 @@
 			projectRoot = "";
 			targets = (
 				405F301E1AC084BED0EC371C /* iosApp */,
+				C4E1D2A01B8C4F6E9A110004 /* TrackingSessionWidget */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		770E846A4F62DF61611237C7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C4E1D2A01B8C4F6E9A11000C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -164,7 +260,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C4E1D2A01B8C4F6E9A11000B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C4E1D2A01B8C4F6E9A110009 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C4E1D2A01B8C4F6E9A110004 /* TrackingSessionWidget */;
+			targetProxy = C4E1D2A01B8C4F6E9A110003 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		80304D78BBC784D6B24D3F92 /* Debug */ = {
@@ -296,6 +407,7 @@
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
@@ -324,6 +436,7 @@
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
@@ -340,6 +453,60 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C4E1D2A01B8C4F6E9A11000D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TrackingSessionWidget/TrackingSessionWidget.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "${TEAM_ID}";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TrackingSessionWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "FeedTracker timer";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.zioanacleto.feedtracker.FeedTracker$(TEAM_ID).widget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C4E1D2A01B8C4F6E9A11000E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TrackingSessionWidget/TrackingSessionWidget.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "${TEAM_ID}";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TrackingSessionWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "FeedTracker timer";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.zioanacleto.feedtracker.FeedTracker$(TEAM_ID).widget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -363,6 +530,15 @@
 			buildConfigurations = (
 				A168C5A59E615C2C6F154ADC /* Debug */,
 				2260C534B965F225E6AC6A45 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C4E1D2A01B8C4F6E9A11000A /* Build configuration list for PBXNativeTarget "TrackingSessionWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C4E1D2A01B8C4F6E9A11000D /* Debug */,
+				C4E1D2A01B8C4F6E9A11000E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

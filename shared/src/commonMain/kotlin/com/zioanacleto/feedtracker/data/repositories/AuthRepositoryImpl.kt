@@ -9,6 +9,7 @@ import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
 import com.zioanacleto.feedtracker.domain.auth.UpdateProfileRequest
 import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
+import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 import com.zioanacleto.feedtracker.domain.repositories.AuthRepository
 import com.zioanacleto.feedtracker.network.FeedTrackerApiClient
 
@@ -53,6 +54,11 @@ class AuthRepositoryImpl(private val apiClient: FeedTrackerApiClient) : AuthRepo
         accessToken = accessToken,
         request = UpdateProfileRequest(firstName = firstName.trim(), lastName = lastName.trim()),
     )
+
+    override suspend fun getTrackingPreferences(accessToken: String): TrackingPreferences = apiClient.getTrackingPreferences(accessToken)
+
+    override suspend fun updateTrackingPreferences(accessToken: String, preferences: TrackingPreferences): TrackingPreferences =
+        apiClient.updateTrackingPreferences(accessToken, preferences)
 
     override suspend fun logout(accessToken: String) {
         apiClient.logout(accessToken)

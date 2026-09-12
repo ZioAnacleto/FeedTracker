@@ -1,7 +1,9 @@
 package com.zioanacleto.feedtracker.features.home
 
 import app.cash.turbine.test
+import com.zioanacleto.feedtracker.data.repositories.InMemoryTrackingPreferencesRepository
 import com.zioanacleto.feedtracker.domain.core.Resource
+import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 import com.zioanacleto.feedtracker.testutil.FakeTrackingSessionsRepository
 import com.zioanacleto.feedtracker.testutil.runViewModelTest
 import com.zioanacleto.feedtracker.testutil.sampleSession
@@ -228,6 +230,38 @@ class HomeViewModelTest {
                 averageDurationLast7DaysMs = 120_000L,
             ),
         )
+    }
+
+    @Test
+    fun usesConfiguredStartOfDayForTodayStats() = runViewModelTest {
+        val startOfToday = 1_700_000_000_000L
+        val now = startOfToday + 8 * 60 * 60 * 1000L
+        val beforeConfiguredStart = sampleSession(
+            id = "early",
+            sessionStartTime = startOfToday + 60_000L,
+            sessionEndTime = startOfToday + 120_000L,
+        )
+        val afterConfiguredStart = sampleSession(
+            id = "late",
+            sessionStartTime = startOfToday + 7 * 60 * 60 * 1000L,
+            sessionEndTime = startOfToday + 7 * 60 * 60 * 1000L + 60_000L,
+        )
+        val viewModel = HomeViewModel(
+            trackingSessionsRepository = FakeTrackingSessionsRepository(
+                sessions = flowOf(Resource.Success(listOf(beforeConfiguredStart, afterConfiguredStart))),
+            ),
+            trackingPreferencesRepository = InMemoryTrackingPreferencesRepository(
+                TrackingPreferences.Default.copy(dayStartHour = 6),
+            ),
+            clock = { now },
+            startOfLocalDay = { startOfToday },
+        )
+
+        viewModel.loadSessions()
+
+        val stats = (viewModel.uiState.value as HomeUiState.Ready).stats
+        stats.sessionsToday shouldBe 1
+        stats.durationTodayMs shouldBe 60_000L
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.zioanacleto.feedtracker.features.auth.models.EmailVerificationCodesTa
 import com.zioanacleto.feedtracker.features.auth.models.RevokedAccessTokensTable
 import com.zioanacleto.feedtracker.features.auth.models.UserAuthMethodsTable
 import com.zioanacleto.feedtracker.features.auth.models.UsersTable
+import com.zioanacleto.feedtracker.features.trackingpreferences.models.TrackingPreferencesTable
 import com.zioanacleto.feedtracker.features.trackingsessions.models.TrackingSessionsTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -33,6 +34,7 @@ object DatabaseFactory {
                 EmailVerificationCodesTable,
                 UserAuthMethodsTable,
                 RevokedAccessTokensTable,
+                TrackingPreferencesTable,
             )
         }
     }

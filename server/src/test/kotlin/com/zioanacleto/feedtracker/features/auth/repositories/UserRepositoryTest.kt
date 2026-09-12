@@ -7,6 +7,7 @@ import com.zioanacleto.feedtracker.features.auth.models.EmailVerificationCodesTa
 import com.zioanacleto.feedtracker.features.auth.models.NewUser
 import com.zioanacleto.feedtracker.features.auth.models.UserAuthMethodsTable
 import com.zioanacleto.feedtracker.features.auth.models.UsersTable
+import com.zioanacleto.feedtracker.features.trackingpreferences.models.TrackingPreferencesTable
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -37,6 +38,7 @@ class UserRepositoryTest :
             transaction {
                 EmailVerificationCodesTable.deleteAll()
                 UserAuthMethodsTable.deleteAll()
+                TrackingPreferencesTable.deleteAll()
                 UsersTable.deleteAll()
             }
         }

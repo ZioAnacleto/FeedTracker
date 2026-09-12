@@ -14,6 +14,7 @@ import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
 import com.zioanacleto.feedtracker.domain.auth.VerifyPasswordResetResponse
+import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 import com.zioanacleto.feedtracker.features.auth.services.AuthService
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -25,6 +26,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 
 fun Route.authRoutes(authService: AuthService) {
@@ -110,6 +112,17 @@ fun Route.authRoutes(authService: AuthService) {
             val request = call.receive<UpdateProfileRequest>()
             val user = authService.updateProfile(call.bearerToken(), request)
             call.respond(ApiResponse<UserModel>("SUCCESS", "Profile updated", user))
+        }
+
+        get("/tracking-preferences") {
+            val preferences = authService.getTrackingPreferences(call.bearerToken())
+            call.respond(ApiResponse("SUCCESS", "Tracking preferences", preferences))
+        }
+
+        put("/tracking-preferences") {
+            val request = call.receive<TrackingPreferences>()
+            val preferences = authService.updateTrackingPreferences(call.bearerToken(), request)
+            call.respond(ApiResponse("SUCCESS", "Tracking preferences updated", preferences))
         }
 
         post("/logout") {

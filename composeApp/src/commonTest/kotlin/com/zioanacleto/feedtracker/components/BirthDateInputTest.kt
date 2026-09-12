@@ -1,5 +1,6 @@
 package com.zioanacleto.feedtracker.components
 
+import com.zioanacleto.feedtracker.domain.preferences.DateDisplayFormat
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
@@ -41,5 +42,11 @@ class BirthDateInputTest {
     @Test
     fun rejectsInputLongerThanTenCharacters() {
         birthDateChange(oldText = "12/34/5678", newText = "12/34/56789").shouldBeNull()
+    }
+
+    @Test
+    fun insertsSlashesForYearFirstFormat() {
+        formatBirthDateDigits("2026", DateDisplayFormat.YEAR_MONTH_DAY) shouldBe "2026/"
+        formatBirthDateDigits("20260901", DateDisplayFormat.YEAR_MONTH_DAY) shouldBe "2026/09/01"
     }
 }

@@ -1,5 +1,7 @@
 package com.zioanacleto.feedtracker.components
 
+import com.zioanacleto.feedtracker.domain.preferences.DateDisplayFormat
+
 data class CivilDate(val year: Int, val month: Int, val day: Int)
 
 data class LocalDateTimeParts(val date: CivilDate, val hour: Int, val minute: Int)
@@ -12,11 +14,7 @@ expect fun localDateTimeToEpochMillis(date: CivilDate, hour: Int, minute: Int): 
 
 expect fun localDateTimeFromEpochMillis(epochMillis: Long): LocalDateTimeParts
 
-fun formatCivilDate(date: CivilDate): String {
-    val day = date.day.toString().padStart(2, '0')
-    val month = date.month.toString().padStart(2, '0')
-    return "$day/$month/${date.year}"
-}
+fun formatCivilDate(date: CivilDate, format: DateDisplayFormat = DateDisplayFormat.DAY_MONTH_YEAR): String = formatBirthDate(date, format)
 
 fun formatClockTime(hour: Int, minute: Int): String {
     val hours = hour.toString().padStart(2, '0')

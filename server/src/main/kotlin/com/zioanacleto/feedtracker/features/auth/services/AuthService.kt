@@ -12,6 +12,7 @@ import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
 import com.zioanacleto.feedtracker.domain.auth.VerifyPasswordResetResponse
+import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 
 interface AuthService {
     fun availableAuthMethods(): List<AuthMethod>
@@ -25,5 +26,7 @@ interface AuthService {
     suspend fun loginWithGoogle(request: SocialLoginRequest): AuthSession
     suspend fun loginWithApple(request: SocialLoginRequest): AuthSession
     suspend fun updateProfile(accessToken: String, request: UpdateProfileRequest): UserModel
+    suspend fun getTrackingPreferences(accessToken: String): TrackingPreferences
+    suspend fun updateTrackingPreferences(accessToken: String, preferences: TrackingPreferences): TrackingPreferences
     suspend fun logout(accessToken: String)
 }

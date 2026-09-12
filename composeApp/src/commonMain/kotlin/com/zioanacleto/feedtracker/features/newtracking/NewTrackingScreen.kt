@@ -41,7 +41,11 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.zioanacleto.feedtracker.components.AnimatedTimer
 import com.zioanacleto.feedtracker.components.birthDateChange
+import com.zioanacleto.feedtracker.components.canonicalBirthDateFromDisplay
+import com.zioanacleto.feedtracker.components.formatBirthDateForDisplay
 import com.zioanacleto.feedtracker.components.hideKeyboardOnTouch
+import com.zioanacleto.feedtracker.components.placeholder
+import com.zioanacleto.feedtracker.domain.repositories.TrackingPreferencesRepository
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
@@ -55,7 +59,6 @@ import feedtracker.composeapp.generated.resources.clear_date_of_birth
 import feedtracker.composeapp.generated.resources.clear_name
 import feedtracker.composeapp.generated.resources.clear_surname
 import feedtracker.composeapp.generated.resources.date_of_birth
-import feedtracker.composeapp.generated.resources.date_of_birth_placeholder
 import feedtracker.composeapp.generated.resources.discard_session_confirmation
 import feedtracker.composeapp.generated.resources.discard_session_title
 import feedtracker.composeapp.generated.resources.leave
@@ -84,9 +87,15 @@ fun NewTrackingScreen(
     initialBirthDate: String = "",
     onBackButtonClick: () -> Unit,
 ) {
+    val viewModel = koinViewModel<NewTrackingViewModel>()
+    val preferences by koinInject<TrackingPreferencesRepository>().preferences.collectAsState()
+    val dateFormat = preferences.dateFormat
+    val activeTrackingSession = koinInject<ActiveTrackingSessionController>()
     var nameTextField by remember { mutableStateOf(TextFieldValue(initialName)) }
     var surnameTextField by remember { mutableStateOf(TextFieldValue(initialSurname)) }
-    var birthDateTextField by remember { mutableStateOf(TextFieldValue(initialBirthDate)) }
+    var birthDateTextField by remember(dateFormat, initialBirthDate) {
+        mutableStateOf(TextFieldValue(formatBirthDateForDisplay(initialBirthDate, dateFormat)))
+    }
     var additionalNotesTextField by remember { mutableStateOf(TextFieldValue("")) }
 
     val isButtonEnabled by remember {
@@ -106,8 +115,6 @@ fun NewTrackingScreen(
     var isTimerRunning by remember { mutableStateOf(true) }
     var showDiscardDialog by remember { mutableStateOf(false) }
 
-    val viewModel = koinViewModel<NewTrackingViewModel>()
-    val activeTrackingSession = koinInject<ActiveTrackingSessionController>()
     val showPopup by viewModel.showPopup.collectAsState()
     val saveState by viewModel.saveState.collectAsState()
 
@@ -258,7 +265,7 @@ fun NewTrackingScreen(
                     },
                 value = birthDateTextField,
                 onValueChange = fun(input: TextFieldValue) {
-                    val change = birthDateChange(birthDateTextField.text, input.text) ?: return
+                    val change = birthDateChange(birthDateTextField.text, input.text, dateFormat) ?: return
                     birthDateTextField = if (change.placeCursorAtEnd) {
                         input.copy(text = change.text, selection = TextRange(change.text.length))
                     } else {
@@ -267,7 +274,7 @@ fun NewTrackingScreen(
                     if (change.complete) localFocusManager.clearFocus()
                 },
                 label = { Text(stringResource(Res.string.date_of_birth)) },
-                placeholder = { Text(stringResource(Res.string.date_of_birth_placeholder)) },
+                placeholder = { Text(dateFormat.placeholder()) },
                 singleLine = true,
                 trailingIcon = {
                     if (hasBirthDateFocus && birthDateTextField.text.isNotEmpty()) {
@@ -364,7 +371,8 @@ fun NewTrackingScreen(
                         viewModel.saveNewTracking(
                             name = nameTextField.text,
                             surname = surnameTextField.text,
-                            birthDate = birthDateTextField.text,
+                            birthDate = canonicalBirthDateFromDisplay(birthDateTextField.text, dateFormat)
+                                ?: birthDateTextField.text,
                             additionalNotes = additionalNotesTextField.text,
                             startTime = startTime,
                             endTime = stopTime,

@@ -6,10 +6,10 @@ import platform.Foundation.NSTimeZone
 import platform.Foundation.dateWithTimeIntervalSince1970
 import platform.Foundation.localTimeZone
 
-actual fun formatSessionDateTime(epochMillis: Long): String {
+actual fun formatSessionDateTime(epochMillis: Long, datePattern: String): String {
     val date = NSDate.dateWithTimeIntervalSince1970(epochMillis / 1000.0)
     val formatter = NSDateFormatter()
-    formatter.dateFormat = "dd/MM/yyyy HH:mm"
+    formatter.dateFormat = datePattern
     formatter.timeZone = NSTimeZone.localTimeZone
     return formatter.stringFromDate(date)
 }

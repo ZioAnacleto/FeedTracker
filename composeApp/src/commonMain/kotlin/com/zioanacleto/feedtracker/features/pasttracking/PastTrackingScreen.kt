@@ -51,7 +51,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.zioanacleto.feedtracker.components.DurationDial
 import com.zioanacleto.feedtracker.components.birthDateChange
+import com.zioanacleto.feedtracker.components.canonicalBirthDateFromDisplay
 import com.zioanacleto.feedtracker.components.civilDateFromUtcEpochMillis
+import com.zioanacleto.feedtracker.components.formatBirthDateForDisplay
 import com.zioanacleto.feedtracker.components.formatCivilDate
 import com.zioanacleto.feedtracker.components.formatClockTime
 import com.zioanacleto.feedtracker.components.hideKeyboardOnTouch
@@ -60,9 +62,12 @@ import com.zioanacleto.feedtracker.components.isPastTrackingSaveEnabled
 import com.zioanacleto.feedtracker.components.isSelectablePastUtcDate
 import com.zioanacleto.feedtracker.components.localDateTimeFromEpochMillis
 import com.zioanacleto.feedtracker.components.localDateTimeToEpochMillis
+import com.zioanacleto.feedtracker.components.placeholder
 import com.zioanacleto.feedtracker.components.startPartsAfterDurationChange
 import com.zioanacleto.feedtracker.components.startPartsKeepingSessionInPast
 import com.zioanacleto.feedtracker.components.utcEpochMillisFromCivilDate
+import com.zioanacleto.feedtracker.domain.preferences.DateDisplayFormat
+import com.zioanacleto.feedtracker.domain.repositories.TrackingPreferencesRepository
 import com.zioanacleto.feedtracker.features.newtracking.NewTrackingViewModel
 import com.zioanacleto.feedtracker.features.newtracking.SaveTrackingUiState
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
@@ -77,7 +82,6 @@ import feedtracker.composeapp.generated.resources.clear_date_of_birth
 import feedtracker.composeapp.generated.resources.clear_name
 import feedtracker.composeapp.generated.resources.clear_surname
 import feedtracker.composeapp.generated.resources.date_of_birth
-import feedtracker.composeapp.generated.resources.date_of_birth_placeholder
 import feedtracker.composeapp.generated.resources.discard_session_confirmation
 import feedtracker.composeapp.generated.resources.discard_session_title
 import feedtracker.composeapp.generated.resources.leave
@@ -97,6 +101,7 @@ import feedtracker.composeapp.generated.resources.surname
 import feedtracker.composeapp.generated.resources.surname_placeholder
 import feedtracker.composeapp.generated.resources.unable_to_save
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 private const val DEFAULT_DURATION_MS = 15L * 60L * 1000L
@@ -115,9 +120,18 @@ fun PastTrackingScreen(
         localDateTimeFromEpochMillis((nowMillis - DEFAULT_DURATION_MS).coerceAtLeast(0L))
     }
 
+    val viewModel = koinViewModel<NewTrackingViewModel>()
+    val preferences by koinInject<TrackingPreferencesRepository>().preferences.collectAsState()
+    val dateFormat = preferences.dateFormat
+    val showPopup by viewModel.showPopup.collectAsState()
+    val saveState by viewModel.saveState.collectAsState()
+    val localFocusManager = LocalFocusManager.current
+
     var nameTextField by remember { mutableStateOf(TextFieldValue(initialName)) }
     var surnameTextField by remember { mutableStateOf(TextFieldValue(initialSurname)) }
-    var birthDateTextField by remember { mutableStateOf(TextFieldValue(initialBirthDate)) }
+    var birthDateTextField by remember(dateFormat, initialBirthDate) {
+        mutableStateOf(TextFieldValue(formatBirthDateForDisplay(initialBirthDate, dateFormat)))
+    }
     var additionalNotesTextField by remember { mutableStateOf(TextFieldValue("")) }
     var sessionDate by remember { mutableStateOf(initialParts.date) }
     var startHour by remember { mutableIntStateOf(initialParts.hour) }
@@ -145,11 +159,6 @@ fun PastTrackingScreen(
         birthDate = birthDateTextField.text,
         isPastSession = isPastSession,
     )
-
-    val viewModel = koinViewModel<NewTrackingViewModel>()
-    val showPopup by viewModel.showPopup.collectAsState()
-    val saveState by viewModel.saveState.collectAsState()
-    val localFocusManager = LocalFocusManager.current
 
     LaunchedEffect(saveState) {
         if (saveState is SaveTrackingUiState.Saved) {
@@ -240,6 +249,7 @@ fun PastTrackingScreen(
                 onSurnameFocus = { hasSurnameFocus = it },
                 onBirthDateFocus = { hasBirthDateFocus = it },
                 onBirthDateComplete = { localFocusManager.clearFocus() },
+                dateFormat = dateFormat,
             )
 
             val pickerFieldColors = feedTrackerTextFieldColors()
@@ -248,7 +258,7 @@ fun PastTrackingScreen(
                     .fillMaxWidth()
                     .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp)
                     .clickable { showDatePicker = true },
-                value = formatCivilDate(sessionDate),
+                value = formatCivilDate(sessionDate, dateFormat),
                 onValueChange = {},
                 enabled = false,
                 colors = pickerFieldColors,
@@ -427,7 +437,8 @@ fun PastTrackingScreen(
                         viewModel.saveNewTracking(
                             name = nameTextField.text,
                             surname = surnameTextField.text,
-                            birthDate = birthDateTextField.text,
+                            birthDate = canonicalBirthDateFromDisplay(birthDateTextField.text, dateFormat)
+                                ?: birthDateTextField.text,
                             additionalNotes = additionalNotesTextField.text,
                             startTime = startMillis,
                             endTime = startMillis + durationMs,
@@ -480,6 +491,7 @@ private fun PersonNameFields(
     onSurnameFocus: (Boolean) -> Unit,
     onBirthDateFocus: (Boolean) -> Unit,
     onBirthDateComplete: () -> Unit,
+    dateFormat: DateDisplayFormat,
 ) {
     OutlinedTextField(
         modifier = Modifier
@@ -548,7 +560,7 @@ private fun PersonNameFields(
             .onFocusChanged { onBirthDateFocus(it.hasFocus) },
         value = birthDateTextField,
         onValueChange = fun(input: TextFieldValue) {
-            val change = birthDateChange(birthDateTextField.text, input.text) ?: return
+            val change = birthDateChange(birthDateTextField.text, input.text, dateFormat) ?: return
             if (change.placeCursorAtEnd) {
                 onBirthDateChange(input.copy(text = change.text, selection = TextRange(change.text.length)))
             } else {
@@ -557,7 +569,7 @@ private fun PersonNameFields(
             if (change.complete) onBirthDateComplete()
         },
         label = { Text(stringResource(Res.string.date_of_birth)) },
-        placeholder = { Text(stringResource(Res.string.date_of_birth_placeholder)) },
+        placeholder = { Text(dateFormat.placeholder()) },
         singleLine = true,
         trailingIcon = {
             if (hasBirthDateFocus && birthDateTextField.text.isNotEmpty()) {

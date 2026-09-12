@@ -8,6 +8,8 @@ import com.zioanacleto.feedtracker.domain.auth.AuthSession
 import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
 import com.zioanacleto.feedtracker.domain.auth.VerifyPasswordResetResponse
+import com.zioanacleto.feedtracker.domain.preferences.DateDisplayFormat
+import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 import com.zioanacleto.feedtracker.features.auth.services.AuthService
 import com.zioanacleto.feedtracker.features.trackingsessions.services.TrackingSessionService
 import com.zioanacleto.feedtracker.installTestConfig
@@ -18,6 +20,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
@@ -310,6 +313,74 @@ class AuthRoutesTest :
                     val response = json.decodeFromString<ApiResponse<UserModel>>(bodyAsText())
                     response.data?.firstName shouldBe "Luigi"
                     response.data?.lastName shouldBe "Bianchi"
+                }
+            }
+        }
+
+        test("GET /api/auth/tracking-preferences returns the current user settings") {
+            val mockAuth = mockk<AuthService>()
+            coEvery { mockAuth.getTrackingPreferences("access-token") } returns TrackingPreferences(
+                dateFormat = DateDisplayFormat.YEAR_MONTH_DAY,
+                dayStartHour = 5,
+            )
+
+            testApplication {
+                installTestConfig()
+                application {
+                    testModule {
+                        configureDI(
+                            extraModules = listOf(
+                                module {
+                                    single<AuthService> { mockAuth }
+                                    single<TrackingSessionService> { mockk(relaxed = true) }
+                                },
+                            ),
+                        )
+                    }
+                }
+
+                client.get("/api/auth/tracking-preferences") {
+                    header(HttpHeaders.Authorization, "Bearer access-token")
+                }.apply {
+                    status shouldBe HttpStatusCode.OK
+                    val response = json.decodeFromString<ApiResponse<TrackingPreferences>>(bodyAsText())
+                    response.data?.dateFormat shouldBe DateDisplayFormat.YEAR_MONTH_DAY
+                    response.data?.dayStartHour shouldBe 5
+                }
+            }
+        }
+
+        test("PUT /api/auth/tracking-preferences updates the current user settings") {
+            val mockAuth = mockk<AuthService>()
+            coEvery { mockAuth.updateTrackingPreferences("access-token", any()) } returns TrackingPreferences(
+                dayStartHour = 7,
+                dayStartMinute = 15,
+            )
+
+            testApplication {
+                installTestConfig()
+                application {
+                    testModule {
+                        configureDI(
+                            extraModules = listOf(
+                                module {
+                                    single<AuthService> { mockAuth }
+                                    single<TrackingSessionService> { mockk(relaxed = true) }
+                                },
+                            ),
+                        )
+                    }
+                }
+
+                client.put("/api/auth/tracking-preferences") {
+                    header(HttpHeaders.Authorization, "Bearer access-token")
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"dateFormat":"DAY_MONTH_YEAR","dayStartHour":7,"dayStartMinute":15}""")
+                }.apply {
+                    status shouldBe HttpStatusCode.OK
+                    val response = json.decodeFromString<ApiResponse<TrackingPreferences>>(bodyAsText())
+                    response.data?.dayStartHour shouldBe 7
+                    response.data?.dayStartMinute shouldBe 15
                 }
             }
         }

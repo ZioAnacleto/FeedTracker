@@ -2,6 +2,13 @@ package com.zioanacleto.feedtracker.network
 
 import com.zioanacleto.feedtracker.common.models.ApiResponse
 import com.zioanacleto.feedtracker.domain.CreateTrackingSessionRequest
+import com.zioanacleto.feedtracker.domain.auth.AuthMethod
+import com.zioanacleto.feedtracker.domain.auth.AuthSession
+import com.zioanacleto.feedtracker.domain.auth.ResetPasswordRequest
+import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
+import com.zioanacleto.feedtracker.domain.auth.UserModel
+import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
+import com.zioanacleto.feedtracker.domain.auth.VerifyPasswordResetResponse
 import com.zioanacleto.feedtracker.testutil.trackingSession
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -78,6 +85,57 @@ class FeedTrackerApiClientTest {
         )
 
         client.deleteTrackingSession("session-1")
+    }
+
+    @Test
+    fun startPasswordResetPostsToForgotPassword() = runTest {
+        val client = apiClient(
+            expectedMethod = HttpMethod.Post,
+            expectedPath = "/api/auth/email/forgot-password",
+            status = HttpStatusCode.Accepted,
+            body = json.encodeToString(ApiResponse<String?>("SUCCESS", "sent")),
+        )
+
+        client.startPasswordReset(StartEmailAuthRequest("mario@example.com"))
+    }
+
+    @Test
+    fun verifyPasswordResetCodeReturnsToken() = runTest {
+        val client = apiClient(
+            expectedMethod = HttpMethod.Post,
+            expectedPath = "/api/auth/email/reset/verify",
+            body = json.encodeToString(
+                ApiResponse(
+                    status = "SUCCESS",
+                    message = "ok",
+                    data = VerifyPasswordResetResponse("reset-token"),
+                ),
+            ),
+        )
+
+        client.verifyPasswordResetCode(VerifyEmailCodeRequest("mario@example.com", "123456"))
+            .resetToken shouldBe "reset-token"
+    }
+
+    @Test
+    fun resetPasswordReturnsSession() = runTest {
+        val session = AuthSession(
+            user = UserModel(
+                id = "user-1",
+                email = "mario@example.com",
+                authMethods = listOf(AuthMethod.EMAIL),
+                firstName = "Mario",
+                lastName = "Rossi",
+            ),
+            accessToken = "access-token",
+        )
+        val client = apiClient(
+            expectedMethod = HttpMethod.Post,
+            expectedPath = "/api/auth/email/reset",
+            body = json.encodeToString(ApiResponse("SUCCESS", "ok", session)),
+        )
+
+        client.resetPassword(ResetPasswordRequest("reset-token", "password2")) shouldBe session
     }
 
     @Test

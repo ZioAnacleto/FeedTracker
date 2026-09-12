@@ -10,6 +10,7 @@ object UsersTable : Table("users") {
     val firstName = varchar("first_name", 255)
     val lastName = varchar("last_name", 255)
     val createdAt = long("created_at")
+    val tokensValidAfter = long("tokens_valid_after").default(0)
 
     override val primaryKey = PrimaryKey(id)
 }

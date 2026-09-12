@@ -19,6 +19,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -44,6 +45,7 @@ import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.back
 import feedtracker.composeapp.generated.resources.email
 import feedtracker.composeapp.generated.resources.email_placeholder
+import feedtracker.composeapp.generated.resources.forgot_password
 import feedtracker.composeapp.generated.resources.log_in
 import feedtracker.composeapp.generated.resources.logging_in
 import feedtracker.composeapp.generated.resources.password
@@ -52,7 +54,12 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun EmailLoginScreen(modifier: Modifier = Modifier, viewModel: EmailLoginViewModel = koinViewModel(), onBackButtonClick: () -> Unit) {
+fun EmailLoginScreen(
+    modifier: Modifier = Modifier,
+    viewModel: EmailLoginViewModel = koinViewModel(),
+    onBackButtonClick: () -> Unit,
+    onForgotPasswordClick: () -> Unit,
+) {
     val uiState by viewModel.uiState.collectAsState()
     val passwordFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
@@ -142,7 +149,15 @@ fun EmailLoginScreen(modifier: Modifier = Modifier, viewModel: EmailLoginViewMod
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                    onClick = onForgotPasswordClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !uiState.isLoggingIn,
+                ) {
+                    Text(stringResource(Res.string.forgot_password))
+                }
+                Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = {
                         focusManager.clearFocus()

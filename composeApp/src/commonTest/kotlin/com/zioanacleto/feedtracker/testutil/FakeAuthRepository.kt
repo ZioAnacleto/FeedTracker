@@ -23,9 +23,14 @@ class FakeAuthRepository(
     private val startRegistrationError: Throwable? = null,
     private val verifyError: Throwable? = null,
     private val completeError: Throwable? = null,
+    private val startPasswordResetError: Throwable? = null,
+    private val verifyPasswordResetError: Throwable? = null,
+    private val resetPasswordError: Throwable? = null,
     private val loginDelayMillis: Long = 0,
     private val startRegistrationDelayMillis: Long = 0,
     private val verifyDelayMillis: Long = 0,
+    private val startPasswordResetDelayMillis: Long = 0,
+    private val resetToken: String = "reset-token",
     private val logoutDelayMillis: Long = 0,
     private val updateProfileDelayMillis: Long = 0,
     private val registrationToken: String = "reg-token",
@@ -40,6 +45,12 @@ class FakeAuthRepository(
     var verifyCalls = 0
         private set
     var completeCalls = 0
+        private set
+    var startPasswordResetCalls = 0
+        private set
+    var verifyPasswordResetCalls = 0
+        private set
+    var resetPasswordCalls = 0
         private set
     var lastStartedEmail: String? = null
         private set
@@ -99,6 +110,31 @@ class FakeAuthRepository(
             delay(loginDelayMillis)
         }
         loginError?.let { throw it }
+        return session
+    }
+
+    override suspend fun startPasswordReset(email: String) {
+        startPasswordResetCalls += 1
+        lastStartedEmail = email
+        if (startPasswordResetDelayMillis > 0) {
+            delay(startPasswordResetDelayMillis)
+        }
+        startPasswordResetError?.let { throw it }
+    }
+
+    override suspend fun verifyPasswordResetCode(email: String, code: String): String {
+        verifyPasswordResetCalls += 1
+        lastVerifiedCode = code
+        if (verifyDelayMillis > 0) {
+            delay(verifyDelayMillis)
+        }
+        verifyPasswordResetError?.let { throw it }
+        return resetToken
+    }
+
+    override suspend fun resetPassword(resetToken: String, password: String): AuthSession {
+        resetPasswordCalls += 1
+        resetPasswordError?.let { throw it }
         return session
     }
 

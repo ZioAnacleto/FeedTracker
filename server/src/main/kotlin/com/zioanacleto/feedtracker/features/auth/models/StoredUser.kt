@@ -12,4 +12,4 @@ data class NewUser(
     val createdAt: Long,
 )
 
-data class StoredUser(val model: UserModel, val passwordHash: String?)
+data class StoredUser(val model: UserModel, val passwordHash: String?, val tokensValidAfter: Long = 0)

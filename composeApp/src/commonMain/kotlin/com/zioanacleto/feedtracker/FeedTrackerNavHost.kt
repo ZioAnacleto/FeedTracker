@@ -17,9 +17,11 @@ import com.zioanacleto.feedtracker.features.home.HomeScreen
 import com.zioanacleto.feedtracker.features.home.navigation.HomeRoute
 import com.zioanacleto.feedtracker.features.login.EmailLoginScreen
 import com.zioanacleto.feedtracker.features.login.EmailSignUpScreen
+import com.zioanacleto.feedtracker.features.login.ForgotPasswordScreen
 import com.zioanacleto.feedtracker.features.login.LoginMethodsScreen
 import com.zioanacleto.feedtracker.features.login.navigation.EmailLoginRoute
 import com.zioanacleto.feedtracker.features.login.navigation.EmailSignUpRoute
+import com.zioanacleto.feedtracker.features.login.navigation.ForgotPasswordRoute
 import com.zioanacleto.feedtracker.features.login.navigation.LoginRoute
 import com.zioanacleto.feedtracker.features.newtracking.NewTrackingScreen
 import com.zioanacleto.feedtracker.features.newtracking.navigation.NewTrackingRoute
@@ -65,6 +67,13 @@ private fun LoggedOutNavHost(modifier: Modifier, navController: NavHostControlle
         }
         composable<EmailLoginRoute> {
             EmailLoginScreen(
+                modifier = Modifier.fillMaxSize(),
+                onBackButtonClick = { navController.popBackStack() },
+                onForgotPasswordClick = { navController.navigate(ForgotPasswordRoute) },
+            )
+        }
+        composable<ForgotPasswordRoute> {
+            ForgotPasswordScreen(
                 modifier = Modifier.fillMaxSize(),
                 onBackButtonClick = { navController.popBackStack() },
             )

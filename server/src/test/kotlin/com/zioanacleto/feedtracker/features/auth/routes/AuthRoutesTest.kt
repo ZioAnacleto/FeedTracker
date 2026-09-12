@@ -7,6 +7,7 @@ import com.zioanacleto.feedtracker.domain.auth.AuthMethodsResponse
 import com.zioanacleto.feedtracker.domain.auth.AuthSession
 import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
+import com.zioanacleto.feedtracker.domain.auth.VerifyPasswordResetResponse
 import com.zioanacleto.feedtracker.features.auth.services.AuthService
 import com.zioanacleto.feedtracker.features.trackingsessions.services.TrackingSessionService
 import com.zioanacleto.feedtracker.installTestConfig
@@ -126,6 +127,122 @@ class AuthRoutesTest :
                     status shouldBe HttpStatusCode.OK
                     val response = json.decodeFromString<ApiResponse<VerifyEmailCodeResponse>>(bodyAsText())
                     response.data?.registrationToken shouldBe "reg-token"
+                }
+            }
+        }
+
+        test("POST /api/auth/email/login returns a session") {
+            val mockAuth = mockk<AuthService>()
+            coEvery { mockAuth.loginWithEmail(any()) } returns session
+
+            testApplication {
+                installTestConfig()
+                application {
+                    testModule {
+                        configureDI(
+                            extraModules = listOf(
+                                module {
+                                    single<AuthService> { mockAuth }
+                                    single<TrackingSessionService> { mockk(relaxed = true) }
+                                },
+                            ),
+                        )
+                    }
+                }
+
+                client.post("/api/auth/email/login") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"email":"mario@example.com","password":"password1"}""")
+                }.apply {
+                    status shouldBe HttpStatusCode.OK
+                }
+            }
+        }
+
+        test("POST /api/auth/email/forgot-password returns 202") {
+            val mockAuth = mockk<AuthService>()
+            coEvery { mockAuth.startPasswordReset(any()) } returns Unit
+
+            testApplication {
+                installTestConfig()
+                application {
+                    testModule {
+                        configureDI(
+                            extraModules = listOf(
+                                module {
+                                    single<AuthService> { mockAuth }
+                                    single<TrackingSessionService> { mockk(relaxed = true) }
+                                },
+                            ),
+                        )
+                    }
+                }
+
+                client.post("/api/auth/email/forgot-password") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"email":"mario@example.com"}""")
+                }.apply {
+                    status shouldBe HttpStatusCode.Accepted
+                }
+            }
+        }
+
+        test("POST /api/auth/email/reset/verify returns a reset token") {
+            val mockAuth = mockk<AuthService>()
+            coEvery { mockAuth.verifyPasswordResetCode(any()) } returns VerifyPasswordResetResponse("reset-token")
+
+            testApplication {
+                installTestConfig()
+                application {
+                    testModule {
+                        configureDI(
+                            extraModules = listOf(
+                                module {
+                                    single<AuthService> { mockAuth }
+                                    single<TrackingSessionService> { mockk(relaxed = true) }
+                                },
+                            ),
+                        )
+                    }
+                }
+
+                client.post("/api/auth/email/reset/verify") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"email":"mario@example.com","code":"123456"}""")
+                }.apply {
+                    status shouldBe HttpStatusCode.OK
+                    val response = json.decodeFromString<ApiResponse<VerifyPasswordResetResponse>>(bodyAsText())
+                    response.data?.resetToken shouldBe "reset-token"
+                }
+            }
+        }
+
+        test("POST /api/auth/email/reset returns a session") {
+            val mockAuth = mockk<AuthService>()
+            coEvery { mockAuth.resetPassword(any()) } returns session
+
+            testApplication {
+                installTestConfig()
+                application {
+                    testModule {
+                        configureDI(
+                            extraModules = listOf(
+                                module {
+                                    single<AuthService> { mockAuth }
+                                    single<TrackingSessionService> { mockk(relaxed = true) }
+                                },
+                            ),
+                        )
+                    }
+                }
+
+                client.post("/api/auth/email/reset") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"resetToken":"reset-token","password":"password2"}""")
+                }.apply {
+                    status shouldBe HttpStatusCode.OK
+                    val response = json.decodeFromString<ApiResponse<AuthSession>>(bodyAsText())
+                    response.data?.accessToken shouldBe "access-token"
                 }
             }
         }

@@ -6,6 +6,7 @@ import com.zioanacleto.feedtracker.domain.auth.AuthMethodsResponse
 import com.zioanacleto.feedtracker.domain.auth.AuthSession
 import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
+import com.zioanacleto.feedtracker.domain.auth.VerifyPasswordResetResponse
 import com.zioanacleto.feedtracker.network.FeedTrackerApiClient
 import com.zioanacleto.feedtracker.network.installFeedTrackerJson
 import io.kotest.matchers.shouldBe
@@ -198,6 +199,74 @@ class AuthRepositoryImplTest {
 
         repository.logout("access-token")
         authorization shouldBe "Bearer access-token"
+    }
+
+    @Test
+    fun startPasswordResetPostsToForgotPassword() = runTest {
+        var posted = false
+        val engine = MockEngine { request ->
+            request.method shouldBe HttpMethod.Post
+            request.url.encodedPath shouldBe "/api/auth/email/forgot-password"
+            posted = true
+            respond(
+                content = ByteReadChannel(json.encodeToString(ApiResponse<String?>("SUCCESS", "sent"))),
+                status = HttpStatusCode.Accepted,
+                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+            )
+        }
+
+        val repository = AuthRepositoryImpl(apiClient(engine))
+
+        repository.startPasswordReset(" mario@example.com ")
+        posted shouldBe true
+    }
+
+    @Test
+    fun verifyPasswordResetCodePostsToResetVerify() = runTest {
+        var posted = false
+        val engine = MockEngine { request ->
+            request.method shouldBe HttpMethod.Post
+            request.url.encodedPath shouldBe "/api/auth/email/reset/verify"
+            posted = true
+            respond(
+                content = ByteReadChannel(
+                    json.encodeToString(
+                        ApiResponse(
+                            status = "SUCCESS",
+                            message = "ok",
+                            data = VerifyPasswordResetResponse("reset-token"),
+                        ),
+                    ),
+                ),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+            )
+        }
+
+        val repository = AuthRepositoryImpl(apiClient(engine))
+
+        repository.verifyPasswordResetCode("mario@example.com", "123456") shouldBe "reset-token"
+        posted shouldBe true
+    }
+
+    @Test
+    fun resetPasswordPostsToEmailReset() = runTest {
+        var posted = false
+        val engine = MockEngine { request ->
+            request.method shouldBe HttpMethod.Post
+            request.url.encodedPath shouldBe "/api/auth/email/reset"
+            posted = true
+            respond(
+                content = ByteReadChannel(json.encodeToString(ApiResponse("SUCCESS", "ok", session))),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+            )
+        }
+
+        val repository = AuthRepositoryImpl(apiClient(engine))
+
+        repository.resetPassword("reset-token", "password2") shouldBe session
+        posted shouldBe true
     }
 
     private fun apiClient(engine: MockEngine) = FeedTrackerApiClient(

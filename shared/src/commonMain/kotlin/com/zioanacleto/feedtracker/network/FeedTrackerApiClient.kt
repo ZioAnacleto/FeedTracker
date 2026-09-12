@@ -7,11 +7,13 @@ import com.zioanacleto.feedtracker.domain.auth.AuthMethodsResponse
 import com.zioanacleto.feedtracker.domain.auth.AuthSession
 import com.zioanacleto.feedtracker.domain.auth.CompleteEmailRegistrationRequest
 import com.zioanacleto.feedtracker.domain.auth.EmailLoginRequest
+import com.zioanacleto.feedtracker.domain.auth.ResetPasswordRequest
 import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
 import com.zioanacleto.feedtracker.domain.auth.UpdateProfileRequest
 import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
+import com.zioanacleto.feedtracker.domain.auth.VerifyPasswordResetResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
@@ -57,6 +59,29 @@ class FeedTrackerApiClient(val httpClient: HttpClient, private val baseUrl: Stri
 
     suspend fun loginWithEmail(request: EmailLoginRequest): AuthSession = execute {
         httpClient.post("$authUrl/email/login") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+    }
+
+    suspend fun startPasswordReset(request: StartEmailAuthRequest) {
+        executeNoContent {
+            httpClient.post("$authUrl/email/forgot-password") {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+        }
+    }
+
+    suspend fun verifyPasswordResetCode(request: VerifyEmailCodeRequest): VerifyPasswordResetResponse = execute {
+        httpClient.post("$authUrl/email/reset/verify") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+    }
+
+    suspend fun resetPassword(request: ResetPasswordRequest): AuthSession = execute {
+        httpClient.post("$authUrl/email/reset") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }

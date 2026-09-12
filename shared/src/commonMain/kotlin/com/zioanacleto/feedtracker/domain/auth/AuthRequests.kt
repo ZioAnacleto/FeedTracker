@@ -30,3 +30,9 @@ data class AuthMethodsResponse(val methods: List<AuthMethod>)
 
 @Serializable
 data class UpdateProfileRequest(val firstName: String, val lastName: String)
+
+@Serializable
+data class ResetPasswordRequest(val resetToken: String, val password: String)
+
+@Serializable
+data class VerifyPasswordResetResponse(val resetToken: String)

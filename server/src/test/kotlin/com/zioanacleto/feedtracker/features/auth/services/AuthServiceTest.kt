@@ -7,6 +7,7 @@ import com.zioanacleto.feedtracker.config.AuthConfig
 import com.zioanacleto.feedtracker.domain.auth.AuthMethod
 import com.zioanacleto.feedtracker.domain.auth.CompleteEmailRegistrationRequest
 import com.zioanacleto.feedtracker.domain.auth.EmailLoginRequest
+import com.zioanacleto.feedtracker.domain.auth.ResetPasswordRequest
 import com.zioanacleto.feedtracker.domain.auth.SocialLoginRequest
 import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
 import com.zioanacleto.feedtracker.domain.auth.UpdateProfileRequest
@@ -95,7 +96,7 @@ class AuthServiceTest :
             it("sends a verification code for a new email") {
                 coEvery { users.findByEmail("mario@example.com") } returns null
                 every { codes.generate() } returns "123456"
-                coEvery { verifications.replaceActiveCode(any(), any(), any(), any()) } returns mockk()
+                coEvery { verifications.replaceActiveCode(any(), any(), any(), any(), any()) } returns mockk()
                 coEvery { emailSender.sendVerification(any(), any(), any()) } returns Unit
 
                 runBlocking { service.startEmailRegistration(StartEmailAuthRequest("Mario@Example.com")) }
@@ -113,7 +114,7 @@ class AuthServiceTest :
                 val googleUser = user.copy(authMethods = listOf(AuthMethod.GOOGLE))
                 coEvery { users.findByEmail("mario@example.com") } returns StoredUser(googleUser, null)
                 every { codes.generate() } returns "123456"
-                coEvery { verifications.replaceActiveCode(any(), any(), any(), any()) } returns mockk()
+                coEvery { verifications.replaceActiveCode(any(), any(), any(), any(), any()) } returns mockk()
                 coEvery { emailSender.sendVerification(any(), any(), any()) } returns Unit
 
                 runBlocking { service.startEmailRegistration(StartEmailAuthRequest("mario@example.com")) }
@@ -136,9 +137,10 @@ class AuthServiceTest :
             }
 
             it("returns a registration token when the code matches") {
-                coEvery { verifications.findActiveByEmail("mario@example.com") } returns EmailVerificationCode(
+                coEvery { verifications.findActiveByEmail("mario@example.com", any()) } returns EmailVerificationCode(
                     id = "code-1",
                     email = "mario@example.com",
+                    purpose = "registration",
                     codeHash = "will-be-replaced",
                     expiresAt = 2_000_000L,
                     attemptCount = 0,
@@ -150,13 +152,14 @@ class AuthServiceTest :
                 val hashSlot = slot<String>()
                 coEvery { users.findByEmail(any()) } returns null
                 every { codes.generate() } returns "123456"
-                coEvery { verifications.replaceActiveCode(any(), capture(hashSlot), any(), any()) } returns mockk()
+                coEvery { verifications.replaceActiveCode(any(), capture(hashSlot), any(), any(), any()) } returns mockk()
                 coEvery { emailSender.sendVerification(any(), any(), any()) } returns Unit
                 runBlocking { service.startEmailRegistration(StartEmailAuthRequest("mario@example.com")) }
 
-                coEvery { verifications.findActiveByEmail("mario@example.com") } returns EmailVerificationCode(
+                coEvery { verifications.findActiveByEmail("mario@example.com", any()) } returns EmailVerificationCode(
                     id = "code-1",
                     email = "mario@example.com",
+                    purpose = "registration",
                     codeHash = hashSlot.captured,
                     expiresAt = 2_000_000L,
                     attemptCount = 0,
@@ -173,9 +176,10 @@ class AuthServiceTest :
             }
 
             it("rejects a wrong verification code") {
-                coEvery { verifications.findActiveByEmail("mario@example.com") } returns EmailVerificationCode(
+                coEvery { verifications.findActiveByEmail("mario@example.com", any()) } returns EmailVerificationCode(
                     id = "code-1",
                     email = "mario@example.com",
+                    purpose = "registration",
                     codeHash = "abc",
                     expiresAt = 2_000_000L,
                     attemptCount = 0,
@@ -320,8 +324,10 @@ class AuthServiceTest :
                     userId = "user-1",
                     jti = "jti-1",
                     expiresAtMillis = 2_000_000L,
+                    issuedAtMillis = 1_000_000L,
                 )
                 coEvery { revokedTokens.isRevoked("jti-1") } returns false
+                coEvery { users.findStoredById("user-1") } returns StoredUser(user, "hashed")
                 coEvery { users.findById("user-1") } returns user
                 val updated = user.copy(firstName = "Luigi", lastName = "Bianchi")
                 coEvery { users.updateNames("user-1", "Luigi", "Bianchi") } returns updated
@@ -338,8 +344,10 @@ class AuthServiceTest :
                     userId = "user-1",
                     jti = "jti-1",
                     expiresAtMillis = 2_000_000L,
+                    issuedAtMillis = 1_000_000L,
                 )
                 coEvery { revokedTokens.isRevoked("jti-1") } returns false
+                coEvery { users.findStoredById("user-1") } returns StoredUser(user, "hashed")
 
                 shouldThrow<ValidationException> {
                     runBlocking { service.updateProfile("access", UpdateProfileRequest("  ", "Bianchi")) }
@@ -351,6 +359,7 @@ class AuthServiceTest :
                     userId = "user-1",
                     jti = "jti-1",
                     expiresAtMillis = 2_000_000L,
+                    issuedAtMillis = 1_000_000L,
                 )
                 coEvery { revokedTokens.isRevoked("jti-1") } returns true
 
@@ -364,6 +373,7 @@ class AuthServiceTest :
                     userId = "user-1",
                     jti = "jti-1",
                     expiresAtMillis = 2_000_000L,
+                    issuedAtMillis = 1_000_000L,
                 )
 
                 runBlocking { service.logout("access") }
@@ -376,6 +386,168 @@ class AuthServiceTest :
 
                 shouldThrow<UnauthorizedException> {
                     runBlocking { service.logout("bad") }
+                }
+            }
+
+            it("sends a password reset code for an email account without revealing existence") {
+                coEvery { users.findByEmail("mario@example.com") } returns StoredUser(user, "hashed")
+                coEvery { verifications.findActiveByEmail("mario@example.com", any()) } returns null
+                every { codes.generate() } returns "123456"
+                coEvery { verifications.replaceActiveCode(any(), any(), any(), any(), any()) } returns mockk()
+                coEvery { emailSender.sendPasswordReset(any(), any(), any(), any()) } returns Unit
+
+                runBlocking { service.startPasswordReset(StartEmailAuthRequest("Mario@Example.com")) }
+
+                coVerify {
+                    emailSender.sendPasswordReset(
+                        "mario@example.com",
+                        "123456",
+                        "feedtracker://auth/verify?email=mario%40example.com&code=123456&purpose=reset",
+                        false,
+                    )
+                }
+            }
+
+            it("does not send a reset email when the address is unknown") {
+                coEvery { users.findByEmail("ghost@example.com") } returns null
+
+                runBlocking { service.startPasswordReset(StartEmailAuthRequest("ghost@example.com")) }
+
+                coVerify(exactly = 0) { emailSender.sendPasswordReset("ghost@example.com", any(), any(), any()) }
+                coVerify(exactly = 0) { verifications.replaceActiveCode("ghost@example.com", any(), any(), any(), any()) }
+            }
+
+            it("invites SSO-only accounts to set a password") {
+                val googleUser = user.copy(authMethods = listOf(AuthMethod.GOOGLE))
+                coEvery { users.findByEmail("mario@example.com") } returns StoredUser(googleUser, null)
+                coEvery { verifications.findActiveByEmail("mario@example.com", any()) } returns null
+                every { codes.generate() } returns "123456"
+                coEvery { verifications.replaceActiveCode(any(), any(), any(), any(), any()) } returns mockk()
+                coEvery { emailSender.sendPasswordReset(any(), any(), any(), any()) } returns Unit
+
+                runBlocking { service.startPasswordReset(StartEmailAuthRequest("mario@example.com")) }
+
+                coVerify { emailSender.sendPasswordReset("mario@example.com", "123456", any(), true) }
+            }
+
+            it("rate-limits password reset emails") {
+                coEvery { users.findByEmail("limited@example.com") } returns StoredUser(user, "hashed")
+                coEvery { verifications.findActiveByEmail("limited@example.com", any()) } returns EmailVerificationCode(
+                    id = "code-1",
+                    email = "limited@example.com",
+                    purpose = "password_reset",
+                    codeHash = "hash",
+                    expiresAt = 2_000_000L,
+                    attemptCount = 0,
+                    consumedAt = null,
+                    createdAt = 980_000L,
+                )
+
+                runBlocking { service.startPasswordReset(StartEmailAuthRequest("limited@example.com")) }
+
+                coVerify(exactly = 0) { emailSender.sendPasswordReset("limited@example.com", any(), any(), any()) }
+            }
+
+            it("returns a reset token when the reset code matches") {
+                val hashSlot = slot<String>()
+                coEvery { users.findByEmail("mario@example.com") } returns StoredUser(user, "hashed")
+                coEvery { verifications.findActiveByEmail("mario@example.com", any()) } returns null
+                every { codes.generate() } returns "123456"
+                coEvery { verifications.replaceActiveCode(any(), capture(hashSlot), any(), any(), any()) } returns mockk()
+                coEvery { emailSender.sendPasswordReset(any(), any(), any(), any()) } returns Unit
+                every { tokens.createPasswordResetToken("mario@example.com", 900) } returns "reset-token"
+                runBlocking { service.startPasswordReset(StartEmailAuthRequest("mario@example.com")) }
+
+                coEvery { verifications.findActiveByEmail("mario@example.com", any()) } returns EmailVerificationCode(
+                    id = "code-1",
+                    email = "mario@example.com",
+                    purpose = "password_reset",
+                    codeHash = hashSlot.captured,
+                    expiresAt = 2_000_000L,
+                    attemptCount = 0,
+                    consumedAt = null,
+                    createdAt = 1L,
+                )
+
+                val result = runBlocking {
+                    service.verifyPasswordResetCode(VerifyEmailCodeRequest("mario@example.com", "123456"))
+                }
+
+                result.resetToken shouldBe "reset-token"
+            }
+
+            it("updates the password and invalidates previous sessions") {
+                every { tokens.parsePasswordResetToken("reset-token") } returns "mario@example.com"
+                coEvery { users.findByEmail("mario@example.com") } returns StoredUser(user, "old-hash")
+                every { passwordHasher.hash("password2") } returns "new-hash"
+                coEvery { users.updatePassword("user-1", "new-hash", 1_000_000L) } returns user
+                every { tokens.createAccessToken("user-1", 3600) } returns "new-access"
+
+                val session = runBlocking {
+                    service.resetPassword(ResetPasswordRequest("reset-token", "password2"))
+                }
+
+                session.accessToken shouldBe "new-access"
+                coVerify { users.updatePassword("user-1", "new-hash", 1_000_000L) }
+            }
+
+            it("does not fail the request when the reset email cannot be sent") {
+                coEvery { users.findByEmail("mario@example.com") } returns StoredUser(user, "hashed")
+                coEvery { verifications.findActiveByEmail("mario@example.com", any()) } returns null
+                every { codes.generate() } returns "123456"
+                coEvery { verifications.replaceActiveCode(any(), any(), any(), any(), any()) } returns mockk()
+                coEvery { emailSender.sendPasswordReset(any(), any(), any(), any()) } throws RuntimeException("smtp down")
+
+                runBlocking { service.startPasswordReset(StartEmailAuthRequest("mario@example.com")) }
+            }
+
+            it("increments attempts when the reset code does not match") {
+                coEvery { verifications.findActiveByEmail("mario@example.com", any()) } returns EmailVerificationCode(
+                    id = "code-1",
+                    email = "mario@example.com",
+                    purpose = "password_reset",
+                    codeHash = "abc",
+                    expiresAt = 2_000_000L,
+                    attemptCount = 0,
+                    consumedAt = null,
+                    createdAt = 1L,
+                )
+
+                shouldThrow<UnauthorizedException> {
+                    runBlocking { service.verifyPasswordResetCode(VerifyEmailCodeRequest("mario@example.com", "000000")) }
+                }
+                coVerify { verifications.incrementAttempts("code-1") }
+            }
+
+            it("rejects a reset token for an unknown email") {
+                every { tokens.parsePasswordResetToken("reset-token") } returns "ghost@example.com"
+                coEvery { users.findByEmail("ghost@example.com") } returns null
+
+                shouldThrow<UnauthorizedException> {
+                    runBlocking { service.resetPassword(ResetPasswordRequest("reset-token", "password2")) }
+                }
+            }
+
+            it("rejects a short password during reset") {
+                every { tokens.parsePasswordResetToken("reset-token") } returns "mario@example.com"
+
+                shouldThrow<ValidationException> {
+                    runBlocking { service.resetPassword(ResetPasswordRequest("reset-token", "short")) }
+                }
+            }
+
+            it("rejects an access token issued before a password reset") {
+                every { tokens.parseAccessToken("access") } returns AccessTokenClaims(
+                    userId = "user-1",
+                    jti = "jti-1",
+                    expiresAtMillis = 2_000_000L,
+                    issuedAtMillis = 900_000L,
+                )
+                coEvery { revokedTokens.isRevoked("jti-1") } returns false
+                coEvery { users.findStoredById("user-1") } returns StoredUser(user, "hashed", tokensValidAfter = 1_000_000L)
+
+                shouldThrow<UnauthorizedException> {
+                    runBlocking { service.updateProfile("access", UpdateProfileRequest("Luigi", "Bianchi")) }
                 }
             }
         }

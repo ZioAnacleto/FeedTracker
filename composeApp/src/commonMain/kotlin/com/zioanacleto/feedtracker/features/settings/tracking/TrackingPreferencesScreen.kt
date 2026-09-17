@@ -282,7 +282,11 @@ fun TrackingPreferencesScreen(
                             OutlinedTextField(
                                 value = birthDateField,
                                 onValueChange = { input ->
-                                    val change = birthDateChange(birthDateField.text, input.text, uiState.dateFormat) ?: return@OutlinedTextField
+                                    val change = birthDateChange(
+                                        birthDateField.text,
+                                        input.text,
+                                        uiState.dateFormat,
+                                    ) ?: return@OutlinedTextField
                                     birthDateField = if (change.placeCursorAtEnd) {
                                         input.copy(text = change.text, selection = TextRange(change.text.length))
                                     } else {
@@ -334,11 +338,7 @@ fun TrackingPreferencesScreen(
 }
 
 @Composable
-private fun PreferenceSection(
-    title: String,
-    description: String,
-    content: @Composable ColumnScope.() -> Unit,
-) {
+private fun PreferenceSection(title: String, description: String, content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -364,13 +364,7 @@ private fun PreferenceSection(
 }
 
 @Composable
-private fun CompactChoice(
-    modifier: Modifier = Modifier,
-    label: String,
-    selected: Boolean,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
+private fun CompactChoice(modifier: Modifier = Modifier, label: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Surface(
         modifier = modifier.selectable(
@@ -399,13 +393,7 @@ private fun CompactChoice(
 }
 
 @Composable
-private fun DetailedChoice(
-    title: String,
-    subtitle: String,
-    selected: Boolean,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
+private fun DetailedChoice(title: String, subtitle: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Surface(
         modifier = Modifier

@@ -6,8 +6,11 @@ import com.zioanacleto.feedtracker.data.local.AuthSessionStore
 import com.zioanacleto.feedtracker.data.local.FileTextStore
 import com.zioanacleto.feedtracker.data.local.JsonAuthSessionStore
 import com.zioanacleto.feedtracker.data.local.JsonPendingSessionsStore
+import com.zioanacleto.feedtracker.data.local.JsonTrackingPreferencesStore
 import com.zioanacleto.feedtracker.data.local.PENDING_TRACKING_SESSIONS_FILE_NAME
 import com.zioanacleto.feedtracker.data.local.PendingSessionsStore
+import com.zioanacleto.feedtracker.data.local.TRACKING_PREFERENCES_FILE_NAME
+import com.zioanacleto.feedtracker.data.local.TrackingPreferencesStore
 import com.zioanacleto.feedtracker.network.NetworkMonitor
 import com.zioanacleto.feedtracker.widget.ActiveTrackingSessionNotifier
 import com.zioanacleto.feedtracker.widget.ActiveTrackingSessionStore
@@ -30,6 +33,11 @@ actual val platformModule: Module = module {
     single<AuthSessionStore> {
         JsonAuthSessionStore(
             FileTextStore(File(androidContext().filesDir, AUTH_SESSION_FILE_NAME).absolutePath),
+        )
+    }
+    single<TrackingPreferencesStore> {
+        JsonTrackingPreferencesStore(
+            FileTextStore(File(androidContext().filesDir, TRACKING_PREFERENCES_FILE_NAME).absolutePath),
         )
     }
 }

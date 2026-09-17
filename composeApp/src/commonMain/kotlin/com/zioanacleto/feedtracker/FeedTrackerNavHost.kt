@@ -32,6 +32,9 @@ import com.zioanacleto.feedtracker.features.settings.personal.navigation.Persona
 import com.zioanacleto.feedtracker.features.settings.profile.ProfileSettingsScreen
 import com.zioanacleto.feedtracker.features.settings.profile.navigation.PROFILE_SAVED_RESULT
 import com.zioanacleto.feedtracker.features.settings.profile.navigation.ProfileSettingsRoute
+import com.zioanacleto.feedtracker.features.settings.tracking.TrackingPreferencesScreen
+import com.zioanacleto.feedtracker.features.settings.tracking.navigation.TRACKING_PREFERENCES_SAVED_RESULT
+import com.zioanacleto.feedtracker.features.settings.tracking.navigation.TrackingPreferencesRoute
 import com.zioanacleto.feedtracker.widget.NewTrackingNavigator
 
 @Composable
@@ -122,12 +125,20 @@ private fun LoggedInNavHost(modifier: Modifier, navController: NavHostController
             val profileSaved by entry.savedStateHandle
                 .getStateFlow(PROFILE_SAVED_RESULT, false)
                 .collectAsState()
+            val trackingPreferencesSaved by entry.savedStateHandle
+                .getStateFlow(TRACKING_PREFERENCES_SAVED_RESULT, false)
+                .collectAsState()
             PersonalSettingsScreen(
                 modifier = Modifier.fillMaxSize(),
                 onBackButtonClick = { navController.popBackStack() },
                 onProfileClick = { navController.navigate(ProfileSettingsRoute) },
+                onTrackingPreferencesClick = { navController.navigate(TrackingPreferencesRoute) },
                 showProfileSavedMessage = profileSaved,
                 onProfileSavedMessageShown = { entry.savedStateHandle[PROFILE_SAVED_RESULT] = false },
+                showTrackingPreferencesSavedMessage = trackingPreferencesSaved,
+                onTrackingPreferencesSavedMessageShown = {
+                    entry.savedStateHandle[TRACKING_PREFERENCES_SAVED_RESULT] = false
+                },
             )
         }
         composable<ProfileSettingsRoute> {
@@ -136,6 +147,16 @@ private fun LoggedInNavHost(modifier: Modifier, navController: NavHostController
                 onBackButtonClick = { navController.popBackStack() },
                 onSaved = {
                     navController.previousBackStackEntry?.savedStateHandle?.set(PROFILE_SAVED_RESULT, true)
+                    navController.popBackStack()
+                },
+            )
+        }
+        composable<TrackingPreferencesRoute> {
+            TrackingPreferencesScreen(
+                modifier = Modifier.fillMaxSize(),
+                onBackButtonClick = { navController.popBackStack() },
+                onSaved = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set(TRACKING_PREFERENCES_SAVED_RESULT, true)
                     navController.popBackStack()
                 },
             )

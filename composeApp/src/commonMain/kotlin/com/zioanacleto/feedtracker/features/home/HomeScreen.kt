@@ -63,10 +63,16 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.zioanacleto.feedtracker.components.AddSessionExpandableFab
 import com.zioanacleto.feedtracker.components.TitleWithName
 import com.zioanacleto.feedtracker.components.UserAvatarButton
+import com.zioanacleto.feedtracker.components.durationDisplayParts
+import com.zioanacleto.feedtracker.components.formatBirthDateForDisplay
 import com.zioanacleto.feedtracker.components.formatSessionDateTime
 import com.zioanacleto.feedtracker.components.userInitials
 import com.zioanacleto.feedtracker.domain.TrackingSessionModel
+import com.zioanacleto.feedtracker.domain.preferences.DurationDisplayFormat
+import com.zioanacleto.feedtracker.domain.preferences.PersonIdentity
+import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 import com.zioanacleto.feedtracker.domain.repositories.AuthSessionRepository
+import com.zioanacleto.feedtracker.domain.repositories.TrackingPreferencesRepository
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
 import com.zioanacleto.feedtracker.theme.feedTrackerCardColors
@@ -79,6 +85,7 @@ import feedtracker.composeapp.generated.resources.collapse_person_sessions
 import feedtracker.composeapp.generated.resources.delete_session
 import feedtracker.composeapp.generated.resources.duration
 import feedtracker.composeapp.generated.resources.duration_format
+import feedtracker.composeapp.generated.resources.duration_format_hours_minutes
 import feedtracker.composeapp.generated.resources.expand_person_sessions
 import feedtracker.composeapp.generated.resources.home_tab_all_sessions
 import feedtracker.composeapp.generated.resources.home_tab_overview
@@ -117,12 +124,14 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = koinViewModel(),
     authSessionRepository: AuthSessionRepository = koinInject(),
+    trackingPreferencesRepository: TrackingPreferencesRepository = koinInject(),
     onNewTrackingClick: (name: String, surname: String, birthDate: String) -> Unit,
     onPastTrackingClick: (name: String, surname: String, birthDate: String) -> Unit,
     onPersonalSettingsClick: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val session by authSessionRepository.session.collectAsState()
+    val preferences by trackingPreferencesRepository.preferences.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
     var addMenuExpanded by remember { mutableStateOf(false) }
     val initials = remember(session) {
@@ -202,6 +211,7 @@ fun HomeScreen(
                         onSessionClick = viewModel::selectSession,
                         onNewTrackingClick = onNewTrackingClick,
                         onPastTrackingClick = onPastTrackingClick,
+                        preferences = preferences,
                     )
 
                     state.selectedSession?.let { session ->
@@ -227,17 +237,12 @@ fun HomeScreen(
         }
 
         val lastPerson = (uiState as? HomeUiState.Ready)?.recentSessions?.firstOrNull()
+        val prefill = sessionPrefill(preferences, lastPerson)
         AddSessionExpandableFab(
             expanded = addMenuExpanded,
             onExpandedChange = { addMenuExpanded = it },
-            onNewSessionClick = { onNewTrackingClick("", "", "") },
-            onPastSessionClick = {
-                onPastTrackingClick(
-                    lastPerson?.name.orEmpty(),
-                    lastPerson?.surname.orEmpty(),
-                    lastPerson?.birthDate.orEmpty(),
-                )
-            },
+            onNewSessionClick = { onNewTrackingClick(prefill.name, prefill.surname, prefill.birthDate) },
+            onPastSessionClick = { onPastTrackingClick(prefill.name, prefill.surname, prefill.birthDate) },
             modifier = Modifier
                 .padding(end = 10.dp, bottom = 20.dp)
                 .align(Alignment.BottomEnd),
@@ -280,8 +285,10 @@ private fun HomeReadyTabs(
     onSessionClick: (TrackingSessionModel) -> Unit,
     onNewTrackingClick: (String, String, String) -> Unit,
     onPastTrackingClick: (String, String, String) -> Unit,
+    preferences: TrackingPreferences,
 ) {
     var selectedTab by remember { mutableIntStateOf(TAB_OVERVIEW) }
+    val prefill = sessionPrefill(preferences, state.recentSessions.firstOrNull())
 
     Column(modifier = Modifier.fillMaxSize()) {
         HomeTabChipSelector(
@@ -294,13 +301,14 @@ private fun HomeReadyTabs(
                 onSessionClick = onSessionClick,
                 onNewTrackingClick = onNewTrackingClick,
                 onPastTrackingClick = onPastTrackingClick,
+                preferences = preferences,
             )
             else -> AllSessionsTab(
                 state = state,
                 onToggleGroup = onToggleGroup,
                 onSessionClick = onSessionClick,
-                onStartFirstSession = { onNewTrackingClick("", "", "") },
-                onLogPastSession = { onPastTrackingClick("", "", "") },
+                onStartFirstSession = { onNewTrackingClick(prefill.name, prefill.surname, prefill.birthDate) },
+                onLogPastSession = { onPastTrackingClick(prefill.name, prefill.surname, prefill.birthDate) },
             )
         }
     }
@@ -368,11 +376,13 @@ private fun OverviewTab(
     onSessionClick: (TrackingSessionModel) -> Unit,
     onNewTrackingClick: (String, String, String) -> Unit,
     onPastTrackingClick: (String, String, String) -> Unit,
+    preferences: TrackingPreferences,
 ) {
+    val prefill = sessionPrefill(preferences, state.recentSessions.firstOrNull())
     if (state.recentSessions.isEmpty()) {
         EmptySessionsState(
-            onStartFirstSession = { onNewTrackingClick("", "", "") },
-            onLogPastSession = { onPastTrackingClick("", "", "") },
+            onStartFirstSession = { onNewTrackingClick(prefill.name, prefill.surname, prefill.birthDate) },
+            onLogPastSession = { onPastTrackingClick(prefill.name, prefill.surname, prefill.birthDate) },
         )
         return
     }
@@ -531,7 +541,7 @@ private fun LastSessionCard(session: TrackingSessionModel, onQuickStart: () -> U
             Text(
                 text = stringResource(
                     Res.string.session_date,
-                    formatSessionDateTime(session.sessionStartTime),
+                    formatSessionDateTime(session.sessionStartTime, rememberTrackingPreferences().dateFormat),
                 ),
                 style = MaterialTheme.typography.bodyMedium,
             )
@@ -726,11 +736,11 @@ private fun SessionDetailDialog(
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(stringResource(Res.string.born_date, session.birthDate))
+                Text(stringResource(Res.string.born_date, displayedBirthDate(session.birthDate)))
                 Text(
                     stringResource(
                         Res.string.session_date,
-                        formatSessionDateTime(session.sessionStartTime),
+                        formatSessionDateTime(session.sessionStartTime, rememberTrackingPreferences().dateFormat),
                     ),
                 )
                 Text(
@@ -806,7 +816,7 @@ private fun TrackingSessionGroupCard(
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                        text = stringResource(Res.string.born_date, group.birthDate),
+                        text = stringResource(Res.string.born_date, displayedBirthDate(group.birthDate)),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Text(
@@ -874,14 +884,14 @@ private fun TrackingSessionDetails(session: TrackingSessionModel, modifier: Modi
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(
-                text = stringResource(Res.string.born_date, session.birthDate),
+                text = stringResource(Res.string.born_date, displayedBirthDate(session.birthDate)),
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
         Text(
             text = stringResource(
                 Res.string.session_date,
-                formatSessionDateTime(session.sessionStartTime),
+                formatSessionDateTime(session.sessionStartTime, rememberTrackingPreferences().dateFormat),
             ),
             style = MaterialTheme.typography.bodyMedium,
         )
@@ -907,8 +917,29 @@ private fun formatDuration(startTime: Long, endTime: Long): String = formatDurat
 
 @Composable
 private fun formatDurationMillis(durationMs: Long): String {
-    val totalSeconds = durationMs.coerceAtLeast(0L) / 1000
-    val minutes = (totalSeconds / 60).toInt()
-    val seconds = (totalSeconds % 60).toInt()
-    return stringResource(Res.string.duration_format, minutes, seconds)
+    val preferences = rememberTrackingPreferences()
+    val parts = durationDisplayParts(durationMs, preferences.durationFormat)
+    return when (preferences.durationFormat) {
+        DurationDisplayFormat.MINUTES_SECONDS ->
+            stringResource(Res.string.duration_format, parts.first, parts.second)
+        DurationDisplayFormat.HOURS_MINUTES ->
+            stringResource(Res.string.duration_format_hours_minutes, parts.first, parts.second)
+    }
+}
+
+@Composable
+private fun displayedBirthDate(canonical: String): String = formatBirthDateForDisplay(canonical, rememberTrackingPreferences().dateFormat)
+
+@Composable
+private fun rememberTrackingPreferences(): TrackingPreferences {
+    val repository = koinInject<TrackingPreferencesRepository>()
+    val preferences by repository.preferences.collectAsState()
+    return preferences
+}
+
+private fun sessionPrefill(preferences: TrackingPreferences, lastSession: TrackingSessionModel?): PersonIdentity {
+    val fallback = lastSession?.let {
+        PersonIdentity(name = it.name, surname = it.surname, birthDate = it.birthDate)
+    } ?: PersonIdentity()
+    return preferences.prefillPerson().orFallback(fallback)
 }

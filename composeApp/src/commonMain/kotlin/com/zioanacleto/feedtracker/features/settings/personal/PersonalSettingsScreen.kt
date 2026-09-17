@@ -58,6 +58,8 @@ import feedtracker.composeapp.generated.resources.settings_placeholder_language
 import feedtracker.composeapp.generated.resources.settings_placeholder_notifications
 import feedtracker.composeapp.generated.resources.settings_placeholder_privacy
 import feedtracker.composeapp.generated.resources.settings_placeholder_profile
+import feedtracker.composeapp.generated.resources.tracking_preferences
+import feedtracker.composeapp.generated.resources.tracking_preferences_saved
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -68,17 +70,33 @@ fun PersonalSettingsScreen(
     viewModel: PersonalSettingsViewModel = koinViewModel(),
     onBackButtonClick: () -> Unit,
     onProfileClick: () -> Unit,
+    onTrackingPreferencesClick: () -> Unit,
     showProfileSavedMessage: Boolean = false,
     onProfileSavedMessageShown: () -> Unit = {},
+    showTrackingPreferencesSavedMessage: Boolean = false,
+    onTrackingPreferencesSavedMessageShown: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val loggingOutDescription = stringResource(Res.string.logging_out)
     var showLogoutConfirmation by remember { mutableStateOf(false) }
     var showSavedMessage by remember { mutableStateOf(false) }
+    var savedMessage by remember { mutableStateOf("") }
+    val profileSavedText = stringResource(Res.string.profile_saved)
+    val trackingPreferencesSavedText = stringResource(Res.string.tracking_preferences_saved)
 
     LaunchedEffect(showProfileSavedMessage) {
         if (!showProfileSavedMessage) return@LaunchedEffect
         onProfileSavedMessageShown()
+        savedMessage = profileSavedText
+        showSavedMessage = true
+        delay(PROFILE_SAVED_MESSAGE_MS)
+        showSavedMessage = false
+    }
+
+    LaunchedEffect(showTrackingPreferencesSavedMessage) {
+        if (!showTrackingPreferencesSavedMessage) return@LaunchedEffect
+        onTrackingPreferencesSavedMessageShown()
+        savedMessage = trackingPreferencesSavedText
         showSavedMessage = true
         delay(PROFILE_SAVED_MESSAGE_MS)
         showSavedMessage = false
@@ -122,6 +140,11 @@ fun PersonalSettingsScreen(
                 SettingsMenuRow(
                     title = stringResource(Res.string.settings_placeholder_profile),
                     onClick = onProfileClick,
+                    enabled = !uiState.isLoggingOut,
+                )
+                SettingsMenuRow(
+                    title = stringResource(Res.string.tracking_preferences),
+                    onClick = onTrackingPreferencesClick,
                     enabled = !uiState.isLoggingOut,
                 )
                 SettingsPlaceholderRow(title = stringResource(Res.string.settings_placeholder_account))
@@ -180,7 +203,7 @@ fun PersonalSettingsScreen(
             enter = fadeIn(animationSpec = tween(SNACKBAR_FADE_MS)),
             exit = fadeOut(animationSpec = tween(SNACKBAR_FADE_MS)),
         ) {
-            ProfileSavedSnackbar()
+            ProfileSavedSnackbar(message = savedMessage)
         }
 
         if (uiState.isLoggingOut) {
@@ -242,7 +265,7 @@ private fun SettingsPlaceholderRow(title: String, showDivider: Boolean = true) {
 }
 
 @Composable
-private fun ProfileSavedSnackbar() {
+private fun ProfileSavedSnackbar(message: String) {
     Surface(
         shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.inverseSurface,
@@ -250,7 +273,7 @@ private fun ProfileSavedSnackbar() {
         tonalElevation = 6.dp,
     ) {
         Text(
-            text = stringResource(Res.string.profile_saved),
+            text = message,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),

@@ -13,12 +13,16 @@ import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
 import com.zioanacleto.feedtracker.domain.auth.UpdateProfileRequest
 import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
+import com.zioanacleto.feedtracker.domain.preferences.DateDisplayFormat
+import com.zioanacleto.feedtracker.domain.preferences.DurationDisplayFormat
+import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 import com.zioanacleto.feedtracker.features.auth.models.EmailVerificationCode
 import com.zioanacleto.feedtracker.features.auth.models.NewUser
 import com.zioanacleto.feedtracker.features.auth.models.StoredUser
 import com.zioanacleto.feedtracker.features.auth.repositories.EmailVerificationRepository
 import com.zioanacleto.feedtracker.features.auth.repositories.RevokedAccessTokenRepository
 import com.zioanacleto.feedtracker.features.auth.repositories.UserRepository
+import com.zioanacleto.feedtracker.features.trackingpreferences.repositories.TrackingPreferencesRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
@@ -41,6 +45,7 @@ class AuthServiceTest :
             val codes = mockk<VerificationCodeGenerator>()
             val socialVerifier = mockk<SocialTokenVerifier>()
             val revokedTokens = mockk<RevokedAccessTokenRepository>(relaxUnitFun = true)
+            val trackingPreferences = mockk<TrackingPreferencesRepository>()
             val timeProvider = TimeProvider { 1_000_000L }
             val authConfig = AuthConfig(
                 jwtSecret = "test-secret-that-is-long-enough-32b",
@@ -62,6 +67,7 @@ class AuthServiceTest :
                 timeProvider = timeProvider,
                 authConfig = authConfig,
                 revokedTokens = revokedTokens,
+                trackingPreferences = trackingPreferences,
             )
 
             it("returns email plus configured social methods") {
@@ -80,6 +86,7 @@ class AuthServiceTest :
                     timeProvider = timeProvider,
                     authConfig = authConfig.copy(googleClientId = "", appleAudience = ""),
                     revokedTokens = revokedTokens,
+                    trackingPreferences = trackingPreferences,
                 )
 
                 emailOnly.availableAuthMethods() shouldBe listOf(AuthMethod.EMAIL)
@@ -337,6 +344,70 @@ class AuthServiceTest :
                 }
 
                 result shouldBe updated
+            }
+
+            it("returns default tracking preferences when none are stored") {
+                every { tokens.parseAccessToken("access") } returns AccessTokenClaims(
+                    userId = "user-1",
+                    jti = "jti-1",
+                    expiresAtMillis = 2_000_000L,
+                    issuedAtMillis = 1_000_000L,
+                )
+                coEvery { revokedTokens.isRevoked("jti-1") } returns false
+                coEvery { users.findStoredById("user-1") } returns StoredUser(user, "hashed")
+                coEvery { trackingPreferences.findByUserId("user-1") } returns null
+
+                val result = runBlocking { service.getTrackingPreferences("access") }
+
+                result shouldBe TrackingPreferences.Default
+            }
+
+            it("saves sanitized tracking preferences for an authenticated user") {
+                every { tokens.parseAccessToken("access") } returns AccessTokenClaims(
+                    userId = "user-1",
+                    jti = "jti-1",
+                    expiresAtMillis = 2_000_000L,
+                    issuedAtMillis = 1_000_000L,
+                )
+                coEvery { revokedTokens.isRevoked("jti-1") } returns false
+                coEvery { users.findStoredById("user-1") } returns StoredUser(user, "hashed")
+                val request = TrackingPreferences(
+                    dateFormat = DateDisplayFormat.MONTH_DAY_YEAR,
+                    dayStartHour = 6,
+                    dayStartMinute = 30,
+                    durationFormat = DurationDisplayFormat.HOURS_MINUTES,
+                    defaultPersonName = " Luigi ",
+                    defaultPersonSurname = " Bianchi ",
+                    defaultPersonBirthDate = "02/02/1991",
+                )
+                val saved = slot<TrackingPreferences>()
+                coEvery { trackingPreferences.upsert("user-1", capture(saved)) } answers { saved.captured }
+
+                val result = runBlocking { service.updateTrackingPreferences("access", request) }
+
+                result.defaultPersonName shouldBe "Luigi"
+                result.dayStartHour shouldBe 6
+                saved.captured.defaultPersonSurname shouldBe "Bianchi"
+            }
+
+            it("rejects an invalid day start hour") {
+                every { tokens.parseAccessToken("access") } returns AccessTokenClaims(
+                    userId = "user-1",
+                    jti = "jti-1",
+                    expiresAtMillis = 2_000_000L,
+                    issuedAtMillis = 1_000_000L,
+                )
+                coEvery { revokedTokens.isRevoked("jti-1") } returns false
+                coEvery { users.findStoredById("user-1") } returns StoredUser(user, "hashed")
+
+                shouldThrow<ValidationException> {
+                    runBlocking {
+                        service.updateTrackingPreferences(
+                            "access",
+                            TrackingPreferences.Default.copy(dayStartHour = 24),
+                        )
+                    }
+                }
             }
 
             it("rejects a blank first name when updating the profile") {

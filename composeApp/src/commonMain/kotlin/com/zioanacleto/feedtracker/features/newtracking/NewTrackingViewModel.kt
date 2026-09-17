@@ -2,7 +2,9 @@ package com.zioanacleto.feedtracker.features.newtracking
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zioanacleto.feedtracker.data.repositories.InMemoryTrackingPreferencesRepository
 import com.zioanacleto.feedtracker.domain.TrackingSessionModel
+import com.zioanacleto.feedtracker.domain.repositories.TrackingPreferencesRepository
 import com.zioanacleto.feedtracker.domain.repositories.TrackingSessionsRepository
 import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.unable_to_save_tracking_session
@@ -22,7 +24,10 @@ sealed interface SaveTrackingUiState {
 }
 
 @OptIn(ExperimentalUuidApi::class)
-class NewTrackingViewModel(private val trackingSessionsRepository: TrackingSessionsRepository) : ViewModel() {
+class NewTrackingViewModel(
+    private val trackingSessionsRepository: TrackingSessionsRepository,
+    private val trackingPreferencesRepository: TrackingPreferencesRepository = InMemoryTrackingPreferencesRepository(),
+) : ViewModel() {
 
     private val _showPopup = MutableStateFlow(false)
     val showPopup: StateFlow<Boolean> = _showPopup.asStateFlow()
@@ -53,6 +58,7 @@ class NewTrackingViewModel(private val trackingSessionsRepository: TrackingSessi
             runCatching {
                 trackingSessionsRepository.saveTrackingSession(trackingModel)
             }.onSuccess {
+                trackingPreferencesRepository.rememberLastUsedPerson(name, surname, birthDate)
                 _saveState.value = SaveTrackingUiState.Saved
             }.onFailure { throwable ->
                 _saveState.value = SaveTrackingUiState.Error(

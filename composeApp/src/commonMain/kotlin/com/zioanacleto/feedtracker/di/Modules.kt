@@ -8,6 +8,7 @@ import com.zioanacleto.feedtracker.features.login.LoginMethodsViewModel
 import com.zioanacleto.feedtracker.features.newtracking.NewTrackingViewModel
 import com.zioanacleto.feedtracker.features.settings.personal.PersonalSettingsViewModel
 import com.zioanacleto.feedtracker.features.settings.profile.ProfileSettingsViewModel
+import com.zioanacleto.feedtracker.features.settings.tracking.TrackingPreferencesViewModel
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
 import com.zioanacleto.feedtracker.widget.ActiveTrackingSessionController
 import org.koin.core.KoinApplication
@@ -31,14 +32,15 @@ val uiModule = module {
             clock = { getCurrentTimeMillis() },
         )
     }
-    viewModel { HomeViewModel(get()) }
-    viewModel { NewTrackingViewModel(get()) }
+    viewModel { HomeViewModel(get(), get()) }
+    viewModel { NewTrackingViewModel(get(), get()) }
     viewModel { LoginMethodsViewModel(get()) }
     viewModel { EmailLoginViewModel(get(), get()) }
     viewModel { EmailSignUpViewModel(get(), get()) }
     viewModel { ForgotPasswordViewModel(get(), get()) }
     viewModel { PersonalSettingsViewModel(get(), get()) }
     viewModel { ProfileSettingsViewModel(get(), get()) }
+    viewModel { TrackingPreferencesViewModel(get()) }
 }
 
 expect val platformModule: Module

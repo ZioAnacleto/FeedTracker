@@ -14,6 +14,7 @@ import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
 import com.zioanacleto.feedtracker.domain.auth.VerifyPasswordResetResponse
+import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
@@ -21,6 +22,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
@@ -92,6 +94,20 @@ class FeedTrackerApiClient(val httpClient: HttpClient, private val baseUrl: Stri
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             contentType(ContentType.Application.Json)
             setBody(request)
+        }
+    }
+
+    suspend fun getTrackingPreferences(accessToken: String): TrackingPreferences = execute {
+        httpClient.get("$authUrl/tracking-preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+    }
+
+    suspend fun updateTrackingPreferences(accessToken: String, preferences: TrackingPreferences): TrackingPreferences = execute {
+        httpClient.put("$authUrl/tracking-preferences") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            contentType(ContentType.Application.Json)
+            setBody(preferences)
         }
     }
 

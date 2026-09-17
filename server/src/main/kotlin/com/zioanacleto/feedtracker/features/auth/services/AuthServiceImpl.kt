@@ -17,11 +17,14 @@ import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
 import com.zioanacleto.feedtracker.domain.auth.VerifyPasswordResetResponse
+import com.zioanacleto.feedtracker.domain.preferences.PersonPrefillMode
+import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 import com.zioanacleto.feedtracker.features.auth.models.EmailVerificationPurpose
 import com.zioanacleto.feedtracker.features.auth.models.NewUser
 import com.zioanacleto.feedtracker.features.auth.repositories.EmailVerificationRepository
 import com.zioanacleto.feedtracker.features.auth.repositories.RevokedAccessTokenRepository
 import com.zioanacleto.feedtracker.features.auth.repositories.UserRepository
+import com.zioanacleto.feedtracker.features.trackingpreferences.repositories.TrackingPreferencesRepository
 import io.ktor.http.HttpStatusCode
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -40,6 +43,7 @@ class AuthServiceImpl(
     private val timeProvider: TimeProvider,
     private val authConfig: AuthConfig,
     private val revokedTokens: RevokedAccessTokenRepository,
+    private val trackingPreferences: TrackingPreferencesRepository,
 ) : AuthService {
 
     override fun availableAuthMethods(): List<AuthMethod> = buildList {
@@ -182,6 +186,17 @@ class AuthServiceImpl(
         return users.updateNames(claims.userId, request.firstName.trim(), request.lastName.trim())
     }
 
+    override suspend fun getTrackingPreferences(accessToken: String): TrackingPreferences {
+        val claims = requireValidAccessToken(accessToken)
+        return trackingPreferences.findByUserId(claims.userId) ?: TrackingPreferences.Default
+    }
+
+    override suspend fun updateTrackingPreferences(accessToken: String, preferences: TrackingPreferences): TrackingPreferences {
+        val claims = requireValidAccessToken(accessToken)
+        val sanitized = AuthServiceImpl.sanitizeTrackingPreferences(preferences)
+        return trackingPreferences.upsert(claims.userId, sanitized)
+    }
+
     override suspend fun logout(accessToken: String) {
         val claims = tokens.parseAccessToken(accessToken)
         revokedTokens.revoke(
@@ -308,6 +323,40 @@ class AuthServiceImpl(
             if (password.length < MIN_PASSWORD_LENGTH) {
                 throw ValidationException("Password must be at least $MIN_PASSWORD_LENGTH characters")
             }
+        }
+
+        private val BIRTH_DATE_REGEX = Regex(
+            """^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/(19\d{2}|20\d{2})$""",
+        )
+
+        fun sanitizeTrackingPreferences(preferences: TrackingPreferences): TrackingPreferences {
+            if (preferences.dayStartHour !in 0..23 || preferences.dayStartMinute !in 0..59) {
+                throw ValidationException("day start must be a valid time")
+            }
+            return preferences.copy(
+                defaultPersonName = preferences.defaultPersonName.trim(),
+                defaultPersonSurname = preferences.defaultPersonSurname.trim(),
+                defaultPersonBirthDate = validateOptionalBirthDate(preferences.defaultPersonBirthDate),
+                lastUsedPersonName = preferences.lastUsedPersonName.trim(),
+                lastUsedPersonSurname = preferences.lastUsedPersonSurname.trim(),
+                lastUsedPersonBirthDate = validateOptionalBirthDate(preferences.lastUsedPersonBirthDate),
+            ).also { sanitized ->
+                if (sanitized.personPrefillMode == PersonPrefillMode.CUSTOM &&
+                    sanitized.defaultPersonBirthDate.isNotEmpty() &&
+                    (sanitized.defaultPersonName.isEmpty() || sanitized.defaultPersonSurname.isEmpty())
+                ) {
+                    throw ValidationException("default person name and surname are required when a birth date is set")
+                }
+            }
+        }
+
+        private fun validateOptionalBirthDate(value: String): String {
+            val trimmed = value.trim()
+            if (trimmed.isEmpty()) return ""
+            if (!BIRTH_DATE_REGEX.matches(trimmed)) {
+                throw ValidationException("birthDate must be in DD/MM/YYYY format")
+            }
+            return trimmed
         }
     }
 }

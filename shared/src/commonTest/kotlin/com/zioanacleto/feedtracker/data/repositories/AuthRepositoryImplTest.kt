@@ -7,6 +7,8 @@ import com.zioanacleto.feedtracker.domain.auth.AuthSession
 import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
 import com.zioanacleto.feedtracker.domain.auth.VerifyPasswordResetResponse
+import com.zioanacleto.feedtracker.domain.preferences.DateDisplayFormat
+import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 import com.zioanacleto.feedtracker.network.FeedTrackerApiClient
 import com.zioanacleto.feedtracker.network.installFeedTrackerJson
 import io.kotest.matchers.shouldBe
@@ -178,6 +180,27 @@ class AuthRepositoryImplTest {
             firstName = "Luigi",
             lastName = "Bianchi",
         )
+        authorization shouldBe "Bearer access-token"
+    }
+
+    @Test
+    fun getTrackingPreferencesUsesBearerToken() = runTest {
+        val preferences = TrackingPreferences(dateFormat = DateDisplayFormat.MONTH_DAY_YEAR)
+        var authorization: String? = null
+        val engine = MockEngine { request ->
+            request.method shouldBe HttpMethod.Get
+            request.url.encodedPath shouldBe "/api/auth/tracking-preferences"
+            authorization = request.headers[HttpHeaders.Authorization]
+            respond(
+                content = ByteReadChannel(json.encodeToString(ApiResponse("SUCCESS", "ok", preferences))),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+            )
+        }
+
+        val repository = AuthRepositoryImpl(apiClient(engine))
+
+        repository.getTrackingPreferences("access-token") shouldBe preferences
         authorization shouldBe "Bearer access-token"
     }
 

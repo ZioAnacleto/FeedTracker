@@ -3,6 +3,7 @@ package com.zioanacleto.feedtracker.domain.repositories
 import com.zioanacleto.feedtracker.domain.auth.AuthMethod
 import com.zioanacleto.feedtracker.domain.auth.AuthSession
 import com.zioanacleto.feedtracker.domain.auth.UserModel
+import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 
 interface AuthRepository {
     suspend fun getAvailableAuthMethods(): List<AuthMethod>
@@ -14,5 +15,7 @@ interface AuthRepository {
     suspend fun verifyPasswordResetCode(email: String, code: String): String
     suspend fun resetPassword(resetToken: String, password: String): AuthSession
     suspend fun updateProfile(accessToken: String, firstName: String, lastName: String): UserModel
+    suspend fun getTrackingPreferences(accessToken: String): TrackingPreferences
+    suspend fun updateTrackingPreferences(accessToken: String, preferences: TrackingPreferences): TrackingPreferences
     suspend fun logout(accessToken: String)
 }

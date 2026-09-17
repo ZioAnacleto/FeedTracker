@@ -3,6 +3,7 @@ package com.zioanacleto.feedtracker.testutil
 import com.zioanacleto.feedtracker.domain.auth.AuthMethod
 import com.zioanacleto.feedtracker.domain.auth.AuthSession
 import com.zioanacleto.feedtracker.domain.auth.UserModel
+import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 import com.zioanacleto.feedtracker.domain.repositories.AuthRepository
 import kotlinx.coroutines.delay
 
@@ -37,6 +38,9 @@ class FakeAuthRepository(
     private val logoutError: Throwable? = null,
     private val updateProfileError: Throwable? = null,
     private val updatedUser: UserModel? = null,
+    private val trackingPreferences: TrackingPreferences = TrackingPreferences.Default,
+    private val getTrackingPreferencesError: Throwable? = null,
+    private val updateTrackingPreferencesError: Throwable? = null,
 ) : AuthRepository {
     var loginCalls = 0
         private set
@@ -67,6 +71,12 @@ class FakeAuthRepository(
     var lastUpdatedLastName: String? = null
         private set
     var lastUpdateToken: String? = null
+        private set
+    var getTrackingPreferencesCalls = 0
+        private set
+    var updateTrackingPreferencesCalls = 0
+        private set
+    var lastSavedTrackingPreferences: TrackingPreferences? = null
         private set
 
     override suspend fun getAvailableAuthMethods(): List<AuthMethod> {
@@ -148,6 +158,21 @@ class FakeAuthRepository(
         }
         updateProfileError?.let { throw it }
         return updatedUser ?: session.user.copy(firstName = firstName, lastName = lastName)
+    }
+
+    override suspend fun getTrackingPreferences(accessToken: String): TrackingPreferences {
+        getTrackingPreferencesCalls += 1
+        lastUpdateToken = accessToken
+        getTrackingPreferencesError?.let { throw it }
+        return lastSavedTrackingPreferences ?: trackingPreferences
+    }
+
+    override suspend fun updateTrackingPreferences(accessToken: String, preferences: TrackingPreferences): TrackingPreferences {
+        updateTrackingPreferencesCalls += 1
+        lastUpdateToken = accessToken
+        lastSavedTrackingPreferences = preferences
+        updateTrackingPreferencesError?.let { throw it }
+        return preferences
     }
 
     override suspend fun logout(accessToken: String) {

@@ -3,8 +3,11 @@ package com.zioanacleto.feedtracker.features.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zioanacleto.feedtracker.components.startOfLocalDayMillis
+import com.zioanacleto.feedtracker.components.startOfTrackingDayMillis
+import com.zioanacleto.feedtracker.data.repositories.InMemoryTrackingPreferencesRepository
 import com.zioanacleto.feedtracker.domain.TrackingSessionModel
 import com.zioanacleto.feedtracker.domain.core.Resource
+import com.zioanacleto.feedtracker.domain.repositories.TrackingPreferencesRepository
 import com.zioanacleto.feedtracker.domain.repositories.TrackingSessionsRepository
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
 import feedtracker.composeapp.generated.resources.Res
@@ -37,6 +40,7 @@ sealed interface HomeUiState {
 
 class HomeViewModel(
     private val trackingSessionsRepository: TrackingSessionsRepository,
+    private val trackingPreferencesRepository: TrackingPreferencesRepository = InMemoryTrackingPreferencesRepository(),
     private val clock: () -> Long = { getCurrentTimeMillis() },
     private val startOfLocalDay: (Long) -> Long = { startOfLocalDayMillis(it) },
 ) : ViewModel() {
@@ -54,6 +58,13 @@ class HomeViewModel(
         viewModelScope.launch {
             trackingSessionsRepository.syncedPendingCount.collect { count ->
                 showSyncedMessage(count)
+            }
+        }
+        viewModelScope.launch {
+            trackingPreferencesRepository.preferences.collect {
+                if (_uiState.value is HomeUiState.Ready) {
+                    _uiState.value = readyState(keepSelection = true)
+                }
             }
         }
     }
@@ -165,7 +176,17 @@ class HomeViewModel(
             selectedSession
         }
         val now = clock()
-        val overview = buildHomeOverview(sessions, now, startOfLocalDay(now))
+        val preferences = trackingPreferencesRepository.preferences.value
+        val overview = buildHomeOverview(
+            sessions,
+            now,
+            startOfTrackingDayMillis(
+                nowMillis = now,
+                dayStartHour = preferences.dayStartHour,
+                dayStartMinute = preferences.dayStartMinute,
+                startOfLocalDay = startOfLocalDay,
+            ),
+        )
         return HomeUiState.Ready(
             items = buildHomeSessionListItems(sessions, expandedGroupKeys),
             recentSessions = overview.recentSessions,

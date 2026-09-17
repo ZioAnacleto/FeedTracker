@@ -20,6 +20,8 @@ import com.zioanacleto.feedtracker.features.auth.services.SocialTokenVerifier
 import com.zioanacleto.feedtracker.features.auth.services.TimeProvider
 import com.zioanacleto.feedtracker.features.auth.services.TokenService
 import com.zioanacleto.feedtracker.features.auth.services.VerificationCodeGenerator
+import com.zioanacleto.feedtracker.features.trackingpreferences.repositories.TrackingPreferencesRepository
+import com.zioanacleto.feedtracker.features.trackingpreferences.repositories.TrackingPreferencesRepositoryImpl
 import com.zioanacleto.feedtracker.features.trackingsessions.repositories.TrackingSessionRepository
 import com.zioanacleto.feedtracker.features.trackingsessions.repositories.TrackingSessionRepositoryImpl
 import com.zioanacleto.feedtracker.features.trackingsessions.services.TrackingSessionService
@@ -54,6 +56,7 @@ fun Application.configureDI(extraModules: List<Module> = emptyList()) {
                 single<UserRepository> { UserRepositoryImpl() }
                 single<EmailVerificationRepository> { EmailVerificationRepositoryImpl() }
                 single<RevokedAccessTokenRepository> { RevokedAccessTokenRepositoryImpl() }
+                single<TrackingPreferencesRepository> { TrackingPreferencesRepositoryImpl() }
                 single<AuthService> {
                     AuthServiceImpl(
                         users = get(),
@@ -66,6 +69,7 @@ fun Application.configureDI(extraModules: List<Module> = emptyList()) {
                         timeProvider = get(),
                         authConfig = appConfig.auth,
                         revokedTokens = get(),
+                        trackingPreferences = get(),
                     )
                 }
                 single<TrackingSessionRepository> { TrackingSessionRepositoryImpl() }

@@ -9,6 +9,8 @@ import com.zioanacleto.feedtracker.domain.auth.StartEmailAuthRequest
 import com.zioanacleto.feedtracker.domain.auth.UserModel
 import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeRequest
 import com.zioanacleto.feedtracker.domain.auth.VerifyPasswordResetResponse
+import com.zioanacleto.feedtracker.domain.preferences.DateDisplayFormat
+import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 import com.zioanacleto.feedtracker.testutil.trackingSession
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -136,6 +138,30 @@ class FeedTrackerApiClientTest {
         )
 
         client.resetPassword(ResetPasswordRequest("reset-token", "password2")) shouldBe session
+    }
+
+    @Test
+    fun getTrackingPreferencesReadsSinglePayload() = runTest {
+        val preferences = TrackingPreferences(dateFormat = DateDisplayFormat.YEAR_MONTH_DAY, dayStartHour = 5)
+        val client = apiClient(
+            expectedMethod = HttpMethod.Get,
+            expectedPath = "/api/auth/tracking-preferences",
+            body = json.encodeToString(ApiResponse("SUCCESS", "ok", preferences)),
+        )
+
+        client.getTrackingPreferences("access-token") shouldBe preferences
+    }
+
+    @Test
+    fun updateTrackingPreferencesPutsJsonBody() = runTest {
+        val preferences = TrackingPreferences(dayStartMinute = 45)
+        val client = apiClient(
+            expectedMethod = HttpMethod.Put,
+            expectedPath = "/api/auth/tracking-preferences",
+            body = json.encodeToString(ApiResponse("SUCCESS", "ok", preferences)),
+        )
+
+        client.updateTrackingPreferences("access-token", preferences) shouldBe preferences
     }
 
     @Test

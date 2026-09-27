@@ -9,6 +9,7 @@ class FakeSessionExportSharer(
     private val saveError: Throwable? = null,
     private val saveResult: SessionExportSaveResult = SessionExportSaveResult.SAVED,
     private val shareDelayMillis: Long = 0,
+    private val saveDelayMillis: Long = 0,
     override val requiresComposeSaveLauncher: Boolean = false,
     override val showsSeparateSaveActions: Boolean = true,
 ) : SessionExportSharer {
@@ -24,6 +25,9 @@ class FakeSessionExportSharer(
     }
 
     override suspend fun saveTextFile(fileName: String, mimeType: String, content: String): SessionExportSaveResult {
+        if (saveDelayMillis > 0) {
+            delay(saveDelayMillis)
+        }
         saveError?.let { throw it }
         if (saveResult == SessionExportSaveResult.SAVED) {
             saved += SharedTextFile(fileName, mimeType, content)

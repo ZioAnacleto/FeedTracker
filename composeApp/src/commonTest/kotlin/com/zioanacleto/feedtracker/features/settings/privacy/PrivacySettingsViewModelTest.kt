@@ -101,6 +101,39 @@ class PrivacySettingsViewModelTest {
     }
 
     @Test
+    fun saveDoesNotReportSuccessUntilThePlatformFinishes() = runViewModelTest {
+        val viewModel = viewModel(
+            sessions = listOf(sampleSession()),
+            sharer = FakeSessionExportSharer(saveDelayMillis = 1_000),
+        )
+
+        viewModel.exportSessions(SessionExportFormat.JSON, SessionExportDestination.SAVE)
+        testScheduler.runCurrent()
+
+        viewModel.uiState.value.isExporting shouldBe true
+        viewModel.uiState.value.saveSucceeded shouldBe false
+
+        testScheduler.advanceUntilIdle()
+
+        viewModel.uiState.value.isExporting shouldBe false
+        viewModel.uiState.value.saveSucceeded shouldBe true
+    }
+
+    @Test
+    fun saveShowsErrorWhenTheFileCannotBeWritten() = runViewModelTest {
+        val viewModel = viewModel(
+            sessions = listOf(sampleSession()),
+            sharer = FakeSessionExportSharer(saveError = IllegalStateException("Unable to write the export file")),
+        )
+
+        viewModel.exportSessions(SessionExportFormat.JSON, SessionExportDestination.SAVE)
+
+        viewModel.uiState.value.error shouldBe "Unable to write the export file"
+        viewModel.uiState.value.saveSucceeded shouldBe false
+        viewModel.uiState.value.isExporting shouldBe false
+    }
+
+    @Test
     fun saveDoesNotReportSuccessWhenThePlatformCancels() = runViewModelTest {
         val sharer = FakeSessionExportSharer(saveResult = SessionExportSaveResult.CANCELLED)
         val viewModel = viewModel(sessions = listOf(sampleSession()), sharer = sharer)

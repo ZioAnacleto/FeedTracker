@@ -2,6 +2,12 @@ package com.zioanacleto.feedtracker.features.settings.privacy
 
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCObjectVar
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.ptr
+import kotlinx.cinterop.value
+import platform.Foundation.NSError
 import platform.Foundation.NSString
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
@@ -10,43 +16,80 @@ import platform.Foundation.create
 import platform.Foundation.writeToFile
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
+import platform.UIKit.UIDocumentPickerDelegateProtocol
 import platform.UIKit.UIDocumentPickerViewController
 import platform.UIKit.UIViewController
 import platform.UIKit.UIWindow
 import platform.UIKit.popoverPresentationController
+import platform.darwin.NSObject
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 class IosSessionExportSharer : SessionExportSharer {
+    private val pickerSession = DocumentExportPickerSession()
+    private var pickerDelegate: NSObject? = null
+
     override suspend fun shareTextFile(fileName: String, mimeType: String, content: String) {
-        presentFile(fileName, content, share = true)
+        val fileUrl = writeTemporaryExportFile(fileName, content)
+        val presenter = currentViewController()
+        val activityViewController = UIActivityViewController(
+            activityItems = listOf(fileUrl),
+            applicationActivities = null,
+        )
+        activityViewController.popoverPresentationController?.sourceView = presenter.view
+        presenter.presentViewController(activityViewController, animated = true, completion = null)
     }
 
     override suspend fun saveTextFile(fileName: String, mimeType: String, content: String): SessionExportSaveResult {
-        presentFile(fileName, content, share = false)
-        return SessionExportSaveResult.SAVED
+        val fileUrl = writeTemporaryExportFile(fileName, content)
+        val presenter = currentViewController()
+        val delegate = IosExportDocumentPickerDelegate(pickerSession)
+        val picker = UIDocumentPickerViewController(forExportingURLs = listOf(fileUrl), asCopy = true)
+        picker.delegate = delegate
+        pickerDelegate = delegate
+        return try {
+            awaitDocumentExport(
+                session = pickerSession,
+                onCancel = {
+                    pickerDelegate = null
+                    picker.dismissViewControllerAnimated(true, completion = null)
+                },
+            ) {
+                presenter.presentViewController(picker, animated = true, completion = null)
+            }
+        } finally {
+            pickerDelegate = null
+        }
     }
 
-    private fun presentFile(fileName: String, content: String, share: Boolean) {
+    private fun writeTemporaryExportFile(fileName: String, content: String): NSURL {
         val path = NSTemporaryDirectory().trimEnd('/') + "/" + fileName
-        NSString.create(string = content).writeToFile(
-            path,
-            atomically = true,
-            encoding = NSUTF8StringEncoding,
-            error = null,
-        )
-        val fileUrl = NSURL.fileURLWithPath(path)
-        val presenter = currentViewController()
-        if (share) {
-            val activityViewController = UIActivityViewController(
-                activityItems = listOf(fileUrl),
-                applicationActivities = null,
+        memScoped {
+            val error = alloc<ObjCObjectVar<NSError?>>()
+            val written = NSString.create(string = content).writeToFile(
+                path = path,
+                atomically = true,
+                encoding = NSUTF8StringEncoding,
+                error = error.ptr,
             )
-            activityViewController.popoverPresentationController?.sourceView = presenter.view
-            presenter.presentViewController(activityViewController, animated = true, completion = null)
-        } else {
-            val picker = UIDocumentPickerViewController(forExportingURLs = listOf(fileUrl), asCopy = true)
-            presenter.presentViewController(picker, animated = true, completion = null)
+            val failure = exportWriteFailureMessage(written, error.value?.localizedDescription)
+            if (failure != null) {
+                throw IllegalStateException(failure)
+            }
         }
+        return NSURL.fileURLWithPath(path)
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private class IosExportDocumentPickerDelegate(private val session: DocumentExportPickerSession) :
+    NSObject(),
+    UIDocumentPickerDelegateProtocol {
+    override fun documentPicker(controller: UIDocumentPickerViewController, didPickDocumentsAtURLs: List<*>) {
+        session.onDocumentsPicked()
+    }
+
+    override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) {
+        session.onCancelled()
     }
 }
 

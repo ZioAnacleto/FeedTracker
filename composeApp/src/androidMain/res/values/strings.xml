@@ -8,4 +8,5 @@
     <string name="widget_idle_timer">--:--</string>
     <string name="notification_channel_name">Tracking timer</string>
     <string name="notification_channel_description">Shows the live timer for the active tracking session</string>
+    <string name="export_sessions_share_title">Export sessions</string>
 </resources>

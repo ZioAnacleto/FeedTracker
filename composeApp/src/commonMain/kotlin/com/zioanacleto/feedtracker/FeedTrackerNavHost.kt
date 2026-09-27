@@ -29,6 +29,8 @@ import com.zioanacleto.feedtracker.features.pasttracking.PastTrackingScreen
 import com.zioanacleto.feedtracker.features.pasttracking.navigation.PastTrackingRoute
 import com.zioanacleto.feedtracker.features.settings.personal.PersonalSettingsScreen
 import com.zioanacleto.feedtracker.features.settings.personal.navigation.PersonalSettingsRoute
+import com.zioanacleto.feedtracker.features.settings.privacy.PrivacySettingsScreen
+import com.zioanacleto.feedtracker.features.settings.privacy.navigation.PrivacySettingsRoute
 import com.zioanacleto.feedtracker.features.settings.profile.ProfileSettingsScreen
 import com.zioanacleto.feedtracker.features.settings.profile.navigation.PROFILE_SAVED_RESULT
 import com.zioanacleto.feedtracker.features.settings.profile.navigation.ProfileSettingsRoute
@@ -133,6 +135,7 @@ private fun LoggedInNavHost(modifier: Modifier, navController: NavHostController
                 onBackButtonClick = { navController.popBackStack() },
                 onProfileClick = { navController.navigate(ProfileSettingsRoute) },
                 onTrackingPreferencesClick = { navController.navigate(TrackingPreferencesRoute) },
+                onPrivacyClick = { navController.navigate(PrivacySettingsRoute) },
                 showProfileSavedMessage = profileSaved,
                 onProfileSavedMessageShown = { entry.savedStateHandle[PROFILE_SAVED_RESULT] = false },
                 showTrackingPreferencesSavedMessage = trackingPreferencesSaved,
@@ -159,6 +162,12 @@ private fun LoggedInNavHost(modifier: Modifier, navController: NavHostController
                     navController.previousBackStackEntry?.savedStateHandle?.set(TRACKING_PREFERENCES_SAVED_RESULT, true)
                     navController.popBackStack()
                 },
+            )
+        }
+        composable<PrivacySettingsRoute> {
+            PrivacySettingsScreen(
+                modifier = Modifier.fillMaxSize(),
+                onBackButtonClick = { navController.popBackStack() },
             )
         }
         composable<NewTrackingRoute> { entry ->

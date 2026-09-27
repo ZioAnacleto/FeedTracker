@@ -9,6 +9,7 @@ interface TrackingSessionsRepository {
     val syncedPendingCount: Flow<Int>
         get() = emptyFlow()
     suspend fun getTrackingSessions(): Flow<Resource<List<TrackingSessionModel>>>
+    suspend fun getAllTrackingSessionsForExport(): List<TrackingSessionModel>
     suspend fun getTrackingSession(id: String): Flow<Resource<TrackingSessionModel>>
     suspend fun saveTrackingSession(trackingSession: TrackingSessionModel)
     suspend fun deleteTrackingSession(id: String)

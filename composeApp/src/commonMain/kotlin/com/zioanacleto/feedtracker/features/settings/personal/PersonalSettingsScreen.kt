@@ -71,6 +71,7 @@ fun PersonalSettingsScreen(
     onBackButtonClick: () -> Unit,
     onProfileClick: () -> Unit,
     onTrackingPreferencesClick: () -> Unit,
+    onPrivacyClick: () -> Unit,
     showProfileSavedMessage: Boolean = false,
     onProfileSavedMessageShown: () -> Unit = {},
     showTrackingPreferencesSavedMessage: Boolean = false,
@@ -149,7 +150,11 @@ fun PersonalSettingsScreen(
                 )
                 SettingsPlaceholderRow(title = stringResource(Res.string.settings_placeholder_account))
                 SettingsPlaceholderRow(title = stringResource(Res.string.settings_placeholder_notifications))
-                SettingsPlaceholderRow(title = stringResource(Res.string.settings_placeholder_privacy))
+                SettingsMenuRow(
+                    title = stringResource(Res.string.settings_placeholder_privacy),
+                    onClick = onPrivacyClick,
+                    enabled = !uiState.isLoggingOut,
+                )
                 SettingsPlaceholderRow(title = stringResource(Res.string.settings_placeholder_language), showDivider = false)
             }
 

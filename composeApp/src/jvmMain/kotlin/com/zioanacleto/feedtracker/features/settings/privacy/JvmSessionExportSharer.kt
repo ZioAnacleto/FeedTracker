@@ -13,7 +13,7 @@ class JvmSessionExportSharer : SessionExportSharer {
         saveTextFile(fileName, mimeType, content)
     }
 
-    override suspend fun saveTextFile(fileName: String, mimeType: String, content: String) {
+    override suspend fun saveTextFile(fileName: String, mimeType: String, content: String): SessionExportSaveResult {
         val selectedFile = withContext(Dispatchers.Main) {
             val extension = fileName.substringAfterLast('.')
             val chooser = JFileChooser().apply {
@@ -22,9 +22,10 @@ class JvmSessionExportSharer : SessionExportSharer {
             }
             val result = chooser.showSaveDialog(null)
             chooser.selectedFile.takeIf { result == JFileChooser.APPROVE_OPTION }
-        } ?: return
+        } ?: return SessionExportSaveResult.CANCELLED
         withContext(Dispatchers.IO) {
             selectedFile.writeText(content)
         }
+        return SessionExportSaveResult.SAVED
     }
 }

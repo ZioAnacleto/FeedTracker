@@ -101,9 +101,22 @@ class PrivacySettingsViewModelTest {
     }
 
     @Test
+    fun saveDoesNotReportSuccessWhenThePlatformCancels() = runViewModelTest {
+        val sharer = FakeSessionExportSharer(saveResult = SessionExportSaveResult.CANCELLED)
+        val viewModel = viewModel(sessions = listOf(sampleSession()), sharer = sharer)
+
+        viewModel.exportSessions(SessionExportFormat.JSON, SessionExportDestination.SAVE)
+
+        sharer.saved shouldHaveSize 0
+        viewModel.uiState.value.saveSucceeded shouldBe false
+        viewModel.uiState.value.isExporting shouldBe false
+        viewModel.uiState.value.pendingSave.shouldBeNull()
+    }
+
+    @Test
     fun saveWaitsForADocumentPickerWhenThePlatformNeedsOne() = runViewModelTest {
         val sessions = listOf(sampleSession())
-        val sharer = FakeSessionExportSharer(savesWithSystemPicker = false)
+        val sharer = FakeSessionExportSharer(requiresComposeSaveLauncher = true)
         val viewModel = viewModel(sessions = sessions, sharer = sharer)
 
         viewModel.exportSessions(SessionExportFormat.CSV, SessionExportDestination.SAVE)
@@ -131,7 +144,7 @@ class PrivacySettingsViewModelTest {
         val sessions = listOf(sampleSession())
         val viewModel = viewModel(
             sessions = sessions,
-            sharer = FakeSessionExportSharer(savesWithSystemPicker = false),
+            sharer = FakeSessionExportSharer(requiresComposeSaveLauncher = true),
             savedStateHandle = handle,
         )
 
@@ -140,7 +153,7 @@ class PrivacySettingsViewModelTest {
 
         val restored = viewModel(
             sessions = sessions,
-            sharer = FakeSessionExportSharer(savesWithSystemPicker = false),
+            sharer = FakeSessionExportSharer(requiresComposeSaveLauncher = true),
             savedStateHandle = handle,
         )
 
@@ -153,7 +166,7 @@ class PrivacySettingsViewModelTest {
         val handle = SavedStateHandle()
         val viewModel = viewModel(
             sessions = listOf(sampleSession()),
-            sharer = FakeSessionExportSharer(savesWithSystemPicker = false),
+            sharer = FakeSessionExportSharer(requiresComposeSaveLauncher = true),
             savedStateHandle = handle,
         )
 
@@ -163,7 +176,7 @@ class PrivacySettingsViewModelTest {
 
         val restored = viewModel(
             sessions = listOf(sampleSession()),
-            sharer = FakeSessionExportSharer(savesWithSystemPicker = false),
+            sharer = FakeSessionExportSharer(requiresComposeSaveLauncher = true),
             savedStateHandle = handle,
         )
 
@@ -175,7 +188,7 @@ class PrivacySettingsViewModelTest {
     fun completePendingSaveWritesThePendingContent() = runViewModelTest {
         val viewModel = viewModel(
             sessions = listOf(sampleSession()),
-            sharer = FakeSessionExportSharer(savesWithSystemPicker = false),
+            sharer = FakeSessionExportSharer(requiresComposeSaveLauncher = true),
         )
         viewModel.exportSessions(SessionExportFormat.JSON, SessionExportDestination.SAVE)
         viewModel.onSaveLauncherOpened()
@@ -195,7 +208,7 @@ class PrivacySettingsViewModelTest {
     fun completePendingSaveReportsFailure() = runViewModelTest {
         val viewModel = viewModel(
             sessions = listOf(sampleSession()),
-            sharer = FakeSessionExportSharer(savesWithSystemPicker = false),
+            sharer = FakeSessionExportSharer(requiresComposeSaveLauncher = true),
         )
         viewModel.exportSessions(SessionExportFormat.CSV, SessionExportDestination.SAVE)
 
@@ -211,7 +224,7 @@ class PrivacySettingsViewModelTest {
     fun completePendingSaveFailsWhenContentIsMissing() = runViewModelTest {
         val viewModel = viewModel(
             sessions = listOf(sampleSession()),
-            sharer = FakeSessionExportSharer(savesWithSystemPicker = false),
+            sharer = FakeSessionExportSharer(requiresComposeSaveLauncher = true),
         )
 
         viewModel.completePendingSave { error("should not write") }

@@ -8,7 +8,7 @@ import com.zioanacleto.feedtracker.R
 import java.io.File
 
 class AndroidSessionExportSharer(private val context: Context) : SessionExportSharer {
-    override val savesWithSystemPicker: Boolean = false
+    override val requiresComposeSaveLauncher: Boolean = true
 
     override suspend fun shareTextFile(fileName: String, mimeType: String, content: String) {
         val exportDir = File(context.cacheDir, EXPORT_DIRECTORY).apply { mkdirs() }
@@ -24,10 +24,6 @@ class AndroidSessionExportSharer(private val context: Context) : SessionExportSh
         val chooser = Intent.createChooser(shareIntent, context.getString(R.string.export_sessions_share_title))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(chooser)
-    }
-
-    override suspend fun saveTextFile(fileName: String, mimeType: String, content: String) {
-        error("Android saves exports through the system document picker")
     }
 
     private companion object {

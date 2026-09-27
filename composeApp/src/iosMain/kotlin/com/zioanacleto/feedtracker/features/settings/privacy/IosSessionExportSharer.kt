@@ -21,8 +21,9 @@ class IosSessionExportSharer : SessionExportSharer {
         presentFile(fileName, content, share = true)
     }
 
-    override suspend fun saveTextFile(fileName: String, mimeType: String, content: String) {
+    override suspend fun saveTextFile(fileName: String, mimeType: String, content: String): SessionExportSaveResult {
         presentFile(fileName, content, share = false)
+        return SessionExportSaveResult.SAVED
     }
 
     private fun presentFile(fileName: String, content: String, share: Boolean) {

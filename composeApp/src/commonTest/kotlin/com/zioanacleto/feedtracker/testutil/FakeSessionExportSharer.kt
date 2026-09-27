@@ -1,13 +1,15 @@
 package com.zioanacleto.feedtracker.testutil
 
+import com.zioanacleto.feedtracker.features.settings.privacy.SessionExportSaveResult
 import com.zioanacleto.feedtracker.features.settings.privacy.SessionExportSharer
 import kotlinx.coroutines.delay
 
 class FakeSessionExportSharer(
     private val shareError: Throwable? = null,
     private val saveError: Throwable? = null,
+    private val saveResult: SessionExportSaveResult = SessionExportSaveResult.SAVED,
     private val shareDelayMillis: Long = 0,
-    override val savesWithSystemPicker: Boolean = true,
+    override val requiresComposeSaveLauncher: Boolean = false,
     override val showsSeparateSaveActions: Boolean = true,
 ) : SessionExportSharer {
     val shared = mutableListOf<SharedTextFile>()
@@ -21,9 +23,12 @@ class FakeSessionExportSharer(
         shared += SharedTextFile(fileName, mimeType, content)
     }
 
-    override suspend fun saveTextFile(fileName: String, mimeType: String, content: String) {
+    override suspend fun saveTextFile(fileName: String, mimeType: String, content: String): SessionExportSaveResult {
         saveError?.let { throw it }
-        saved += SharedTextFile(fileName, mimeType, content)
+        if (saveResult == SessionExportSaveResult.SAVED) {
+            saved += SharedTextFile(fileName, mimeType, content)
+        }
+        return saveResult
     }
 }
 

@@ -77,15 +77,20 @@ class PrivacySettingsViewModel(
                         updateUiState { it.copy(isExporting = false) }
                     }
                     SessionExportDestination.SAVE -> {
-                        if (sessionExportSharer.savesWithSystemPicker) {
-                            sessionExportSharer.saveTextFile(format.fileName, format.mimeType, content)
-                            updateUiState { it.copy(isExporting = false, saveSucceeded = true) }
-                        } else {
+                        if (sessionExportSharer.requiresComposeSaveLauncher) {
                             updateUiState {
                                 it.copy(
                                     isExporting = false,
                                     pendingSave = PendingSessionExport(format.fileName, format.mimeType, content),
                                     saveLauncherOpen = false,
+                                )
+                            }
+                        } else {
+                            val result = sessionExportSharer.saveTextFile(format.fileName, format.mimeType, content)
+                            updateUiState {
+                                it.copy(
+                                    isExporting = false,
+                                    saveSucceeded = result == SessionExportSaveResult.SAVED,
                                 )
                             }
                         }

@@ -112,7 +112,7 @@
     <string name="settings_placeholder_language">Language</string>
     <string name="settings_placeholder_coming_soon">Coming soon</string>
     <string name="export_sessions_title">Export sessions</string>
-    <string name="export_sessions_description">Download or share an anonymized copy of your tracking sessions, including sessions that are still only on this device. An internet connection is required. Names are replaced with unique initials. Dates use the format from Tracking preferences.</string>
+    <string name="export_sessions_description">Download or share a copy of your tracking sessions, including sessions that are still only on this device. An internet connection is required. Names replaced with initials. Dates use the format from Tracking preferences.</string>
     <string name="export_sessions_csv">Share CSV</string>
     <string name="export_sessions_json">Share JSON</string>
     <string name="export_sessions_file_csv">Export CSV</string>

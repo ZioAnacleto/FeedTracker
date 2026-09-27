@@ -99,16 +99,16 @@ class PrivacySettingsViewModel(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (throwable: Throwable) {
-                val error = when (throwable) {
-                    is ExportRequiresConnectionException -> getString(Res.string.export_sessions_requires_connection)
-                    else -> throwable.message ?: getString(Res.string.unable_to_export_sessions)
+                val fallback = when (throwable) {
+                    is ExportRequiresConnectionException -> Res.string.export_sessions_requires_connection
+                    else -> Res.string.unable_to_export_sessions
                 }
                 updateUiState {
                     it.copy(
                         isExporting = false,
                         pendingSave = null,
                         saveLauncherOpen = false,
-                        error = error,
+                        error = throwable.message ?: getString(fallback),
                     )
                 }
             }

@@ -98,22 +98,17 @@ class PrivacySettingsViewModel(
                 }
             } catch (cancellation: CancellationException) {
                 throw cancellation
-            } catch (_: ExportRequiresConnectionException) {
-                updateUiState {
-                    it.copy(
-                        isExporting = false,
-                        pendingSave = null,
-                        saveLauncherOpen = false,
-                        error = getString(Res.string.export_sessions_requires_connection),
-                    )
-                }
             } catch (throwable: Throwable) {
+                val error = when (throwable) {
+                    is ExportRequiresConnectionException -> getString(Res.string.export_sessions_requires_connection)
+                    else -> throwable.message ?: getString(Res.string.unable_to_export_sessions)
+                }
                 updateUiState {
                     it.copy(
                         isExporting = false,
                         pendingSave = null,
                         saveLauncherOpen = false,
-                        error = throwable.message ?: getString(Res.string.unable_to_export_sessions),
+                        error = error,
                     )
                 }
             }

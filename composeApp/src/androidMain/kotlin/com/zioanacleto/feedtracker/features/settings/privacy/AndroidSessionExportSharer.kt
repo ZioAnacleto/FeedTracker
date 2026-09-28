@@ -14,8 +14,7 @@ class AndroidSessionExportSharer(private val context: Context, private val dispa
 
     override suspend fun shareTextFile(fileName: String, mimeType: String, content: String) {
         val file = withContext(dispatcherProvider.io()) {
-            val exportDir = File(context.cacheDir, EXPORT_DIRECTORY).apply { mkdirs() }
-            File(exportDir, fileName).apply { writeText(content) }
+            writeCachedExport(context.cacheDir, fileName, content)
         }
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
@@ -29,7 +28,22 @@ class AndroidSessionExportSharer(private val context: Context, private val dispa
         context.startActivity(chooser)
     }
 
-    private companion object {
-        const val EXPORT_DIRECTORY = "exports"
+    override suspend fun clearCachedExports() {
+        withContext(dispatcherProvider.io()) {
+            deleteCachedExports(context.cacheDir)
+        }
     }
 }
+
+internal fun writeCachedExport(cacheDir: File, fileName: String, content: String): File {
+    val exportDir = File(cacheDir, EXPORT_DIRECTORY)
+    exportDir.deleteRecursively()
+    exportDir.mkdirs()
+    return File(exportDir, fileName).apply { writeText(content) }
+}
+
+internal fun deleteCachedExports(cacheDir: File) {
+    File(cacheDir, EXPORT_DIRECTORY).deleteRecursively()
+}
+
+private const val EXPORT_DIRECTORY = "exports"

@@ -8,6 +8,7 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
 import platform.Foundation.NSError
+import platform.Foundation.NSFileManager
 import platform.Foundation.NSString
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
@@ -61,7 +62,12 @@ class IosSessionExportSharer : SessionExportSharer {
         }
     }
 
+    override suspend fun clearCachedExports() {
+        deleteCachedExportFiles()
+    }
+
     private fun writeTemporaryExportFile(fileName: String, content: String): NSURL {
+        deleteCachedExportFiles()
         val path = NSTemporaryDirectory().trimEnd('/') + "/" + fileName
         memScoped {
             val error = alloc<ObjCObjectVar<NSError?>>()
@@ -77,6 +83,13 @@ class IosSessionExportSharer : SessionExportSharer {
             }
         }
         return NSURL.fileURLWithPath(path)
+    }
+
+    private fun deleteCachedExportFiles() {
+        val directory = NSTemporaryDirectory().trimEnd('/')
+        SessionExportFormat.entries.forEach { format ->
+            NSFileManager.defaultManager.removeItemAtPath("$directory/${format.fileName}", null)
+        }
     }
 }
 

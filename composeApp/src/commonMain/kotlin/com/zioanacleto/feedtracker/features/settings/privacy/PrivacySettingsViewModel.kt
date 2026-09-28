@@ -47,6 +47,12 @@ class PrivacySettingsViewModel(
     private val _uiState = MutableStateFlow(restoredState())
     val uiState: StateFlow<PrivacySettingsUiState> = _uiState.asStateFlow()
 
+    init {
+        viewModelScope.launch {
+            runCatching { sessionExportSharer.clearCachedExports() }
+        }
+    }
+
     fun exportSessions(format: SessionExportFormat, destination: SessionExportDestination) {
         if (_uiState.value.isExporting) return
         viewModelScope.launch {

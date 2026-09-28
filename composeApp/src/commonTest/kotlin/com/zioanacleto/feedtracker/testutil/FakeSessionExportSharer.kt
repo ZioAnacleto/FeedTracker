@@ -15,6 +15,11 @@ class FakeSessionExportSharer(
 ) : SessionExportSharer {
     val shared = mutableListOf<SharedTextFile>()
     val saved = mutableListOf<SharedTextFile>()
+    var clearedExports: Int = 0
+
+    override suspend fun clearCachedExports() {
+        clearedExports += 1
+    }
 
     override suspend fun shareTextFile(fileName: String, mimeType: String, content: String) {
         if (shareDelayMillis > 0) {

@@ -23,6 +23,8 @@ interface SessionExportSharer {
 
     suspend fun shareTextFile(fileName: String, mimeType: String, content: String)
 
+    suspend fun clearCachedExports() {}
+
     suspend fun saveTextFile(fileName: String, mimeType: String, content: String): SessionExportSaveResult =
         error("This platform saves exports through the Compose document launcher")
 }

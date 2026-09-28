@@ -27,6 +27,15 @@ import kotlin.test.Test
 class PrivacySettingsViewModelTest {
 
     @Test
+    fun openingPrivacyClearsCachedExports() = runViewModelTest {
+        val sharer = FakeSessionExportSharer()
+
+        viewModel(sessions = emptyList(), sharer = sharer)
+
+        sharer.clearedExports shouldBe 1
+    }
+
+    @Test
     fun exportCsvSharesAnonymizedSessionsIncludingPendingData() = runViewModelTest {
         val sessions = listOf(
             sampleSession(id = "local-1", name = "Mario", surname = "Rossi"),

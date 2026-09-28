@@ -39,7 +39,7 @@ val uiModule = module {
     viewModel { EmailLoginViewModel(get(), get()) }
     viewModel { EmailSignUpViewModel(get(), get()) }
     viewModel { ForgotPasswordViewModel(get(), get()) }
-    viewModel { PersonalSettingsViewModel(get(), get()) }
+    viewModel { PersonalSettingsViewModel(get(), get(), get()) }
     viewModel { ProfileSettingsViewModel(get(), get()) }
     viewModel { PrivacySettingsViewModel(get(), get(), get(), get()) }
     viewModel { TrackingPreferencesViewModel(get()) }

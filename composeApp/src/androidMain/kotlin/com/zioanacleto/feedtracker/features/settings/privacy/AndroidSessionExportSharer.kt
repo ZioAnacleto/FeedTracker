@@ -5,15 +5,18 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.content.FileProvider
 import com.zioanacleto.feedtracker.R
+import com.zioanacleto.feedtracker.domain.core.DispatcherProvider
+import kotlinx.coroutines.withContext
 import java.io.File
 
-class AndroidSessionExportSharer(private val context: Context) : SessionExportSharer {
+class AndroidSessionExportSharer(private val context: Context, private val dispatcherProvider: DispatcherProvider) : SessionExportSharer {
     override val requiresComposeSaveLauncher: Boolean = true
 
     override suspend fun shareTextFile(fileName: String, mimeType: String, content: String) {
-        val exportDir = File(context.cacheDir, EXPORT_DIRECTORY).apply { mkdirs() }
-        val file = File(exportDir, fileName)
-        file.writeText(content)
+        val file = withContext(dispatcherProvider.io()) {
+            val exportDir = File(context.cacheDir, EXPORT_DIRECTORY).apply { mkdirs() }
+            File(exportDir, fileName).apply { writeText(content) }
+        }
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = mimeType

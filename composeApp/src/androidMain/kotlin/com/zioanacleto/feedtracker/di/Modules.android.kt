@@ -25,7 +25,7 @@ import java.io.File
 
 actual val platformModule: Module = module {
     single<NetworkMonitor> { ConnectivityManagerNetworkMonitor(androidContext(), get()) }
-    single<SessionExportSharer> { AndroidSessionExportSharer(androidContext()) }
+    single<SessionExportSharer> { AndroidSessionExportSharer(androidContext(), get()) }
     single<ActiveTrackingSessionStore> { AndroidActiveTrackingSessionStore(androidContext()) }
     single<ActiveTrackingSessionNotifier> { AndroidActiveTrackingSessionNotifier(androidContext()) }
     single<PendingSessionsStore> {

@@ -25,7 +25,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +41,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.zioanacleto.feedtracker.components.MessageSnackbar
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import feedtracker.composeapp.generated.resources.Res
@@ -51,12 +51,12 @@ import feedtracker.composeapp.generated.resources.log_out
 import feedtracker.composeapp.generated.resources.logging_out
 import feedtracker.composeapp.generated.resources.logout_confirmation
 import feedtracker.composeapp.generated.resources.personal_settings
+import feedtracker.composeapp.generated.resources.privacy
 import feedtracker.composeapp.generated.resources.profile_saved
 import feedtracker.composeapp.generated.resources.settings_placeholder_account
 import feedtracker.composeapp.generated.resources.settings_placeholder_coming_soon
 import feedtracker.composeapp.generated.resources.settings_placeholder_language
 import feedtracker.composeapp.generated.resources.settings_placeholder_notifications
-import feedtracker.composeapp.generated.resources.settings_placeholder_privacy
 import feedtracker.composeapp.generated.resources.settings_placeholder_profile
 import feedtracker.composeapp.generated.resources.tracking_preferences
 import feedtracker.composeapp.generated.resources.tracking_preferences_saved
@@ -151,7 +151,7 @@ fun PersonalSettingsScreen(
                 SettingsPlaceholderRow(title = stringResource(Res.string.settings_placeholder_account))
                 SettingsPlaceholderRow(title = stringResource(Res.string.settings_placeholder_notifications))
                 SettingsMenuRow(
-                    title = stringResource(Res.string.settings_placeholder_privacy),
+                    title = stringResource(Res.string.privacy),
                     onClick = onPrivacyClick,
                     enabled = !uiState.isLoggingOut,
                 )
@@ -208,7 +208,7 @@ fun PersonalSettingsScreen(
             enter = fadeIn(animationSpec = tween(SNACKBAR_FADE_MS)),
             exit = fadeOut(animationSpec = tween(SNACKBAR_FADE_MS)),
         ) {
-            ProfileSavedSnackbar(message = savedMessage)
+            MessageSnackbar(message = savedMessage)
         }
 
         if (uiState.isLoggingOut) {
@@ -266,25 +266,6 @@ private fun SettingsPlaceholderRow(title: String, showDivider: Boolean = true) {
     }
     if (showDivider) {
         HorizontalDivider(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
-    }
-}
-
-@Composable
-private fun ProfileSavedSnackbar(message: String) {
-    Surface(
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.inverseSurface,
-        shadowElevation = 6.dp,
-        tonalElevation = 6.dp,
-    ) {
-        Text(
-            text = message,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            color = MaterialTheme.colorScheme.inverseOnSurface,
-            style = MaterialTheme.typography.bodyMedium,
-        )
     }
 }
 

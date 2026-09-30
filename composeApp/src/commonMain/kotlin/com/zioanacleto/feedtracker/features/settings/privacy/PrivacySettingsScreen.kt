@@ -22,7 +22,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +34,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.zioanacleto.feedtracker.components.MessageSnackbar
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import feedtracker.composeapp.generated.resources.Res
@@ -47,9 +47,9 @@ import feedtracker.composeapp.generated.resources.export_sessions_json
 import feedtracker.composeapp.generated.resources.export_sessions_saved
 import feedtracker.composeapp.generated.resources.export_sessions_title
 import feedtracker.composeapp.generated.resources.exporting_sessions
+import feedtracker.composeapp.generated.resources.privacy
 import feedtracker.composeapp.generated.resources.save_sessions_csv
 import feedtracker.composeapp.generated.resources.save_sessions_json
-import feedtracker.composeapp.generated.resources.settings_placeholder_privacy
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -102,7 +102,7 @@ fun PrivacySettingsScreen(
                     )
                 }
                 Text(
-                    text = stringResource(Res.string.settings_placeholder_privacy),
+                    text = stringResource(Res.string.privacy),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.align(Alignment.Center),
                 )
@@ -204,21 +204,7 @@ fun PrivacySettingsScreen(
             enter = fadeIn(animationSpec = tween(SNACKBAR_FADE_MS)),
             exit = fadeOut(animationSpec = tween(SNACKBAR_FADE_MS)),
         ) {
-            Surface(
-                shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.inverseSurface,
-                shadowElevation = 6.dp,
-                tonalElevation = 6.dp,
-            ) {
-                Text(
-                    text = savedMessage,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    color = MaterialTheme.colorScheme.inverseOnSurface,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
+            MessageSnackbar(message = savedMessage)
         }
 
         if (uiState.isExporting) {

@@ -62,6 +62,9 @@ class TrackingSessionAnonymizerTest {
 
 class TrackingSessionExportFormatterTest {
 
+    private val csvBom = "\uFEFF"
+    private val csvLineEnding = "\r\n"
+
     @Test
     fun csvIncludesHeadersAndEscapesNotesWithoutSessionIds() {
         val csv = formatTrackingSessionsCsv(
@@ -78,8 +81,9 @@ class TrackingSessionExportFormatterTest {
 
         csv.shouldNotContain("session-1")
         csv shouldBe
-            "initials,birthDate,sessionStartTime,sessionEndTime,additionalNotes\n" +
-            "M.R.,01/01/1990,01/01/2026 10:00,01/01/2026 10:15,\"said \"\"hello\"\", then napped\"\n"
+            csvBom +
+            "initials,birthDate,sessionStartTime,sessionEndTime,additionalNotes$csvLineEnding" +
+            "M.R.,01/01/1990,01/01/2026 10:00,01/01/2026 10:15,\"said \"\"hello\"\", then napped\"$csvLineEnding"
     }
 
     @Test
@@ -117,8 +121,56 @@ class TrackingSessionExportFormatterTest {
     @Test
     fun emptyExportKeepsAReadableStructure() {
         formatTrackingSessionsCsv(emptyList()) shouldBe
-            "initials,birthDate,sessionStartTime,sessionEndTime,additionalNotes\n"
+            csvBom + "initials,birthDate,sessionStartTime,sessionEndTime,additionalNotes$csvLineEnding"
         formatTrackingSessionsJson(emptyList()) shouldBe "[]"
+    }
+
+    @Test
+    fun csvNeutralizesFormulaInjection() {
+        val csv = formatTrackingSessionsCsv(
+            listOf(
+                AnonymizedTrackingSession(
+                    initials = "=CMD",
+                    birthDate = "+1234",
+                    sessionStartTime = "-1",
+                    sessionEndTime = "@SUM(A1)",
+                    additionalNotes = "\tformula",
+                ),
+            ),
+        )
+
+        csv shouldBe
+            csvBom +
+            "initials,birthDate,sessionStartTime,sessionEndTime,additionalNotes$csvLineEnding" +
+            "'=CMD,'+1234,'-1,'@SUM(A1),'\tformula$csvLineEnding"
+    }
+
+    @Test
+    fun csvEscapesMultilineNotesAndLeavesNullNotesEmpty() {
+        val csv = formatTrackingSessionsCsv(
+            listOf(
+                AnonymizedTrackingSession(
+                    initials = "M.R.",
+                    birthDate = "01/01/1990",
+                    sessionStartTime = "01/01/2026 10:00",
+                    sessionEndTime = "01/01/2026 10:15",
+                    additionalNotes = "line1\nline2\rline3",
+                ),
+                AnonymizedTrackingSession(
+                    initials = "A.B.",
+                    birthDate = "02/02/1991",
+                    sessionStartTime = "02/02/2026 11:00",
+                    sessionEndTime = "02/02/2026 11:30",
+                    additionalNotes = null,
+                ),
+            ),
+        )
+
+        csv shouldBe
+            csvBom +
+            "initials,birthDate,sessionStartTime,sessionEndTime,additionalNotes$csvLineEnding" +
+            "M.R.,01/01/1990,01/01/2026 10:00,01/01/2026 10:15,\"line1\nline2\rline3\"$csvLineEnding" +
+            "A.B.,02/02/1991,02/02/2026 11:00,02/02/2026 11:30,$csvLineEnding"
     }
 }
 

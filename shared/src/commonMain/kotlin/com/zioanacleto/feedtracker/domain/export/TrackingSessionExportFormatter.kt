@@ -17,9 +17,10 @@ private val csvHeader = listOf(
 )
 
 fun formatTrackingSessionsCsv(sessions: List<AnonymizedTrackingSession>): String = buildString {
-    appendLine(csvHeader.joinToString(","))
+    append('\uFEFF')
+    appendCsvLine(csvHeader.joinToString(","))
     sessions.forEach { session ->
-        appendLine(
+        appendCsvLine(
             listOf(
                 csvField(session.initials),
                 csvField(session.birthDate),
@@ -34,8 +35,23 @@ fun formatTrackingSessionsCsv(sessions: List<AnonymizedTrackingSession>): String
 fun formatTrackingSessionsJson(sessions: List<AnonymizedTrackingSession>): String =
     exportJson.encodeToString(ListSerializer(AnonymizedTrackingSession.serializer()), sessions)
 
+private fun StringBuilder.appendCsvLine(line: String) {
+    append(line)
+    append("\r\n")
+}
+
 private fun csvField(value: String): String {
-    val needsQuotes = value.any { it == ',' || it == '"' || it == '\n' || it == '\r' }
-    if (!needsQuotes) return value
-    return "\"${value.replace("\"", "\"\"")}\""
+    val sanitized = sanitizeCsvInjection(value)
+    val needsQuotes = sanitized.any { it == ',' || it == '"' || it == '\n' || it == '\r' }
+    if (!needsQuotes) return sanitized
+    return "\"${sanitized.replace("\"", "\"\"")}\""
+}
+
+private fun sanitizeCsvInjection(value: String): String {
+    if (value.isEmpty()) return value
+    val first = value.first()
+    if (first == '=' || first == '+' || first == '-' || first == '@' || first == '\t' || first == '\r') {
+        return "'$value"
+    }
+    return value
 }

@@ -3,10 +3,12 @@ package com.zioanacleto.feedtracker.data.repositories
 import app.cash.turbine.test
 import com.zioanacleto.feedtracker.data.datasources.TrackingSessionDataSource
 import com.zioanacleto.feedtracker.domain.core.Resource
+import com.zioanacleto.feedtracker.domain.export.ExportRequiresConnectionException
 import com.zioanacleto.feedtracker.testutil.FakeNetworkMonitor
 import com.zioanacleto.feedtracker.testutil.FakeTrackingSessionDataSource
 import com.zioanacleto.feedtracker.testutil.ImmediateDispatcherProvider
 import com.zioanacleto.feedtracker.testutil.trackingSession
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -240,6 +242,52 @@ class TrackingSessionsRepositoryImplTest {
 
         network.saved.shouldBeEmpty()
         local.getTrackingSessions() shouldBe listOf(session)
+    }
+
+    @Test
+    fun getAllTrackingSessionsForExportFailsWhenOffline() = runTest {
+        val repository = repository(
+            online = false,
+            local = FakeTrackingSessionDataSource(listOf(trackingSession("local"))),
+        )
+
+        shouldThrow<ExportRequiresConnectionException> {
+            repository.getAllTrackingSessionsForExport()
+        }
+    }
+
+    @Test
+    fun getAllTrackingSessionsForExportFailsWhenNetworkListFails() = runTest {
+        val network = FakeTrackingSessionDataSource().apply {
+            getSessionsError = IllegalStateException("network down")
+        }
+        val repository = repository(
+            online = true,
+            network = network,
+            local = FakeTrackingSessionDataSource(listOf(trackingSession("local"))),
+        )
+
+        val error = shouldThrow<IllegalStateException> {
+            repository.getAllTrackingSessionsForExport()
+        }
+        error.message shouldBe "network down"
+    }
+
+    @Test
+    fun getAllTrackingSessionsForExportMergesRemoteAndPendingWithoutDuplicates() = runTest {
+        val shared = trackingSession("shared")
+        val remoteOnly = trackingSession("remote")
+        val pendingOnly = trackingSession("pending")
+        val network = FakeTrackingSessionDataSource(listOf(shared, remoteOnly)).apply {
+            saveError = IllegalStateException("upload failed")
+        }
+        val repository = repository(
+            online = true,
+            network = network,
+            local = FakeTrackingSessionDataSource(listOf(shared, pendingOnly)),
+        )
+
+        repository.getAllTrackingSessionsForExport().map { it.id } shouldBe listOf("shared", "remote", "pending")
     }
 
     @Test

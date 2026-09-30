@@ -4,6 +4,7 @@ import com.zioanacleto.feedtracker.data.datasources.TrackingSessionDataSource
 import com.zioanacleto.feedtracker.domain.TrackingSessionModel
 import com.zioanacleto.feedtracker.domain.core.DispatcherProvider
 import com.zioanacleto.feedtracker.domain.core.Resource
+import com.zioanacleto.feedtracker.domain.export.ExportRequiresConnectionException
 import com.zioanacleto.feedtracker.domain.repositories.TrackingSessionsRepository
 import com.zioanacleto.feedtracker.network.NetworkMonitor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -44,6 +45,16 @@ class TrackingSessionsRepositoryImpl(
         }
         .flowOn(dispatcherProvider.io())
 
+    override suspend fun getAllTrackingSessionsForExport(): List<TrackingSessionModel> = withContext(dispatcherProvider.io()) {
+        if (!isOnline()) {
+            throw ExportRequiresConnectionException()
+        }
+        syncPendingSessions()
+        val remote = networkDataSource.getTrackingSessions()
+        val pending = localDataSource.getTrackingSessions()
+        mergeRemoteAndPending(remote, pending)
+    }
+
     override suspend fun getTrackingSession(id: String): Flow<Resource<TrackingSessionModel>> = loadFromPreferredSource {
         getTrackingSession(id)
     }
@@ -79,16 +90,22 @@ class TrackingSessionsRepositoryImpl(
             syncPendingSessions()
             val remote = networkDataSource.getTrackingSessions()
             val pending = localDataSource.getTrackingSessions()
-            if (pending.isEmpty()) {
-                remote
-            } else {
-                val remoteIds = remote.map { it.id }.toSet()
-                remote + pending.filter { it.id !in remoteIds }
-            }
+            mergeRemoteAndPending(remote, pending)
         } catch (throwable: Throwable) {
             val pending = runCatching { localDataSource.getTrackingSessions() }.getOrDefault(emptyList())
             pending.ifEmpty { pendingSnapshot }.ifEmpty { throw throwable }
         }
+    }
+
+    private fun mergeRemoteAndPending(
+        remote: List<TrackingSessionModel>,
+        pending: List<TrackingSessionModel>,
+    ): List<TrackingSessionModel> {
+        if (pending.isEmpty()) {
+            return remote
+        }
+        val remoteIds = remote.map { it.id }.toSet()
+        return remote + pending.filter { it.id !in remoteIds }
     }
 
     private suspend fun syncPendingSessions() {

@@ -11,6 +11,8 @@ import com.zioanacleto.feedtracker.data.local.PENDING_TRACKING_SESSIONS_FILE_NAM
 import com.zioanacleto.feedtracker.data.local.PendingSessionsStore
 import com.zioanacleto.feedtracker.data.local.TRACKING_PREFERENCES_FILE_NAME
 import com.zioanacleto.feedtracker.data.local.TrackingPreferencesStore
+import com.zioanacleto.feedtracker.features.settings.privacy.IosSessionExportSharer
+import com.zioanacleto.feedtracker.features.settings.privacy.SessionExportSharer
 import com.zioanacleto.feedtracker.network.NetworkMonitor
 import com.zioanacleto.feedtracker.widget.ActiveTrackingSessionNotifier
 import com.zioanacleto.feedtracker.widget.ActiveTrackingSessionStore
@@ -26,6 +28,7 @@ import platform.Foundation.NSUserDomainMask
 @OptIn(ExperimentalForeignApi::class)
 actual val platformModule: Module = module {
     single<NetworkMonitor> { IosNetworkMonitor() }
+    single<SessionExportSharer> { IosSessionExportSharer() }
     single<ActiveTrackingSessionStore> { IosActiveTrackingSessionStore() }
     single<ActiveTrackingSessionNotifier> { IosActiveTrackingSessionNotifier() }
     single<PendingSessionsStore> {

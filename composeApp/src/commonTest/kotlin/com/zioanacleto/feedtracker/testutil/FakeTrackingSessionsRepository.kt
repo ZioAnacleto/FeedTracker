@@ -6,6 +6,7 @@ import com.zioanacleto.feedtracker.domain.repositories.TrackingSessionsRepositor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 
 class FakeTrackingSessionsRepository(
@@ -14,12 +15,23 @@ class FakeTrackingSessionsRepository(
     private val saveError: Throwable? = null,
     private val deleteError: Throwable? = null,
     private val deleteSuspends: Boolean = false,
+    private val exportError: Throwable? = null,
     override val syncedPendingCount: Flow<Int> = emptyFlow(),
 ) : TrackingSessionsRepository {
     val saved = mutableListOf<TrackingSessionModel>()
     val deletedIds = mutableListOf<String>()
 
     override suspend fun getTrackingSessions(): Flow<Resource<List<TrackingSessionModel>>> = sessions
+
+    override suspend fun getAllTrackingSessionsForExport(): List<TrackingSessionModel> {
+        exportError?.let { throw it }
+        val resource = sessions.first { it !is Resource.Loading }
+        return when (resource) {
+            is Resource.Success -> resource.data
+            is Resource.Error -> error(resource.message)
+            Resource.Loading -> error("Unexpected loading state")
+        }
+    }
 
     override suspend fun getTrackingSession(id: String): Flow<Resource<TrackingSessionModel>> = session
 

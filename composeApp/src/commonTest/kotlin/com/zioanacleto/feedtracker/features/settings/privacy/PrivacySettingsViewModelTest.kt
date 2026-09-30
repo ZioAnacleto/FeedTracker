@@ -361,6 +361,53 @@ class PrivacySettingsViewModelTest {
         )
 
         viewModel.uiState.value.showsSeparateSaveActions shouldBe false
+        exportDestination(showsSeparateSaveActions = false) shouldBe SessionExportDestination.SAVE
+        exportDestination(showsSeparateSaveActions = true) shouldBe SessionExportDestination.SHARE
+    }
+
+    @Test
+    fun exportSharesSessionsAfterTheRepositoryLeavesLoading() = runViewModelTest {
+        val sessions = listOf(sampleSession())
+        val sharer = FakeSessionExportSharer()
+        val viewModel = PrivacySettingsViewModel(
+            FakeTrackingSessionsRepository(sessions = flowOf(Resource.Loading, Resource.Success(sessions))),
+            InMemoryTrackingPreferencesRepository(),
+            sharer,
+            formatBirthDate = { value, _ -> value },
+            formatDateTime = { millis, _ -> millis.toString() },
+        )
+
+        viewModel.exportSessions(SessionExportFormat.JSON, SessionExportDestination.SHARE)
+
+        sharer.shared.single().content shouldBe formatTrackingSessionsJson(anonymizeTrackingSessions(sessions))
+        viewModel.uiState.value.isExporting shouldBe false
+        viewModel.uiState.value.error.shouldBeNull()
+    }
+
+    @Test
+    fun saveFailureWithoutAMessageUsesTheFallback() = runViewModelTest {
+        val viewModel = viewModel(
+            sessions = listOf(sampleSession()),
+            sharer = FakeSessionExportSharer(requiresComposeSaveLauncher = true),
+        )
+
+        viewModel.onSaveFailed(IllegalStateException())
+
+        viewModel.uiState.value.error shouldBe "Unable to export sessions"
+        viewModel.uiState.value.saveSucceeded shouldBe false
+        viewModel.uiState.value.pendingSave.shouldBeNull()
+    }
+
+    @Test
+    fun saveSucceededMessageShownClearsTheFlag() = runViewModelTest {
+        val viewModel = viewModel(sessions = listOf(sampleSession()), sharer = FakeSessionExportSharer())
+
+        viewModel.exportSessions(SessionExportFormat.JSON, SessionExportDestination.SAVE)
+        viewModel.uiState.value.saveSucceeded shouldBe true
+
+        viewModel.onSaveSucceededMessageShown()
+
+        viewModel.uiState.value.saveSucceeded shouldBe false
     }
 
     private fun viewModel(

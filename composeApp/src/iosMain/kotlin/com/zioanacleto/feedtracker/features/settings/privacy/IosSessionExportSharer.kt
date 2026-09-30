@@ -6,7 +6,9 @@ import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.useContents
 import kotlinx.cinterop.value
+import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSString
@@ -19,8 +21,10 @@ import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
 import platform.UIKit.UIDocumentPickerDelegateProtocol
 import platform.UIKit.UIDocumentPickerViewController
+import platform.UIKit.UISceneActivationStateForegroundActive
 import platform.UIKit.UIViewController
 import platform.UIKit.UIWindow
+import platform.UIKit.UIWindowScene
 import platform.UIKit.popoverPresentationController
 import platform.darwin.NSObject
 
@@ -36,7 +40,7 @@ class IosSessionExportSharer : SessionExportSharer {
             activityItems = listOf(fileUrl),
             applicationActivities = null,
         )
-        activityViewController.popoverPresentationController?.sourceView = presenter.view
+        anchorPopover(activityViewController, presenter)
         presenter.presentViewController(activityViewController, animated = true, completion = null)
     }
 
@@ -106,14 +110,28 @@ private class IosExportDocumentPickerDelegate(private val session: DocumentExpor
     }
 }
 
+@OptIn(ExperimentalForeignApi::class)
+private fun anchorPopover(activityViewController: UIActivityViewController, presenter: UIViewController) {
+    val popover = activityViewController.popoverPresentationController ?: return
+    val view = presenter.view
+    popover.sourceView = view
+    popover.sourceRect = view.bounds.useContents {
+        CGRectMake(size.width / 2.0, size.height / 2.0, 1.0, 1.0)
+    }
+}
+
 private fun currentViewController(): UIViewController {
-    val window = UIApplication.sharedApplication.windows
-        .mapNotNull { it as? UIWindow }
-        .firstOrNull { it.isKeyWindow() }
-        ?: UIApplication.sharedApplication.windows.firstOrNull() as? UIWindow
+    val window = keyWindow()
     var controller = requireNotNull(window?.rootViewController) { "No root view controller" }
     while (controller.presentedViewController != null) {
         controller = requireNotNull(controller.presentedViewController)
     }
     return controller
+}
+
+private fun keyWindow(): UIWindow? {
+    val scenes = UIApplication.sharedApplication.connectedScenes.mapNotNull { it as? UIWindowScene }
+    val activeScene = scenes.firstOrNull { it.activationState == UISceneActivationStateForegroundActive }
+    return activeScene?.keyWindow
+        ?: scenes.firstNotNullOfOrNull { it.keyWindow }
 }

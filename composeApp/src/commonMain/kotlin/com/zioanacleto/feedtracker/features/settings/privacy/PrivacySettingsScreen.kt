@@ -130,7 +130,10 @@ fun PrivacySettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
                     onClick = {
-                        viewModel.exportSessions(SessionExportFormat.CSV, SessionExportDestination.SHARE)
+                        viewModel.exportSessions(
+                            SessionExportFormat.CSV,
+                            exportDestination(uiState.showsSeparateSaveActions),
+                        )
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !uiState.isExporting,
@@ -148,7 +151,10 @@ fun PrivacySettingsScreen(
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(
                     onClick = {
-                        viewModel.exportSessions(SessionExportFormat.JSON, SessionExportDestination.SHARE)
+                        viewModel.exportSessions(
+                            SessionExportFormat.JSON,
+                            exportDestination(uiState.showsSeparateSaveActions),
+                        )
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !uiState.isExporting,

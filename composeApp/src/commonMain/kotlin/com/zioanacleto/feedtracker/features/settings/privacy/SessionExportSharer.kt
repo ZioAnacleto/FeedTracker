@@ -10,6 +10,9 @@ enum class SessionExportDestination {
     SAVE,
 }
 
+fun exportDestination(showsSeparateSaveActions: Boolean): SessionExportDestination =
+    if (showsSeparateSaveActions) SessionExportDestination.SHARE else SessionExportDestination.SAVE
+
 data class PendingSessionExport(val fileName: String, val mimeType: String, val content: String)
 
 enum class SessionExportSaveResult {

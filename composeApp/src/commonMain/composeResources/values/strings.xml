@@ -123,6 +123,7 @@
     <string name="unable_to_export_sessions">Unable to export sessions</string>
     <string name="export_sessions_requires_connection">An internet connection is required to export sessions</string>
     <string name="export_sessions_saved">Sessions saved</string>
+    <string name="export_sessions_replace_file">A file with this name already exists. Replace it?</string>
     <string name="tracking_preferences">Tracking preferences</string>
     <string name="date_format">Date format</string>
     <string name="date_format_description">How dates appear in sessions and reports</string>

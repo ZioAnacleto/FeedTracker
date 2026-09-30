@@ -58,6 +58,31 @@ class TrackingSessionAnonymizerTest {
 
         exported.single().initials shouldBe "?."
     }
+
+    @Test
+    fun usesTheAvailableInitialWhenOnlyOneNamePartIsPresent() {
+        val exported = anonymizeTrackingSessions(
+            listOf(
+                session(id = "name", name = "Mario", surname = " "),
+                session(id = "surname", name = " ", surname = "Rossi"),
+            ),
+        )
+
+        exported.map { it.initials } shouldBe listOf("M.", "R.")
+    }
+
+    @Test
+    fun disambiguatesThreePeopleWhoShareTheSameInitials() {
+        val exported = anonymizeTrackingSessions(
+            listOf(
+                session(id = "mario", name = "Mario", surname = "Rossi"),
+                session(id = "maria", name = "Maria", surname = "Rossi"),
+                session(id = "marco", name = "Marco", surname = "Rossi"),
+            ),
+        )
+
+        exported.map { it.initials } shouldBe listOf("M.R.3", "M.R.2", "M.R.")
+    }
 }
 
 class TrackingSessionExportFormatterTest {

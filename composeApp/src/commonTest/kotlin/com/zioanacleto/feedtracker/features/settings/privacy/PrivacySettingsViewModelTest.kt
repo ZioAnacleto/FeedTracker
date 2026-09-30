@@ -22,6 +22,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.flow.flowOf
+import org.jetbrains.compose.resources.StringResource
 import kotlin.test.Test
 
 class PrivacySettingsViewModelTest {
@@ -389,6 +390,7 @@ class PrivacySettingsViewModelTest {
         val viewModel = viewModel(
             sessions = listOf(sampleSession()),
             sharer = FakeSessionExportSharer(requiresComposeSaveLauncher = true),
+            stringResource = { "Unable to export sessions" },
         )
 
         viewModel.onSaveFailed(IllegalStateException())
@@ -417,6 +419,7 @@ class PrivacySettingsViewModelTest {
         savedStateHandle: SavedStateHandle = SavedStateHandle(),
         formatBirthDate: (String, DateDisplayFormat) -> String = { value, _ -> value },
         formatDateTime: (Long, DateDisplayFormat) -> String = { millis, _ -> millis.toString() },
+        stringResource: suspend (StringResource) -> String = { error("unexpected string") },
     ) = PrivacySettingsViewModel(
         FakeTrackingSessionsRepository(sessions = flowOf(Resource.Success(sessions))),
         InMemoryTrackingPreferencesRepository(TrackingPreferences(dateFormat = dateFormat)),
@@ -424,5 +427,6 @@ class PrivacySettingsViewModelTest {
         savedStateHandle = savedStateHandle,
         formatBirthDate = formatBirthDate,
         formatDateTime = formatDateTime,
+        stringResource = stringResource,
     )
 }

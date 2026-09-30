@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 
 data class PrivacySettingsUiState(
@@ -43,6 +44,7 @@ class PrivacySettingsViewModel(
     private val formatDateTime: (Long, DateDisplayFormat) -> String = { millis, format ->
         formatSessionDateTime(millis, format)
     },
+    private val stringResource: suspend (StringResource) -> String = { resource -> getString(resource) },
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(restoredState())
     val uiState: StateFlow<PrivacySettingsUiState> = _uiState.asStateFlow()
@@ -114,7 +116,7 @@ class PrivacySettingsViewModel(
                         isExporting = false,
                         pendingSave = null,
                         saveLauncherOpen = false,
-                        error = throwable.message ?: getString(fallback),
+                        error = throwable.message ?: stringResource(fallback),
                     )
                 }
             }
@@ -157,7 +159,7 @@ class PrivacySettingsViewModel(
                 it.copy(
                     pendingSave = null,
                     saveLauncherOpen = false,
-                    error = throwable.message ?: getString(Res.string.unable_to_export_sessions),
+                    error = throwable.message ?: stringResource(Res.string.unable_to_export_sessions),
                 )
             }
         }

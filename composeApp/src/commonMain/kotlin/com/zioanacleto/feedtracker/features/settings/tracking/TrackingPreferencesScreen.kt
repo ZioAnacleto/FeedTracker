@@ -347,7 +347,7 @@ private fun PreferenceSection(title: String, description: String, content: @Comp
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         shape = MaterialTheme.shapes.large,
-        border = BorderStroke(1.dp, Color.White),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = title, style = MaterialTheme.typography.titleMedium)

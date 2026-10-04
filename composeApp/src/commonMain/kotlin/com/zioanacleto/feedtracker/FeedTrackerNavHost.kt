@@ -27,6 +27,8 @@ import com.zioanacleto.feedtracker.features.newtracking.NewTrackingScreen
 import com.zioanacleto.feedtracker.features.newtracking.navigation.NewTrackingRoute
 import com.zioanacleto.feedtracker.features.pasttracking.PastTrackingScreen
 import com.zioanacleto.feedtracker.features.pasttracking.navigation.PastTrackingRoute
+import com.zioanacleto.feedtracker.features.settings.appearance.AppearanceSettingsScreen
+import com.zioanacleto.feedtracker.features.settings.appearance.navigation.AppearanceSettingsRoute
 import com.zioanacleto.feedtracker.features.settings.personal.PersonalSettingsScreen
 import com.zioanacleto.feedtracker.features.settings.personal.navigation.PersonalSettingsRoute
 import com.zioanacleto.feedtracker.features.settings.privacy.PrivacySettingsScreen
@@ -135,6 +137,7 @@ private fun LoggedInNavHost(modifier: Modifier, navController: NavHostController
                 onBackButtonClick = { navController.popBackStack() },
                 onProfileClick = { navController.navigate(ProfileSettingsRoute) },
                 onTrackingPreferencesClick = { navController.navigate(TrackingPreferencesRoute) },
+                onAppearanceClick = { navController.navigate(AppearanceSettingsRoute) },
                 onPrivacyClick = { navController.navigate(PrivacySettingsRoute) },
                 showProfileSavedMessage = profileSaved,
                 onProfileSavedMessageShown = { entry.savedStateHandle[PROFILE_SAVED_RESULT] = false },
@@ -162,6 +165,12 @@ private fun LoggedInNavHost(modifier: Modifier, navController: NavHostController
                     navController.previousBackStackEntry?.savedStateHandle?.set(TRACKING_PREFERENCES_SAVED_RESULT, true)
                     navController.popBackStack()
                 },
+            )
+        }
+        composable<AppearanceSettingsRoute> {
+            AppearanceSettingsScreen(
+                modifier = Modifier.fillMaxSize(),
+                onBackButtonClick = { navController.popBackStack() },
             )
         }
         composable<PrivacySettingsRoute> {

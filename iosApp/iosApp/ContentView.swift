@@ -11,9 +11,12 @@ struct ComposeView: UIViewControllerRepresentable {
 }
 
 struct ContentView: View {
+    @ObservedObject private var statusBar = StatusBarStyleModel.shared
+
     var body: some View {
         ComposeView()
             .ignoresSafeArea()
+            .preferredColorScheme(statusBar.colorScheme)
     }
 }
 

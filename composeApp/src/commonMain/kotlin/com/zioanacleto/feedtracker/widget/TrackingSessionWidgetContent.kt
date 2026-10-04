@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zioanacleto.feedtracker.components.formatElapsedTimerText
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
-import com.zioanacleto.feedtracker.theme.FeedTrackerBackgroundBrush
+import com.zioanacleto.feedtracker.theme.feedTrackerBackgroundBrush
 import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.widget_idle_label
 import feedtracker.composeapp.generated.resources.widget_idle_timer
@@ -56,7 +56,7 @@ fun TrackingSessionWidgetContent(startTimeMillis: Long?, onClick: () -> Unit, mo
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(FeedTrackerBackgroundBrush, RoundedCornerShape(20.dp))
+            .background(feedTrackerBackgroundBrush(), RoundedCornerShape(20.dp))
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,

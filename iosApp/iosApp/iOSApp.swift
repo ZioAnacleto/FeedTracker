@@ -2,6 +2,11 @@ import SwiftUI
 import WidgetKit
 import ComposeApp
 
+final class StatusBarStyleModel: ObservableObject {
+    static let shared = StatusBarStyleModel()
+    @Published var colorScheme: ColorScheme?
+}
+
 @main
 struct iOSApp: App {
     init() {
@@ -9,6 +14,13 @@ struct iOSApp: App {
         TrackingSessionLivePresenter.configure()
         IosActiveTrackingSessionStoreKt.setIosWidgetReloader {
             TrackingSessionLivePresenter.sync()
+        }
+        IosStatusBarKt.setIosStatusBarStyle { followSystem, darkTheme in
+            let follow = followSystem.boolValue
+            let dark = darkTheme.boolValue
+            DispatchQueue.main.async {
+                StatusBarStyleModel.shared.colorScheme = follow ? nil : (dark ? .dark : .light)
+            }
         }
     }
 

@@ -1,9 +1,12 @@
 package com.zioanacleto.feedtracker.di
 
 import com.zioanacleto.feedtracker.IosNetworkMonitor
+import com.zioanacleto.feedtracker.data.local.APPEARANCE_PREFERENCES_FILE_NAME
 import com.zioanacleto.feedtracker.data.local.AUTH_SESSION_FILE_NAME
+import com.zioanacleto.feedtracker.data.local.AppearancePreferencesStore
 import com.zioanacleto.feedtracker.data.local.AuthSessionStore
 import com.zioanacleto.feedtracker.data.local.FileTextStore
+import com.zioanacleto.feedtracker.data.local.JsonAppearancePreferencesStore
 import com.zioanacleto.feedtracker.data.local.JsonAuthSessionStore
 import com.zioanacleto.feedtracker.data.local.JsonPendingSessionsStore
 import com.zioanacleto.feedtracker.data.local.JsonTrackingPreferencesStore
@@ -70,4 +73,19 @@ actual val platformModule: Module = module {
         )
         JsonTrackingPreferencesStore(FileTextStore(path))
     }
+    single<AppearancePreferencesStore> {
+        JsonAppearancePreferencesStore(FileTextStore(documentsFilePath(APPEARANCE_PREFERENCES_FILE_NAME)))
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private fun documentsFilePath(fileName: String): String {
+    val documentsUrl = NSFileManager.defaultManager.URLForDirectory(
+        directory = NSDocumentDirectory,
+        inDomain = NSUserDomainMask,
+        appropriateForURL = null,
+        create = true,
+        error = null,
+    )
+    return requireNotNull(documentsUrl?.URLByAppendingPathComponent(fileName)?.path)
 }

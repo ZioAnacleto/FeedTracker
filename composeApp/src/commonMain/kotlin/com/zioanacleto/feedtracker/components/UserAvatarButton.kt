@@ -10,7 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -29,12 +28,12 @@ fun UserAvatarButton(initials: String, onClick: () -> Unit, modifier: Modifier =
         Box(
             modifier = Modifier
                 .size(36.dp)
-                .border(width = 1.5.dp, color = Color.White, shape = CircleShape),
+                .border(width = 1.5.dp, color = MaterialTheme.colorScheme.onBackground, shape = CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = initials,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
             )

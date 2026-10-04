@@ -1,9 +1,12 @@
 package com.zioanacleto.feedtracker.di
 
 import com.zioanacleto.feedtracker.JvmNetworkMonitor
+import com.zioanacleto.feedtracker.data.local.APPEARANCE_PREFERENCES_FILE_NAME
 import com.zioanacleto.feedtracker.data.local.AUTH_SESSION_FILE_NAME
+import com.zioanacleto.feedtracker.data.local.AppearancePreferencesStore
 import com.zioanacleto.feedtracker.data.local.AuthSessionStore
 import com.zioanacleto.feedtracker.data.local.FileTextStore
+import com.zioanacleto.feedtracker.data.local.JsonAppearancePreferencesStore
 import com.zioanacleto.feedtracker.data.local.JsonAuthSessionStore
 import com.zioanacleto.feedtracker.data.local.JsonPendingSessionsStore
 import com.zioanacleto.feedtracker.data.local.JsonTrackingPreferencesStore
@@ -48,6 +51,12 @@ actual val platformModule: Module = module {
         val directory = File(System.getProperty("user.home"), ".feedtracker")
         JsonTrackingPreferencesStore(
             FileTextStore(File(directory, TRACKING_PREFERENCES_FILE_NAME).absolutePath),
+        )
+    }
+    single<AppearancePreferencesStore> {
+        val directory = File(System.getProperty("user.home"), ".feedtracker")
+        JsonAppearancePreferencesStore(
+            FileTextStore(File(directory, APPEARANCE_PREFERENCES_FILE_NAME).absolutePath),
         )
     }
 }

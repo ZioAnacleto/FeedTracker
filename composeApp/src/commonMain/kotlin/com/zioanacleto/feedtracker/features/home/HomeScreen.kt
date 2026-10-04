@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -684,7 +685,9 @@ private fun DeletedSessionSnackbar(onUndo: () -> Unit) {
                 )
                 TextButton(
                     onClick = onUndo,
-                    colors = feedTrackerTextButtonColors(),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+                    ),
                 ) {
                     Text(text = stringResource(Res.string.undo))
                 }

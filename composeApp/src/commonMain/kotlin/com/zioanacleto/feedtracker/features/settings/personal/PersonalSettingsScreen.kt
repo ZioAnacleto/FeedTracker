@@ -45,6 +45,7 @@ import com.zioanacleto.feedtracker.components.MessageSnackbar
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import feedtracker.composeapp.generated.resources.Res
+import feedtracker.composeapp.generated.resources.appearance
 import feedtracker.composeapp.generated.resources.back
 import feedtracker.composeapp.generated.resources.cancel
 import feedtracker.composeapp.generated.resources.log_out
@@ -71,6 +72,7 @@ fun PersonalSettingsScreen(
     onBackButtonClick: () -> Unit,
     onProfileClick: () -> Unit,
     onTrackingPreferencesClick: () -> Unit,
+    onAppearanceClick: () -> Unit,
     onPrivacyClick: () -> Unit,
     showProfileSavedMessage: Boolean = false,
     onProfileSavedMessageShown: () -> Unit = {},
@@ -146,6 +148,11 @@ fun PersonalSettingsScreen(
                 SettingsMenuRow(
                     title = stringResource(Res.string.tracking_preferences),
                     onClick = onTrackingPreferencesClick,
+                    enabled = !uiState.isLoggingOut,
+                )
+                SettingsMenuRow(
+                    title = stringResource(Res.string.appearance),
+                    onClick = onAppearanceClick,
                     enabled = !uiState.isLoggingOut,
                 )
                 SettingsPlaceholderRow(title = stringResource(Res.string.settings_placeholder_account))

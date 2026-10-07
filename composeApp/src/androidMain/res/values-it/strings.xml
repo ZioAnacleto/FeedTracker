@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FeedTracker</string>
+    <string name="widget_name">Timer FeedTracker</string>
+    <string name="widget_description">Mostra il timer della sessione in corso</string>
+    <string name="widget_tracking_label">In corso</string>
+    <string name="widget_idle_label">Tocca per iniziare</string>
+    <string name="widget_idle_timer">--:--</string>
+    <string name="notification_channel_name">Timer della sessione</string>
+    <string name="notification_channel_description">Mostra il timer della sessione in corso</string>
+    <string name="export_sessions_share_title">Esporta sessioni</string>
+</resources>

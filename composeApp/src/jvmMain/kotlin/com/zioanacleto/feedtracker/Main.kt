@@ -16,6 +16,9 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.zioanacleto.feedtracker.di.initKoin
+import com.zioanacleto.feedtracker.domain.repositories.LanguagePreferencesRepository
+import com.zioanacleto.feedtracker.locale.ProvideAppLanguage
+import com.zioanacleto.feedtracker.locale.applyJvmAppLanguage
 import com.zioanacleto.feedtracker.theme.FeedTrackerTheme
 import com.zioanacleto.feedtracker.widget.ActiveTrackingSessionStore
 import com.zioanacleto.feedtracker.widget.NewTrackingNavigator
@@ -34,74 +37,78 @@ fun main() {
     initKoin {
         printLogger()
     }
-    val store = KoinPlatform.getKoin().get<ActiveTrackingSessionStore>()
+    val koin = KoinPlatform.getKoin()
+    applyJvmAppLanguage(koin.get<LanguagePreferencesRepository>().language.value)
+    val store = koin.get<ActiveTrackingSessionStore>()
     application {
-        var showWidget by remember { mutableStateOf(false) }
-        val trayIcon = painterResource(Res.drawable.compose_multiplatform)
-        val openRequested by NewTrackingNavigator.openRequested.collectAsState()
-        val newTrackingLabel = stringResource(Res.string.tray_new_tracking_session)
-        val showWidgetLabel = stringResource(Res.string.tray_show_timer_widget)
-        val quitLabel = stringResource(Res.string.tray_quit)
-        val widgetTitle = stringResource(Res.string.widget_window_title)
+        ProvideAppLanguage {
+            var showWidget by remember { mutableStateOf(false) }
+            val trayIcon = painterResource(Res.drawable.compose_multiplatform)
+            val openRequested by NewTrackingNavigator.openRequested.collectAsState()
+            val newTrackingLabel = stringResource(Res.string.tray_new_tracking_session)
+            val showWidgetLabel = stringResource(Res.string.tray_show_timer_widget)
+            val quitLabel = stringResource(Res.string.tray_quit)
+            val widgetTitle = stringResource(Res.string.widget_window_title)
 
-        Tray(
-            icon = trayIcon,
-            tooltip = "FeedTracker",
-            onAction = { NewTrackingNavigator.requestOpen() },
-            menu = {
-                Item(
-                    text = newTrackingLabel,
-                    onClick = { NewTrackingNavigator.requestOpen() },
-                )
-                Item(
-                    text = showWidgetLabel,
-                    onClick = { showWidget = true },
-                )
-                Separator()
-                Item(
-                    text = quitLabel,
-                    onClick = ::exitApplication,
-                )
-            },
-        )
-
-        Window(
-            onCloseRequest = ::exitApplication,
-            title = "FeedTracker",
-        ) {
-            val awtWindow = this.window
-            LaunchedEffect(openRequested) {
-                if (openRequested) {
-                    awtWindow.toFront()
-                    awtWindow.requestFocus()
-                }
-            }
-            App(
-                modifier = Modifier.padding(20.dp),
-            )
-        }
-
-        if (showWidget) {
-            val widgetState = rememberWindowState(
-                width = 240.dp,
-                height = 140.dp,
-                position = WindowPosition(Alignment.TopEnd),
-            )
-            Window(
-                onCloseRequest = { showWidget = false },
-                title = widgetTitle,
-                state = widgetState,
-                alwaysOnTop = true,
-                resizable = false,
-            ) {
-                val startTimeMillis by store.startTimeMillis.collectAsState()
-                val person by store.person.collectAsState()
-                FeedTrackerTheme {
-                    TrackingSessionWidgetContent(
-                        startTimeMillis = startTimeMillis,
-                        displayName = person.displayName,
+            Tray(
+                icon = trayIcon,
+                tooltip = "FeedTracker",
+                onAction = { NewTrackingNavigator.requestOpen() },
+                menu = {
+                    Item(
+                        text = newTrackingLabel,
                         onClick = { NewTrackingNavigator.requestOpen() },
                     )
+                    Item(
+                        text = showWidgetLabel,
+                        onClick = { showWidget = true },
+                    )
+                    Separator()
+                    Item(
+                        text = quitLabel,
+                        onClick = ::exitApplication,
+                    )
+                },
+            )
+
+            Window(
+                onCloseRequest = ::exitApplication,
+                title = "FeedTracker",
+            ) {
+                val awtWindow = this.window
+                LaunchedEffect(openRequested) {
+                    if (openRequested) {
+                        awtWindow.toFront()
+                        awtWindow.requestFocus()
+                    }
+                }
+                App(
+                    modifier = Modifier.padding(20.dp),
+                )
+            }
+
+            if (showWidget) {
+                val widgetState = rememberWindowState(
+                    width = 240.dp,
+                    height = 140.dp,
+                    position = WindowPosition(Alignment.TopEnd),
+                )
+                Window(
+                    onCloseRequest = { showWidget = false },
+                    title = widgetTitle,
+                    state = widgetState,
+                    alwaysOnTop = true,
+                    resizable = false,
+                ) {
+                    val startTimeMillis by store.startTimeMillis.collectAsState()
+                    val person by store.person.collectAsState()
+                    FeedTrackerTheme {
+                        TrackingSessionWidgetContent(
+                            startTimeMillis = startTimeMillis,
+                            displayName = person.displayName,
+                            onClick = { NewTrackingNavigator.requestOpen() },
+                        )
+                    }
                 }
             }
         }

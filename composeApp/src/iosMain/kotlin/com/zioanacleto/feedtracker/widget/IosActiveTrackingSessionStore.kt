@@ -13,6 +13,10 @@ fun setIosWidgetReloader(reloader: () -> Unit) {
     iosWidgetReloader = reloader
 }
 
+fun reloadIosTrackingWidgets() {
+    iosWidgetReloader()
+}
+
 @OptIn(ExperimentalForeignApi::class)
 class IosActiveTrackingSessionStore : ActiveTrackingSessionStore {
     private val defaults = NSUserDefaults(suiteName = ActiveTrackingSessionDefaults.APP_GROUP_ID)

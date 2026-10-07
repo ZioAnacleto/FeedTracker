@@ -46,7 +46,7 @@ private struct TrackingSessionExpandedIslandView: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Text("Tracking")
+            Text(TrackingSessionCopy.tracking)
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(.white.opacity(0.9))
             if !displayName.isEmpty {
@@ -81,7 +81,7 @@ private struct TrackingSessionLiveActivityLockScreenView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Tracking")
+            Text(TrackingSessionCopy.tracking)
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(.white.opacity(0.9))
             if !displayName.isEmpty {

@@ -148,7 +148,7 @@ enum TrackingSessionLivePresenter {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
             .joined(separator: " ")
-        content.title = displayName.isEmpty ? "Tracking" : displayName
+        content.title = displayName.isEmpty ? TrackingSessionCopy.tracking : displayName
         content.body = elapsedTimerText(since: startTimeMillis)
         content.sound = nil
         content.interruptionLevel = .passive

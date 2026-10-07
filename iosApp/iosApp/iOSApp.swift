@@ -15,6 +15,7 @@ struct iOSApp: App {
         IosActiveTrackingSessionStoreKt.setIosWidgetReloader {
             TrackingSessionLivePresenter.sync()
         }
+        LocalAppLocale_iosKt.applyStoredIosLanguage()
         IosStatusBarKt.setIosStatusBarStyle { followSystem, darkTheme in
             let follow = followSystem.boolValue
             let dark = darkTheme.boolValue

@@ -109,7 +109,14 @@
     <string name="settings_placeholder_account">Account</string>
     <string name="settings_placeholder_notifications">Notifications</string>
     <string name="privacy">Privacy</string>
-    <string name="settings_placeholder_language">Language</string>
+    <string name="language">Language</string>
+    <string name="language_description">Choose the language for the app. Dates and durations keep the formats from Tracking preferences.</string>
+    <string name="language_system">System</string>
+    <string name="language_system_description">Match the language of this device</string>
+    <string name="language_english">English</string>
+    <string name="language_english_description">Always use English</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_italian_description">Always use Italian</string>
     <string name="settings_placeholder_coming_soon">Coming soon</string>
     <string name="export_sessions_title">Export sessions</string>
     <string name="export_sessions_description">Download or share a copy of your tracking sessions, including sessions that are still only on this device. An internet connection is required. Names replaced with initials. Dates use the format from Tracking preferences.</string>

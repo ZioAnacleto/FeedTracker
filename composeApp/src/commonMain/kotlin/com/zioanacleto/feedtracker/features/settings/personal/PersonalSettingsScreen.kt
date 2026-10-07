@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
@@ -48,6 +50,7 @@ import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.appearance
 import feedtracker.composeapp.generated.resources.back
 import feedtracker.composeapp.generated.resources.cancel
+import feedtracker.composeapp.generated.resources.language
 import feedtracker.composeapp.generated.resources.log_out
 import feedtracker.composeapp.generated.resources.logging_out
 import feedtracker.composeapp.generated.resources.logout_confirmation
@@ -56,7 +59,6 @@ import feedtracker.composeapp.generated.resources.privacy
 import feedtracker.composeapp.generated.resources.profile_saved
 import feedtracker.composeapp.generated.resources.settings_placeholder_account
 import feedtracker.composeapp.generated.resources.settings_placeholder_coming_soon
-import feedtracker.composeapp.generated.resources.settings_placeholder_language
 import feedtracker.composeapp.generated.resources.settings_placeholder_notifications
 import feedtracker.composeapp.generated.resources.settings_placeholder_profile
 import feedtracker.composeapp.generated.resources.tracking_preferences
@@ -73,6 +75,7 @@ fun PersonalSettingsScreen(
     onProfileClick: () -> Unit,
     onTrackingPreferencesClick: () -> Unit,
     onAppearanceClick: () -> Unit,
+    onLanguageClick: () -> Unit,
     onPrivacyClick: () -> Unit,
     showProfileSavedMessage: Boolean = false,
     onProfileSavedMessageShown: () -> Unit = {},
@@ -137,6 +140,7 @@ fun PersonalSettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = ScreenHorizontalPadding),
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -162,21 +166,25 @@ fun PersonalSettingsScreen(
                     onClick = onPrivacyClick,
                     enabled = !uiState.isLoggingOut,
                 )
-                SettingsPlaceholderRow(title = stringResource(Res.string.settings_placeholder_language), showDivider = false)
-            }
-
-            Button(
-                onClick = { showLogoutConfirmation = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = ScreenHorizontalPadding, vertical = 24.dp),
-                enabled = !uiState.isLoggingOut,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                ),
-            ) {
-                Text(stringResource(Res.string.log_out))
+                SettingsMenuRow(
+                    title = stringResource(Res.string.language),
+                    onClick = onLanguageClick,
+                    enabled = !uiState.isLoggingOut,
+                    showDivider = false,
+                )
+                Button(
+                    onClick = { showLogoutConfirmation = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    enabled = !uiState.isLoggingOut,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    ),
+                ) {
+                    Text(stringResource(Res.string.log_out))
+                }
             }
         }
 
@@ -233,7 +241,7 @@ fun PersonalSettingsScreen(
 }
 
 @Composable
-private fun SettingsMenuRow(title: String, onClick: () -> Unit, enabled: Boolean = true) {
+private fun SettingsMenuRow(title: String, onClick: () -> Unit, enabled: Boolean = true, showDivider: Boolean = true) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -253,7 +261,9 @@ private fun SettingsMenuRow(title: String, onClick: () -> Unit, enabled: Boolean
             tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
         )
     }
-    HorizontalDivider(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
+    if (showDivider) {
+        HorizontalDivider(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
+    }
 }
 
 @Composable

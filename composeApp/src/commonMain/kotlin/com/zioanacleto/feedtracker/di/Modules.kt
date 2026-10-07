@@ -7,6 +7,7 @@ import com.zioanacleto.feedtracker.features.login.ForgotPasswordViewModel
 import com.zioanacleto.feedtracker.features.login.LoginMethodsViewModel
 import com.zioanacleto.feedtracker.features.newtracking.NewTrackingViewModel
 import com.zioanacleto.feedtracker.features.settings.appearance.AppearanceSettingsViewModel
+import com.zioanacleto.feedtracker.features.settings.language.LanguageSettingsViewModel
 import com.zioanacleto.feedtracker.features.settings.personal.PersonalSettingsViewModel
 import com.zioanacleto.feedtracker.features.settings.privacy.PrivacySettingsViewModel
 import com.zioanacleto.feedtracker.features.settings.profile.ProfileSettingsViewModel
@@ -45,6 +46,7 @@ val uiModule = module {
     viewModel { PrivacySettingsViewModel(get(), get(), get(), get()) }
     viewModel { TrackingPreferencesViewModel(get()) }
     viewModel { AppearanceSettingsViewModel(get()) }
+    viewModel { LanguageSettingsViewModel(get()) }
 }
 
 expect val platformModule: Module

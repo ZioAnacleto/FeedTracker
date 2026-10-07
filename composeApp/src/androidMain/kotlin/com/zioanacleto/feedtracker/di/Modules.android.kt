@@ -8,8 +8,11 @@ import com.zioanacleto.feedtracker.data.local.AuthSessionStore
 import com.zioanacleto.feedtracker.data.local.FileTextStore
 import com.zioanacleto.feedtracker.data.local.JsonAppearancePreferencesStore
 import com.zioanacleto.feedtracker.data.local.JsonAuthSessionStore
+import com.zioanacleto.feedtracker.data.local.JsonLanguagePreferencesStore
 import com.zioanacleto.feedtracker.data.local.JsonPendingSessionsStore
 import com.zioanacleto.feedtracker.data.local.JsonTrackingPreferencesStore
+import com.zioanacleto.feedtracker.data.local.LANGUAGE_PREFERENCES_FILE_NAME
+import com.zioanacleto.feedtracker.data.local.LanguagePreferencesStore
 import com.zioanacleto.feedtracker.data.local.PENDING_TRACKING_SESSIONS_FILE_NAME
 import com.zioanacleto.feedtracker.data.local.PendingSessionsStore
 import com.zioanacleto.feedtracker.data.local.TRACKING_PREFERENCES_FILE_NAME
@@ -49,6 +52,11 @@ actual val platformModule: Module = module {
     single<AppearancePreferencesStore> {
         JsonAppearancePreferencesStore(
             FileTextStore(File(androidContext().filesDir, APPEARANCE_PREFERENCES_FILE_NAME).absolutePath),
+        )
+    }
+    single<LanguagePreferencesStore> {
+        JsonLanguagePreferencesStore(
+            FileTextStore(File(androidContext().filesDir, LANGUAGE_PREFERENCES_FILE_NAME).absolutePath),
         )
     }
 }

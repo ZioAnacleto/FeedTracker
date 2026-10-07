@@ -15,6 +15,15 @@ class DateDisplayTest {
     }
 
     @Test
+    fun datePatternsStayNumericSoTheAppLanguageDoesNotChangeThem() {
+        DateDisplayFormat.entries.forEach { format ->
+            format.dateTimePattern.none { character ->
+                character.isLetter() && character !in "dMyHm"
+            } shouldBe true
+        }
+    }
+
+    @Test
     fun convertsDisplayedBirthDatesBackToCanonical() {
         canonicalBirthDateFromDisplay("09/01/1990", DateDisplayFormat.MONTH_DAY_YEAR) shouldBe "01/09/1990"
         canonicalBirthDateFromDisplay("1990/09/01", DateDisplayFormat.YEAR_MONTH_DAY) shouldBe "01/09/1990"

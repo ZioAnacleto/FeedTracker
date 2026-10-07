@@ -6,4 +6,5 @@ object ActiveTrackingSessionDefaults {
     const val START_TIME_MILLIS_KEY = "start_time_millis"
     const val NAME_KEY = "name"
     const val SURNAME_KEY = "surname"
+    const val APP_LANGUAGE_KEY = "app_language"
 }

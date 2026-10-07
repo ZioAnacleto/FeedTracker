@@ -121,6 +121,13 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    // In-app language switching reads values-it at runtime. Language splits would
+    // leave those strings out of the base module until Play downloaded Italian.
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
     if (canSignAndroidRelease) {
         signingConfigs {
             create("release") {

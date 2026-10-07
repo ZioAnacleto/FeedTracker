@@ -7,23 +7,26 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.zioanacleto.feedtracker.domain.repositories.AuthSessionRepository
 import com.zioanacleto.feedtracker.domain.repositories.TrackingPreferencesRepository
+import com.zioanacleto.feedtracker.locale.ProvideAppLanguage
 import com.zioanacleto.feedtracker.theme.FeedTrackerTheme
 import org.koin.compose.koinInject
 
 @Composable
 fun App(modifier: Modifier = Modifier) {
-    FeedTrackerTheme {
-        val authSessionRepository = koinInject<AuthSessionRepository>()
-        val trackingPreferencesRepository = koinInject<TrackingPreferencesRepository>()
-        val session by authSessionRepository.session.collectAsState()
-        LaunchedEffect(session?.accessToken) {
-            if (session != null) {
-                trackingPreferencesRepository.refreshFromRemote()
+    ProvideAppLanguage {
+        FeedTrackerTheme {
+            val authSessionRepository = koinInject<AuthSessionRepository>()
+            val trackingPreferencesRepository = koinInject<TrackingPreferencesRepository>()
+            val session by authSessionRepository.session.collectAsState()
+            LaunchedEffect(session?.accessToken) {
+                if (session != null) {
+                    trackingPreferencesRepository.refreshFromRemote()
+                }
             }
+            FeedTrackerNavHost(
+                isLoggedIn = session != null,
+                modifier = modifier,
+            )
         }
-        FeedTrackerNavHost(
-            isLoggedIn = session != null,
-            modifier = modifier,
-        )
     }
 }

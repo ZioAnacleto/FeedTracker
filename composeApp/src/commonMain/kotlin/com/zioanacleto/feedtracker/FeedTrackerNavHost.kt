@@ -29,6 +29,8 @@ import com.zioanacleto.feedtracker.features.pasttracking.PastTrackingScreen
 import com.zioanacleto.feedtracker.features.pasttracking.navigation.PastTrackingRoute
 import com.zioanacleto.feedtracker.features.settings.appearance.AppearanceSettingsScreen
 import com.zioanacleto.feedtracker.features.settings.appearance.navigation.AppearanceSettingsRoute
+import com.zioanacleto.feedtracker.features.settings.language.LanguageSettingsScreen
+import com.zioanacleto.feedtracker.features.settings.language.navigation.LanguageSettingsRoute
 import com.zioanacleto.feedtracker.features.settings.personal.PersonalSettingsScreen
 import com.zioanacleto.feedtracker.features.settings.personal.navigation.PersonalSettingsRoute
 import com.zioanacleto.feedtracker.features.settings.privacy.PrivacySettingsScreen
@@ -138,6 +140,7 @@ private fun LoggedInNavHost(modifier: Modifier, navController: NavHostController
                 onProfileClick = { navController.navigate(ProfileSettingsRoute) },
                 onTrackingPreferencesClick = { navController.navigate(TrackingPreferencesRoute) },
                 onAppearanceClick = { navController.navigate(AppearanceSettingsRoute) },
+                onLanguageClick = { navController.navigate(LanguageSettingsRoute) },
                 onPrivacyClick = { navController.navigate(PrivacySettingsRoute) },
                 showProfileSavedMessage = profileSaved,
                 onProfileSavedMessageShown = { entry.savedStateHandle[PROFILE_SAVED_RESULT] = false },
@@ -169,6 +172,12 @@ private fun LoggedInNavHost(modifier: Modifier, navController: NavHostController
         }
         composable<AppearanceSettingsRoute> {
             AppearanceSettingsScreen(
+                modifier = Modifier.fillMaxSize(),
+                onBackButtonClick = { navController.popBackStack() },
+            )
+        }
+        composable<LanguageSettingsRoute> {
+            LanguageSettingsScreen(
                 modifier = Modifier.fillMaxSize(),
                 onBackButtonClick = { navController.popBackStack() },
             )

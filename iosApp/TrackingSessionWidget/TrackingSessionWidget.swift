@@ -40,7 +40,7 @@ struct TrackingSessionWidgetView: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Text(entry.startDate == nil ? "Tap to start" : "Tracking")
+            Text(entry.startDate == nil ? TrackingSessionCopy.tapToStart : TrackingSessionCopy.tracking)
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(.white.opacity(0.9))
             if let startDate = entry.startDate {

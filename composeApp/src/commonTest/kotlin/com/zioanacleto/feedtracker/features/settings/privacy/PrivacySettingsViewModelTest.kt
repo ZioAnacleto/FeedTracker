@@ -279,10 +279,9 @@ class PrivacySettingsViewModelTest {
     @Test
     fun exportShowsErrorWhenOfflineAndDoesNotShare() = runViewModelTest {
         val sharer = FakeSessionExportSharer()
-        val viewModel = PrivacySettingsViewModel(
-            FakeTrackingSessionsRepository(exportError = ExportRequiresConnectionException()),
-            InMemoryTrackingPreferencesRepository(),
-            sharer,
+        val viewModel = viewModel(
+            sessionsRepository = FakeTrackingSessionsRepository(exportError = ExportRequiresConnectionException()),
+            sharer = sharer,
             formatBirthDate = { value, _ -> value },
             formatDateTime = { millis, _ -> millis.toString() },
         )
@@ -299,10 +298,9 @@ class PrivacySettingsViewModelTest {
     @Test
     fun exportShowsErrorWhenSessionsCannotBeLoaded() = runViewModelTest {
         val sharer = FakeSessionExportSharer()
-        val viewModel = PrivacySettingsViewModel(
-            FakeTrackingSessionsRepository(sessions = flowOf(Resource.Error("offline"))),
-            InMemoryTrackingPreferencesRepository(),
-            sharer,
+        val viewModel = viewModel(
+            sessionsRepository = FakeTrackingSessionsRepository(sessions = flowOf(Resource.Error("offline"))),
+            sharer = sharer,
             formatBirthDate = { value, _ -> value },
             formatDateTime = { millis, _ -> millis.toString() },
         )
@@ -370,10 +368,9 @@ class PrivacySettingsViewModelTest {
     fun exportSharesSessionsAfterTheRepositoryLeavesLoading() = runViewModelTest {
         val sessions = listOf(sampleSession())
         val sharer = FakeSessionExportSharer()
-        val viewModel = PrivacySettingsViewModel(
-            FakeTrackingSessionsRepository(sessions = flowOf(Resource.Loading, Resource.Success(sessions))),
-            InMemoryTrackingPreferencesRepository(),
-            sharer,
+        val viewModel = viewModel(
+            sessionsRepository = FakeTrackingSessionsRepository(sessions = flowOf(Resource.Loading, Resource.Success(sessions))),
+            sharer = sharer,
             formatBirthDate = { value, _ -> value },
             formatDateTime = { millis, _ -> millis.toString() },
         )
@@ -413,7 +410,9 @@ class PrivacySettingsViewModelTest {
     }
 
     private fun viewModel(
-        sessions: List<TrackingSessionModel>,
+        sessions: List<TrackingSessionModel> = emptyList(),
+        sessionsRepository: FakeTrackingSessionsRepository? = null,
+        preferences: InMemoryTrackingPreferencesRepository? = null,
         sharer: FakeSessionExportSharer,
         dateFormat: DateDisplayFormat = DateDisplayFormat.DAY_MONTH_YEAR,
         savedStateHandle: SavedStateHandle = SavedStateHandle(),
@@ -421,8 +420,8 @@ class PrivacySettingsViewModelTest {
         formatDateTime: (Long, DateDisplayFormat) -> String = { millis, _ -> millis.toString() },
         stringResource: suspend (StringResource) -> String = { error("unexpected string") },
     ) = PrivacySettingsViewModel(
-        FakeTrackingSessionsRepository(sessions = flowOf(Resource.Success(sessions))),
-        InMemoryTrackingPreferencesRepository(TrackingPreferences(dateFormat = dateFormat)),
+        sessionsRepository ?: FakeTrackingSessionsRepository(sessions = flowOf(Resource.Success(sessions))),
+        preferences ?: InMemoryTrackingPreferencesRepository(TrackingPreferences(dateFormat = dateFormat)),
         sharer,
         savedStateHandle = savedStateHandle,
         formatBirthDate = formatBirthDate,

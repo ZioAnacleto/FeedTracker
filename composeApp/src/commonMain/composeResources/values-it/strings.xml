@@ -108,7 +108,7 @@
     <string name="settings_placeholder_profile">Profilo</string>
     <string name="settings_placeholder_account">Account</string>
     <string name="settings_placeholder_notifications">Notifiche</string>
-    <string name="privacy">Privacy</string>
+    <string name="privacy">Privacy ed esportazione</string>
     <string name="language">Lingua</string>
     <string name="language_description">Scegli la lingua dell'app. Date e durate restano nei formati delle Preferenze di tracking.</string>
     <string name="language_system">Sistema</string>
@@ -131,6 +131,15 @@
     <string name="export_sessions_requires_connection">Per esportare le sessioni serve una connessione internet</string>
     <string name="export_sessions_saved">Sessioni salvate</string>
     <string name="export_sessions_replace_file">Esiste già un file con questo nome. Sostituirlo?</string>
+    <string name="delete_account_title">Elimina account</string>
+    <string name="delete_account_description">Elimina per sempre questo account, i metodi di accesso e le sessioni di tracking. Le sessioni ancora solo su questo dispositivo vengono scartate e non caricate. Esporta una copia da Privacy ed esportazione se vuoi conservarla. L'azione non si può annullare.</string>
+    <string name="delete_account">Elimina account</string>
+    <string name="delete_account_confirmation">Digita %1$s per eliminare per sempre questo account e le sue sessioni di tracking. Le sessioni salvate solo su questo dispositivo verranno scartate.</string>
+    <string name="delete_account_phrase">ELIMINA</string>
+    <string name="delete_account_type_phrase">Digita ELIMINA</string>
+    <string name="delete_account_confirm">Elimina account per sempre</string>
+    <string name="deleting_account">Eliminazione dell\'account</string>
+    <string name="unable_to_delete_account">Impossibile eliminare l\'account</string>
     <string name="tracking_preferences">Preferenze di tracking</string>
     <string name="appearance">Aspetto</string>
     <string name="appearance_description">Scegli un aspetto chiaro o scuro, oppure segui questo dispositivo</string>

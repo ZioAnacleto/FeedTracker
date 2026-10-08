@@ -40,6 +40,13 @@ class TrackingSessionLocalDataSource(private val pendingSessionsStore: PendingSe
         }
     }
 
+    override suspend fun clear() {
+        mutex.withLock {
+            sessions = mutableListOf()
+            pendingSessionsStore.save(emptyList())
+        }
+    }
+
     private fun loaded(): MutableList<TrackingSessionModel> {
         val cached = sessions
         if (cached != null) {

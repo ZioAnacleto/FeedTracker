@@ -36,6 +36,7 @@ class FakeAuthRepository(
     private val updateProfileDelayMillis: Long = 0,
     private val registrationToken: String = "reg-token",
     private val logoutError: Throwable? = null,
+    private val deleteAccountError: Throwable? = null,
     private val updateProfileError: Throwable? = null,
     private val updatedUser: UserModel? = null,
     private val trackingPreferences: TrackingPreferences = TrackingPreferences.Default,
@@ -63,6 +64,10 @@ class FakeAuthRepository(
     var logoutCalls = 0
         private set
     var lastLogoutToken: String? = null
+        private set
+    var deleteAccountCalls = 0
+        private set
+    var lastDeleteAccountToken: String? = null
         private set
     var updateProfileCalls = 0
         private set
@@ -182,5 +187,11 @@ class FakeAuthRepository(
             delay(logoutDelayMillis)
         }
         logoutError?.let { throw it }
+    }
+
+    override suspend fun deleteAccount(accessToken: String) {
+        deleteAccountCalls += 1
+        lastDeleteAccountToken = accessToken
+        deleteAccountError?.let { throw it }
     }
 }

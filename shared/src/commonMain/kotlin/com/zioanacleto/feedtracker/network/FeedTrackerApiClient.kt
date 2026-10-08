@@ -119,19 +119,40 @@ class FeedTrackerApiClient(val httpClient: HttpClient, private val baseUrl: Stri
         }
     }
 
-    suspend fun getTrackingSessions(): List<TrackingSessionModel> = execute { httpClient.get(trackingSessionsUrl) }
+    suspend fun deleteAccount(accessToken: String) {
+        executeNoContent {
+            httpClient.delete("$authUrl/account") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+            }
+        }
+    }
 
-    suspend fun getTrackingSession(id: String): TrackingSessionModel = execute { httpClient.get("$trackingSessionsUrl/$id") }
+    suspend fun getTrackingSessions(accessToken: String): List<TrackingSessionModel> = execute {
+        httpClient.get(trackingSessionsUrl) {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+    }
 
-    suspend fun createTrackingSession(request: CreateTrackingSessionRequest): TrackingSessionModel = execute {
+    suspend fun getTrackingSession(accessToken: String, id: String): TrackingSessionModel = execute {
+        httpClient.get("$trackingSessionsUrl/$id") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+    }
+
+    suspend fun createTrackingSession(accessToken: String, request: CreateTrackingSessionRequest): TrackingSessionModel = execute {
         httpClient.post(trackingSessionsUrl) {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
             contentType(ContentType.Application.Json)
             setBody(request)
         }
     }
 
-    suspend fun deleteTrackingSession(id: String) {
-        executeNoContent { httpClient.delete("$trackingSessionsUrl/$id") }
+    suspend fun deleteTrackingSession(accessToken: String, id: String) {
+        executeNoContent {
+            httpClient.delete("$trackingSessionsUrl/$id") {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+            }
+        }
     }
 
     private suspend inline fun <reified T> execute(crossinline request: suspend () -> HttpResponse): T {

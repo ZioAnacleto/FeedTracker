@@ -460,6 +460,31 @@ class AuthServiceTest :
                 }
             }
 
+            it("deletes the account and revokes the current access token") {
+                every { tokens.parseAccessToken("access") } returns AccessTokenClaims(
+                    userId = "user-1",
+                    jti = "jti-1",
+                    expiresAtMillis = 2_000_000L,
+                    issuedAtMillis = 1_000_000L,
+                )
+                coEvery { revokedTokens.isRevoked("jti-1") } returns false
+                coEvery { users.findStoredById("user-1") } returns StoredUser(user, "hashed")
+                coEvery { users.deleteAccount("user-1", "mario@example.com") } returns Unit
+
+                runBlocking { service.deleteAccount("access") }
+
+                coVerify { revokedTokens.revoke("jti-1", 2_000_000L, 1_000_000L) }
+                coVerify { users.deleteAccount("user-1", "mario@example.com") }
+            }
+
+            it("rejects account deletion with an invalid access token") {
+                every { tokens.parseAccessToken("bad") } throws UnauthorizedException("Invalid access token")
+
+                shouldThrow<UnauthorizedException> {
+                    runBlocking { service.deleteAccount("bad") }
+                }
+            }
+
             it("sends a password reset code for an email account without revealing existence") {
                 coEvery { users.findByEmail("mario@example.com") } returns StoredUser(user, "hashed")
                 coEvery { verifications.findActiveByEmail("mario@example.com", any()) } returns null

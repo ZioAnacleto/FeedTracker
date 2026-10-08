@@ -17,6 +17,10 @@ class InMemoryTrackingPreferencesRepository(initial: TrackingPreferences = Track
         _preferences.value = preferences
     }
 
+    override suspend fun clearLocal() {
+        _preferences.value = TrackingPreferences.Default
+    }
+
     override suspend fun rememberLastUsedPerson(name: String, surname: String, birthDate: String) {
         _preferences.update {
             it.copy(

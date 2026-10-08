@@ -13,4 +13,5 @@ interface UserRepository {
     suspend fun addAuthMethod(userId: String, method: AuthMethod, passwordHash: String? = null): UserModel
     suspend fun updateNames(userId: String, firstName: String, lastName: String): UserModel
     suspend fun updatePassword(userId: String, passwordHash: String, tokensValidAfter: Long): UserModel
+    suspend fun deleteAccount(userId: String, email: String)
 }

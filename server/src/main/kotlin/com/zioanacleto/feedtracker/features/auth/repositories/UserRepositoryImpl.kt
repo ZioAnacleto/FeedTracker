@@ -3,14 +3,18 @@ package com.zioanacleto.feedtracker.features.auth.repositories
 import com.zioanacleto.feedtracker.common.utils.transactionDb
 import com.zioanacleto.feedtracker.domain.auth.AuthMethod
 import com.zioanacleto.feedtracker.domain.auth.UserModel
+import com.zioanacleto.feedtracker.features.auth.models.EmailVerificationCodesTable
 import com.zioanacleto.feedtracker.features.auth.models.NewUser
 import com.zioanacleto.feedtracker.features.auth.models.StoredUser
 import com.zioanacleto.feedtracker.features.auth.models.UserAuthMethodsTable
 import com.zioanacleto.feedtracker.features.auth.models.UsersTable
 import com.zioanacleto.feedtracker.features.auth.models.parseAuthMethods
 import com.zioanacleto.feedtracker.features.auth.models.toUserModel
+import com.zioanacleto.feedtracker.features.trackingpreferences.models.TrackingPreferencesTable
+import com.zioanacleto.feedtracker.features.trackingsessions.models.TrackingSessionsTable
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
@@ -103,6 +107,16 @@ class UserRepositoryImpl : UserRepository {
             .where { UsersTable.id eq userId }
             .single()
         row.toUserModel(authMethodsFor(userId, row[UsersTable.authMethod]))
+    }
+
+    override suspend fun deleteAccount(userId: String, email: String) {
+        transactionDb {
+            TrackingSessionsTable.deleteWhere { TrackingSessionsTable.userId eq userId }
+            TrackingPreferencesTable.deleteWhere { TrackingPreferencesTable.userId eq userId }
+            EmailVerificationCodesTable.deleteWhere { EmailVerificationCodesTable.email eq email }
+            UserAuthMethodsTable.deleteWhere { UserAuthMethodsTable.userId eq userId }
+            UsersTable.deleteWhere { UsersTable.id eq userId }
+        }
     }
 
     private fun insertAuthMethod(userId: String, method: String) {

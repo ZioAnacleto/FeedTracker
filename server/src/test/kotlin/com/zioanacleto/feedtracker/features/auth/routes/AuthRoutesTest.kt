@@ -16,6 +16,7 @@ import com.zioanacleto.feedtracker.installTestConfig
 import com.zioanacleto.feedtracker.testModule
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.patch
@@ -434,6 +435,35 @@ class AuthRoutesTest :
 
                 client.post("/api/auth/logout").apply {
                     status shouldBe HttpStatusCode.Unauthorized
+                }
+            }
+        }
+
+        test("DELETE /api/auth/account deletes the account") {
+            val mockAuth = mockk<AuthService>()
+            coEvery { mockAuth.deleteAccount("access-token") } returns Unit
+
+            testApplication {
+                installTestConfig()
+                application {
+                    testModule {
+                        configureDI(
+                            extraModules = listOf(
+                                module {
+                                    single<AuthService> { mockAuth }
+                                    single<TrackingSessionService> { mockk(relaxed = true) }
+                                },
+                            ),
+                        )
+                    }
+                }
+
+                client.delete("/api/auth/account") {
+                    header(HttpHeaders.Authorization, "Bearer access-token")
+                }.apply {
+                    status shouldBe HttpStatusCode.OK
+                    val response = json.decodeFromString<ApiResponse<Unit>>(bodyAsText())
+                    response.status shouldBe "SUCCESS"
                 }
             }
         }

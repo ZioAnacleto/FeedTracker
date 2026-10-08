@@ -29,6 +29,7 @@ class TrackingSessionNetworkDataSourceTest {
         val engine = MockEngine { request ->
             request.method shouldBe HttpMethod.Post
             request.url.encodedPath shouldBe "/api/tracking-sessions"
+            request.headers[HttpHeaders.Authorization] shouldBe "Bearer access-token"
             posted = true
             respond(
                 content = ByteReadChannel(json.encodeToString(ApiResponse("SUCCESS", "ok", session))),
@@ -41,7 +42,7 @@ class TrackingSessionNetworkDataSourceTest {
                 httpClient = HttpClient(engine) { installFeedTrackerJson() },
                 baseUrl = "http://test-host:8080",
             ),
-        )
+        ) { "access-token" }
 
         dataSource.saveNewTrackingSession(session)
 
@@ -54,6 +55,7 @@ class TrackingSessionNetworkDataSourceTest {
         val engine = MockEngine { request ->
             request.method shouldBe HttpMethod.Delete
             request.url.encodedPath shouldBe "/api/tracking-sessions/session-1"
+            request.headers[HttpHeaders.Authorization] shouldBe "Bearer access-token"
             deleted = true
             respond(
                 content = ByteReadChannel(
@@ -68,7 +70,7 @@ class TrackingSessionNetworkDataSourceTest {
                 httpClient = HttpClient(engine) { installFeedTrackerJson() },
                 baseUrl = "http://test-host:8080",
             ),
-        )
+        ) { "access-token" }
 
         dataSource.deleteTrackingSession("session-1")
 

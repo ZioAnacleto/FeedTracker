@@ -49,25 +49,25 @@ class TrackingSessionServiceTest :
             )
 
             it("returns session when it exists") {
-                coEvery { repository.findById("session-1") } returns session
+                coEvery { repository.findById("user-1", "session-1") } returns session
 
-                val result = runBlocking { service.getById("session-1") }
+                val result = runBlocking { service.getById("user-1", "session-1") }
 
                 result shouldBe session
             }
 
             it("throws when session is not found") {
-                coEvery { repository.findById("missing") } returns null
+                coEvery { repository.findById("user-1", "missing") } returns null
 
                 shouldThrow<ResourceNotFoundException> {
-                    runBlocking { service.getById("missing") }
+                    runBlocking { service.getById("user-1", "missing") }
                 }
             }
 
             it("creates a valid session") {
-                coEvery { repository.create(createRequest) } returns session
+                coEvery { repository.create("user-1", createRequest) } returns session
 
-                val result = runBlocking { service.create(createRequest) }
+                val result = runBlocking { service.create("user-1", createRequest) }
 
                 result shouldBe session
             }
@@ -76,7 +76,7 @@ class TrackingSessionServiceTest :
                 val invalidRequest = createRequest.copy(birthDate = "1990-01-01")
 
                 shouldThrow<ValidationException> {
-                    runBlocking { service.create(invalidRequest) }
+                    runBlocking { service.create("user-1", invalidRequest) }
                 }
             }
 
@@ -84,44 +84,44 @@ class TrackingSessionServiceTest :
                 val invalidRequest = createRequest.copy(sessionEndTime = 500L)
 
                 shouldThrow<ValidationException> {
-                    runBlocking { service.create(invalidRequest) }
+                    runBlocking { service.create("user-1", invalidRequest) }
                 }
             }
 
             it("rejects blank person fields") {
                 shouldThrow<ValidationException> {
-                    runBlocking { service.create(createRequest.copy(name = " ")) }
+                    runBlocking { service.create("user-1", createRequest.copy(name = " ")) }
                 }
             }
 
             it("updates an existing session") {
                 val updated = session.copy(sessionEndTime = 3000L)
-                coEvery { repository.update("session-1", updateRequest) } returns updated
+                coEvery { repository.update("user-1", "session-1", updateRequest) } returns updated
 
-                val result = runBlocking { service.update("session-1", updateRequest) }
+                val result = runBlocking { service.update("user-1", "session-1", updateRequest) }
 
                 result shouldBe updated
             }
 
             it("throws when updating a missing session") {
-                coEvery { repository.update("missing", updateRequest) } returns null
+                coEvery { repository.update("user-1", "missing", updateRequest) } returns null
 
                 shouldThrow<ResourceNotFoundException> {
-                    runBlocking { service.update("missing", updateRequest) }
+                    runBlocking { service.update("user-1", "missing", updateRequest) }
                 }
             }
 
             it("deletes an existing session") {
-                coEvery { repository.delete("session-1") } returns true
+                coEvery { repository.delete("user-1", "session-1") } returns true
 
-                runBlocking { service.delete("session-1") }
+                runBlocking { service.delete("user-1", "session-1") }
             }
 
             it("throws when deleting a missing session") {
-                coEvery { repository.delete("missing") } returns false
+                coEvery { repository.delete("user-1", "missing") } returns false
 
                 shouldThrow<ResourceNotFoundException> {
-                    runBlocking { service.delete("missing") }
+                    runBlocking { service.delete("user-1", "missing") }
                 }
             }
         }

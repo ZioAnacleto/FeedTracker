@@ -44,6 +44,11 @@ class TrackingPreferencesRepositoryImpl(
         }
     }
 
+    override suspend fun clearLocal() {
+        store.clear()
+        _preferences.value = TrackingPreferences.Default
+    }
+
     private fun persist(preferences: TrackingPreferences) {
         store.save(preferences)
         _preferences.value = preferences

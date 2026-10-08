@@ -9,26 +9,26 @@ import com.zioanacleto.feedtracker.features.trackingsessions.repositories.Tracki
 
 class TrackingSessionServiceImpl(private val repository: TrackingSessionRepository) : TrackingSessionService {
 
-    override suspend fun getAll(): List<TrackingSessionModel> = repository.findAll()
+    override suspend fun getAll(userId: String): List<TrackingSessionModel> = repository.findAll(userId)
 
-    override suspend fun getById(id: String): TrackingSessionModel =
-        repository.findById(id) ?: throw ResourceNotFoundException("Tracking session", id)
+    override suspend fun getById(userId: String, id: String): TrackingSessionModel =
+        repository.findById(userId, id) ?: throw ResourceNotFoundException("Tracking session", id)
 
-    override suspend fun create(request: CreateTrackingSessionRequest): TrackingSessionModel {
+    override suspend fun create(userId: String, request: CreateTrackingSessionRequest): TrackingSessionModel {
         validateSessionTimes(request.sessionStartTime, request.sessionEndTime)
         validatePersonFields(request.name, request.surname, request.birthDate)
-        return repository.create(request)
+        return repository.create(userId, request)
     }
 
-    override suspend fun update(id: String, request: UpdateTrackingSessionRequest): TrackingSessionModel {
+    override suspend fun update(userId: String, id: String, request: UpdateTrackingSessionRequest): TrackingSessionModel {
         validateSessionTimes(request.sessionStartTime, request.sessionEndTime)
         validatePersonFields(request.name, request.surname, request.birthDate)
-        return repository.update(id, request)
+        return repository.update(userId, id, request)
             ?: throw ResourceNotFoundException("Tracking session", id)
     }
 
-    override suspend fun delete(id: String) {
-        if (!repository.delete(id)) {
+    override suspend fun delete(userId: String, id: String) {
+        if (!repository.delete(userId, id)) {
             throw ResourceNotFoundException("Tracking session", id)
         }
     }

@@ -108,7 +108,7 @@
     <string name="settings_placeholder_profile">Profile</string>
     <string name="settings_placeholder_account">Account</string>
     <string name="settings_placeholder_notifications">Notifications</string>
-    <string name="privacy">Privacy</string>
+    <string name="privacy">Privacy and export</string>
     <string name="language">Language</string>
     <string name="language_description">Choose the language for the app. Dates and durations keep the formats from Tracking preferences.</string>
     <string name="language_system">System</string>
@@ -131,6 +131,15 @@
     <string name="export_sessions_requires_connection">An internet connection is required to export sessions</string>
     <string name="export_sessions_saved">Sessions saved</string>
     <string name="export_sessions_replace_file">A file with this name already exists. Replace it?</string>
+    <string name="delete_account_title">Delete account</string>
+    <string name="delete_account_description">Permanently delete this account, its sign-in methods, and its tracking sessions. Sessions that are still only on this device are discarded and are not uploaded. Export a copy from Privacy and export if you want to keep one. This cannot be undone.</string>
+    <string name="delete_account">Delete account</string>
+    <string name="delete_account_confirmation">Type %1$s to permanently delete this account and its tracking sessions. Sessions saved only on this device will be discarded.</string>
+    <string name="delete_account_phrase">DELETE</string>
+    <string name="delete_account_type_phrase">Type DELETE</string>
+    <string name="delete_account_confirm">Delete account forever</string>
+    <string name="deleting_account">Deleting account</string>
+    <string name="unable_to_delete_account">Unable to delete the account</string>
     <string name="tracking_preferences">Tracking preferences</string>
     <string name="appearance">Appearance</string>
     <string name="appearance_description">Choose a light or dark look, or follow this device</string>

@@ -20,6 +20,8 @@ class FakeTrackingSessionsRepository(
 ) : TrackingSessionsRepository {
     val saved = mutableListOf<TrackingSessionModel>()
     val deletedIds = mutableListOf<String>()
+    var discardUnsyncedCalls = 0
+        private set
 
     override suspend fun getTrackingSessions(): Flow<Resource<List<TrackingSessionModel>>> = sessions
 
@@ -46,6 +48,10 @@ class FakeTrackingSessionsRepository(
             delay(1)
         }
         deletedIds += id
+    }
+
+    override suspend fun discardUnsyncedSessions() {
+        discardUnsyncedCalls += 1
     }
 }
 

@@ -105,4 +105,5 @@ private class FakeRemoteAuthRepository(private val remote: TrackingPreferences =
         return preferences
     }
     override suspend fun logout(accessToken: String) = error("unused")
+    override suspend fun deleteAccount(accessToken: String) = error("unused")
 }

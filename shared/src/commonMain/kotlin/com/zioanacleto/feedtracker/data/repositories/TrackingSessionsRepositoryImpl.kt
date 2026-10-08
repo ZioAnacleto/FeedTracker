@@ -74,6 +74,12 @@ class TrackingSessionsRepositoryImpl(
         }
     }
 
+    override suspend fun discardUnsyncedSessions() {
+        withContext(dispatcherProvider.io()) {
+            localDataSource.clear()
+        }
+    }
+
     private fun <T> loadFromPreferredSource(block: suspend TrackingSessionDataSource.() -> T): Flow<Resource<T>> = flow {
         emit(Resource.Loading)
         emit(Resource.Success(preferredDataSource().block()))

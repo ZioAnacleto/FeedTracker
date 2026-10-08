@@ -63,4 +63,8 @@ class AuthRepositoryImpl(private val apiClient: FeedTrackerApiClient) : AuthRepo
     override suspend fun logout(accessToken: String) {
         apiClient.logout(accessToken)
     }
+
+    override suspend fun deleteAccount(accessToken: String) {
+        apiClient.deleteAccount(accessToken)
+    }
 }

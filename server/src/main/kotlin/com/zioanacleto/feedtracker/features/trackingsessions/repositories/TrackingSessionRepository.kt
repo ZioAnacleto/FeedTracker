@@ -5,9 +5,9 @@ import com.zioanacleto.feedtracker.domain.TrackingSessionModel
 import com.zioanacleto.feedtracker.domain.UpdateTrackingSessionRequest
 
 interface TrackingSessionRepository {
-    suspend fun findAll(): List<TrackingSessionModel>
-    suspend fun findById(id: String): TrackingSessionModel?
-    suspend fun create(request: CreateTrackingSessionRequest): TrackingSessionModel
-    suspend fun update(id: String, request: UpdateTrackingSessionRequest): TrackingSessionModel?
-    suspend fun delete(id: String): Boolean
+    suspend fun findAll(userId: String): List<TrackingSessionModel>
+    suspend fun findById(userId: String, id: String): TrackingSessionModel?
+    suspend fun create(userId: String, request: CreateTrackingSessionRequest): TrackingSessionModel
+    suspend fun update(userId: String, id: String, request: UpdateTrackingSessionRequest): TrackingSessionModel?
+    suspend fun delete(userId: String, id: String): Boolean
 }

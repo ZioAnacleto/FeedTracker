@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,10 +18,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,18 +25,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.zioanacleto.feedtracker.components.MessageSnackbar
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
@@ -49,11 +40,7 @@ import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.appearance
 import feedtracker.composeapp.generated.resources.back
-import feedtracker.composeapp.generated.resources.cancel
 import feedtracker.composeapp.generated.resources.language
-import feedtracker.composeapp.generated.resources.log_out
-import feedtracker.composeapp.generated.resources.logging_out
-import feedtracker.composeapp.generated.resources.logout_confirmation
 import feedtracker.composeapp.generated.resources.personal_settings
 import feedtracker.composeapp.generated.resources.privacy
 import feedtracker.composeapp.generated.resources.profile_saved
@@ -65,14 +52,13 @@ import feedtracker.composeapp.generated.resources.tracking_preferences
 import feedtracker.composeapp.generated.resources.tracking_preferences_saved
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun PersonalSettingsScreen(
     modifier: Modifier = Modifier,
-    viewModel: PersonalSettingsViewModel = koinViewModel(),
     onBackButtonClick: () -> Unit,
     onProfileClick: () -> Unit,
+    onAccountClick: () -> Unit,
     onTrackingPreferencesClick: () -> Unit,
     onAppearanceClick: () -> Unit,
     onLanguageClick: () -> Unit,
@@ -82,9 +68,6 @@ fun PersonalSettingsScreen(
     showTrackingPreferencesSavedMessage: Boolean = false,
     onTrackingPreferencesSavedMessageShown: () -> Unit = {},
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val loggingOutDescription = stringResource(Res.string.logging_out)
-    var showLogoutConfirmation by remember { mutableStateOf(false) }
     var showSavedMessage by remember { mutableStateOf(false) }
     var savedMessage by remember { mutableStateOf("") }
     val profileSavedText = stringResource(Res.string.profile_saved)
@@ -122,7 +105,6 @@ fun PersonalSettingsScreen(
                 IconButton(
                     onClick = onBackButtonClick,
                     modifier = Modifier.align(Alignment.CenterStart),
-                    enabled = !uiState.isLoggingOut,
                 ) {
                     Icon(
                         painter = rememberVectorPainter(Icons.AutoMirrored.Rounded.ArrowBack),
@@ -147,72 +129,30 @@ fun PersonalSettingsScreen(
                 SettingsMenuRow(
                     title = stringResource(Res.string.settings_placeholder_profile),
                     onClick = onProfileClick,
-                    enabled = !uiState.isLoggingOut,
                 )
                 SettingsMenuRow(
                     title = stringResource(Res.string.tracking_preferences),
                     onClick = onTrackingPreferencesClick,
-                    enabled = !uiState.isLoggingOut,
                 )
                 SettingsMenuRow(
                     title = stringResource(Res.string.appearance),
                     onClick = onAppearanceClick,
-                    enabled = !uiState.isLoggingOut,
                 )
-                SettingsPlaceholderRow(title = stringResource(Res.string.settings_placeholder_account))
+                SettingsMenuRow(
+                    title = stringResource(Res.string.settings_placeholder_account),
+                    onClick = onAccountClick,
+                )
                 SettingsPlaceholderRow(title = stringResource(Res.string.settings_placeholder_notifications))
                 SettingsMenuRow(
                     title = stringResource(Res.string.privacy),
                     onClick = onPrivacyClick,
-                    enabled = !uiState.isLoggingOut,
                 )
                 SettingsMenuRow(
                     title = stringResource(Res.string.language),
                     onClick = onLanguageClick,
-                    enabled = !uiState.isLoggingOut,
                     showDivider = false,
                 )
-                Button(
-                    onClick = { showLogoutConfirmation = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 24.dp),
-                    enabled = !uiState.isLoggingOut,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                    ),
-                ) {
-                    Text(stringResource(Res.string.log_out))
-                }
             }
-        }
-
-        if (showLogoutConfirmation && !uiState.isLoggingOut) {
-            AlertDialog(
-                onDismissRequest = { showLogoutConfirmation = false },
-                title = { Text(stringResource(Res.string.log_out)) },
-                text = { Text(stringResource(Res.string.logout_confirmation)) },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            showLogoutConfirmation = false
-                            viewModel.logout()
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                        ),
-                    ) {
-                        Text(stringResource(Res.string.log_out))
-                    }
-                },
-                dismissButton = {
-                    Button(onClick = { showLogoutConfirmation = false }) {
-                        Text(stringResource(Res.string.cancel))
-                    }
-                },
-            )
         }
 
         AnimatedVisibility(
@@ -225,27 +165,15 @@ fun PersonalSettingsScreen(
         ) {
             MessageSnackbar(message = savedMessage)
         }
-
-        if (uiState.isLoggingOut) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.35f))
-                    .semantics { contentDescription = loggingOutDescription },
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.onBackground)
-            }
-        }
     }
 }
 
 @Composable
-private fun SettingsMenuRow(title: String, onClick: () -> Unit, enabled: Boolean = true, showDivider: Boolean = true) {
+private fun SettingsMenuRow(title: String, onClick: () -> Unit, showDivider: Boolean = true) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .clickable(role = Role.Button, onClick = onClick)
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -38,9 +38,10 @@ class FeedTrackerApiClientTest {
             expectedMethod = HttpMethod.Get,
             expectedPath = "/api/tracking-sessions",
             body = json.encodeToString(ApiResponse("SUCCESS", "ok", listOf(session))),
+            expectedAuthorization = "Bearer access-token",
         )
 
-        client.getTrackingSessions() shouldBe listOf(session)
+        client.getTrackingSessions("access-token") shouldBe listOf(session)
     }
 
     @Test
@@ -50,9 +51,10 @@ class FeedTrackerApiClientTest {
             expectedMethod = HttpMethod.Get,
             expectedPath = "/api/tracking-sessions/session-1",
             body = json.encodeToString(ApiResponse("SUCCESS", "ok", session)),
+            expectedAuthorization = "Bearer access-token",
         )
 
-        client.getTrackingSession("session-1") shouldBe session
+        client.getTrackingSession("access-token", "session-1") shouldBe session
     }
 
     @Test
@@ -62,9 +64,11 @@ class FeedTrackerApiClientTest {
             expectedMethod = HttpMethod.Post,
             expectedPath = "/api/tracking-sessions",
             body = json.encodeToString(ApiResponse("SUCCESS", "created", session)),
+            expectedAuthorization = "Bearer access-token",
         )
 
         val created = client.createTrackingSession(
+            "access-token",
             CreateTrackingSessionRequest(
                 sessionStartTime = session.sessionStartTime,
                 sessionEndTime = session.sessionEndTime,
@@ -84,9 +88,10 @@ class FeedTrackerApiClientTest {
             expectedMethod = HttpMethod.Delete,
             expectedPath = "/api/tracking-sessions/session-1",
             body = json.encodeToString(ApiResponse<Unit>(status = "SUCCESS", message = "deleted")),
+            expectedAuthorization = "Bearer access-token",
         )
 
-        client.deleteTrackingSession("session-1")
+        client.deleteTrackingSession("access-token", "session-1")
     }
 
     @Test
@@ -169,13 +174,14 @@ class FeedTrackerApiClientTest {
         val client = apiClient(
             expectedMethod = HttpMethod.Get,
             expectedPath = "/api/tracking-sessions/missing",
+            expectedAuthorization = "Bearer access-token",
             status = HttpStatusCode.NotFound,
             body = json.encodeToString(
                 ApiResponse<Unit>(status = "ERROR", message = "Tracking session not found", data = null),
             ),
         )
 
-        val error = shouldThrow<ApiException> { client.getTrackingSession("missing") }
+        val error = shouldThrow<ApiException> { client.getTrackingSession("access-token", "missing") }
         error.message shouldBe "Tracking session not found"
     }
 
@@ -184,6 +190,7 @@ class FeedTrackerApiClientTest {
         val client = apiClient(
             expectedMethod = HttpMethod.Get,
             expectedPath = "/api/tracking-sessions",
+            expectedAuthorization = "Bearer access-token",
             body = json.encodeToString(
                 ApiResponse<List<com.zioanacleto.feedtracker.domain.TrackingSessionModel>>(
                     status = "ERROR",
@@ -193,7 +200,7 @@ class FeedTrackerApiClientTest {
             ),
         )
 
-        val error = shouldThrow<ApiException> { client.getTrackingSessions() }
+        val error = shouldThrow<ApiException> { client.getTrackingSessions("access-token") }
         error.message shouldBe "backend failed"
     }
 
@@ -202,10 +209,14 @@ class FeedTrackerApiClientTest {
         expectedPath: String,
         body: String,
         status: HttpStatusCode = HttpStatusCode.OK,
+        expectedAuthorization: String? = null,
     ): FeedTrackerApiClient {
         val engine = MockEngine { request ->
             request.method shouldBe expectedMethod
             request.url.encodedPath shouldBe expectedPath
+            if (expectedAuthorization != null) {
+                request.headers[HttpHeaders.Authorization] shouldBe expectedAuthorization
+            }
             respond(
                 content = ByteReadChannel(body),
                 status = status,

@@ -27,6 +27,8 @@ import com.zioanacleto.feedtracker.features.newtracking.NewTrackingScreen
 import com.zioanacleto.feedtracker.features.newtracking.navigation.NewTrackingRoute
 import com.zioanacleto.feedtracker.features.pasttracking.PastTrackingScreen
 import com.zioanacleto.feedtracker.features.pasttracking.navigation.PastTrackingRoute
+import com.zioanacleto.feedtracker.features.settings.account.AccountSettingsScreen
+import com.zioanacleto.feedtracker.features.settings.account.navigation.AccountSettingsRoute
 import com.zioanacleto.feedtracker.features.settings.appearance.AppearanceSettingsScreen
 import com.zioanacleto.feedtracker.features.settings.appearance.navigation.AppearanceSettingsRoute
 import com.zioanacleto.feedtracker.features.settings.language.LanguageSettingsScreen
@@ -138,6 +140,7 @@ private fun LoggedInNavHost(modifier: Modifier, navController: NavHostController
                 modifier = Modifier.fillMaxSize(),
                 onBackButtonClick = { navController.popBackStack() },
                 onProfileClick = { navController.navigate(ProfileSettingsRoute) },
+                onAccountClick = { navController.navigate(AccountSettingsRoute) },
                 onTrackingPreferencesClick = { navController.navigate(TrackingPreferencesRoute) },
                 onAppearanceClick = { navController.navigate(AppearanceSettingsRoute) },
                 onLanguageClick = { navController.navigate(LanguageSettingsRoute) },
@@ -158,6 +161,12 @@ private fun LoggedInNavHost(modifier: Modifier, navController: NavHostController
                     navController.previousBackStackEntry?.savedStateHandle?.set(PROFILE_SAVED_RESULT, true)
                     navController.popBackStack()
                 },
+            )
+        }
+        composable<AccountSettingsRoute> {
+            AccountSettingsScreen(
+                modifier = Modifier.fillMaxSize(),
+                onBackButtonClick = { navController.popBackStack() },
             )
         }
         composable<TrackingPreferencesRoute> {

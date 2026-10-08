@@ -9,7 +9,6 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
-import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
@@ -21,8 +20,7 @@ class ApplicationTest {
 
     @Test
     fun healthEndpointReturnsUpStatus() = testApplication {
-        val mockService = mockk<TrackingSessionService>()
-        coEvery { mockService.getAll() } returns emptyList()
+        val mockService = mockk<TrackingSessionService>(relaxed = true)
 
         installTestConfig()
         application {

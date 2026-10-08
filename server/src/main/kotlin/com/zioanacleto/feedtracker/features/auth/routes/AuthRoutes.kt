@@ -1,6 +1,5 @@
 package com.zioanacleto.feedtracker.features.auth.routes
 
-import com.zioanacleto.feedtracker.common.exceptions.UnauthorizedException
 import com.zioanacleto.feedtracker.common.models.ApiResponse
 import com.zioanacleto.feedtracker.domain.auth.AuthMethodsResponse
 import com.zioanacleto.feedtracker.domain.auth.AuthSession
@@ -16,13 +15,11 @@ import com.zioanacleto.feedtracker.domain.auth.VerifyEmailCodeResponse
 import com.zioanacleto.feedtracker.domain.auth.VerifyPasswordResetResponse
 import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 import com.zioanacleto.feedtracker.features.auth.services.AuthService
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.request.header
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
@@ -110,34 +107,29 @@ fun Route.authRoutes(authService: AuthService) {
 
         patch("/profile") {
             val request = call.receive<UpdateProfileRequest>()
-            val user = authService.updateProfile(call.bearerToken(), request)
+            val user = authService.updateProfile(call.requireBearerToken(), request)
             call.respond(ApiResponse<UserModel>("SUCCESS", "Profile updated", user))
         }
 
         get("/tracking-preferences") {
-            val preferences = authService.getTrackingPreferences(call.bearerToken())
+            val preferences = authService.getTrackingPreferences(call.requireBearerToken())
             call.respond(ApiResponse("SUCCESS", "Tracking preferences", preferences))
         }
 
         put("/tracking-preferences") {
             val request = call.receive<TrackingPreferences>()
-            val preferences = authService.updateTrackingPreferences(call.bearerToken(), request)
+            val preferences = authService.updateTrackingPreferences(call.requireBearerToken(), request)
             call.respond(ApiResponse("SUCCESS", "Tracking preferences updated", preferences))
         }
 
         post("/logout") {
-            authService.logout(call.bearerToken())
+            authService.logout(call.requireBearerToken())
             call.respond(ApiResponse<Unit>("SUCCESS", "Logged out"))
         }
-    }
-}
 
-private fun ApplicationCall.bearerToken(): String {
-    val header = request.header(HttpHeaders.Authorization)?.trim().orEmpty()
-    if (!header.startsWith("Bearer ", ignoreCase = true)) {
-        throw UnauthorizedException("Missing access token")
-    }
-    return header.substringAfter(' ').trim().ifBlank {
-        throw UnauthorizedException("Missing access token")
+        delete("/account") {
+            authService.deleteAccount(call.requireBearerToken())
+            call.respond(ApiResponse<Unit>("SUCCESS", "Account deleted"))
+        }
     }
 }

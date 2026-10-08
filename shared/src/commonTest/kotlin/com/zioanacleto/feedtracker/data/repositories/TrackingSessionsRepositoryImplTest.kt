@@ -309,6 +309,20 @@ class TrackingSessionsRepositoryImplTest {
         }
     }
 
+    @Test
+    fun discardUnsyncedSessionsClearsLocalSessionsWithoutCallingTheNetwork() = runTest {
+        val local = FakeTrackingSessionDataSource(listOf(trackingSession("pending")))
+        val network = FakeTrackingSessionDataSource(listOf(trackingSession("remote")))
+        val repository = repository(online = true, network = network, local = local)
+
+        repository.discardUnsyncedSessions()
+
+        local.clearCalls shouldBe 1
+        local.getTrackingSessions().shouldBeEmpty()
+        network.clearCalls shouldBe 0
+        network.getTrackingSessions() shouldBe listOf(trackingSession("remote"))
+    }
+
     private fun repository(
         online: Boolean = true,
         network: TrackingSessionDataSource = FakeTrackingSessionDataSource(),

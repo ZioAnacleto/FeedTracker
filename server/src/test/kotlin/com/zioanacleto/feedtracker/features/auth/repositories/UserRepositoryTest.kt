@@ -2,12 +2,17 @@ package com.zioanacleto.feedtracker.features.auth.repositories
 
 import com.zioanacleto.feedtracker.config.DatabaseConfig
 import com.zioanacleto.feedtracker.config.DatabaseFactory
+import com.zioanacleto.feedtracker.domain.CreateTrackingSessionRequest
 import com.zioanacleto.feedtracker.domain.auth.AuthMethod
+import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 import com.zioanacleto.feedtracker.features.auth.models.EmailVerificationCodesTable
 import com.zioanacleto.feedtracker.features.auth.models.NewUser
 import com.zioanacleto.feedtracker.features.auth.models.UserAuthMethodsTable
 import com.zioanacleto.feedtracker.features.auth.models.UsersTable
 import com.zioanacleto.feedtracker.features.trackingpreferences.models.TrackingPreferencesTable
+import com.zioanacleto.feedtracker.features.trackingpreferences.repositories.TrackingPreferencesRepositoryImpl
+import com.zioanacleto.feedtracker.features.trackingsessions.models.TrackingSessionsTable
+import com.zioanacleto.feedtracker.features.trackingsessions.repositories.TrackingSessionRepositoryImpl
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -37,6 +42,7 @@ class UserRepositoryTest :
         beforeEach {
             transaction {
                 EmailVerificationCodesTable.deleteAll()
+                TrackingSessionsTable.deleteAll()
                 UserAuthMethodsTable.deleteAll()
                 TrackingPreferencesTable.deleteAll()
                 UsersTable.deleteAll()
@@ -205,6 +211,72 @@ class UserRepositoryTest :
 
                 registration?.codeHash shouldBe "reg-hash"
                 reset?.codeHash shouldBe "reset-hash"
+            }
+
+            it("deletes the user, auth methods, preferences, verification codes, and owned sessions") {
+                val sessions = TrackingSessionRepositoryImpl()
+                val preferences = TrackingPreferencesRepositoryImpl()
+                runBlocking {
+                    repository.create(
+                        NewUser(
+                            id = "user-1",
+                            email = "mario@example.com",
+                            passwordHash = "hashed",
+                            authMethod = AuthMethod.EMAIL.name,
+                            firstName = "Mario",
+                            lastName = "Rossi",
+                            createdAt = 1_000L,
+                        ),
+                    )
+                    repository.create(
+                        NewUser(
+                            id = "user-2",
+                            email = "anna@example.com",
+                            passwordHash = "hashed",
+                            authMethod = AuthMethod.EMAIL.name,
+                            firstName = "Anna",
+                            lastName = "Bianchi",
+                            createdAt = 1_000L,
+                        ),
+                    )
+                    preferences.upsert("user-1", TrackingPreferences.Default)
+                    verificationRepository.replaceActiveCode(
+                        email = "mario@example.com",
+                        codeHash = "hash",
+                        expiresAt = 2_000L,
+                        createdAt = 1_000L,
+                    )
+                    sessions.create(
+                        "user-1",
+                        CreateTrackingSessionRequest(
+                            sessionStartTime = 1_000L,
+                            sessionEndTime = 2_000L,
+                            name = "Mario",
+                            surname = "Rossi",
+                            birthDate = "01/01/1990",
+                            additionalNotes = null,
+                        ),
+                    )
+                    sessions.create(
+                        "user-2",
+                        CreateTrackingSessionRequest(
+                            sessionStartTime = 1_000L,
+                            sessionEndTime = 2_000L,
+                            name = "Anna",
+                            surname = "Bianchi",
+                            birthDate = "02/02/1991",
+                            additionalNotes = null,
+                        ),
+                    )
+                    repository.deleteAccount("user-1", "mario@example.com")
+                }
+
+                runBlocking { repository.findByEmail("mario@example.com") }.shouldBeNull()
+                runBlocking { preferences.findByUserId("user-1") }.shouldBeNull()
+                runBlocking { verificationRepository.findActiveByEmail("mario@example.com") }.shouldBeNull()
+                runBlocking { sessions.findAll("user-1") } shouldBe emptyList()
+                runBlocking { sessions.findAll("user-2") }.size shouldBe 1
+                runBlocking { repository.findByEmail("anna@example.com") }.shouldNotBeNull()
             }
         }
     })

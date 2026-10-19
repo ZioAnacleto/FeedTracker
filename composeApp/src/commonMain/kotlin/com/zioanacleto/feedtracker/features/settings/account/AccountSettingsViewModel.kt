@@ -10,6 +10,7 @@ import com.zioanacleto.feedtracker.features.settings.privacy.SessionExportSharer
 import com.zioanacleto.feedtracker.widget.ActiveTrackingSessionController
 import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.unable_to_delete_account
+import feedtracker.composeapp.generated.resources.unable_to_log_out
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,11 +19,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 
-data class AccountSettingsUiState(
-    val isLoggingOut: Boolean = false,
-    val isDeletingAccount: Boolean = false,
-    val error: String? = null,
-)
+data class AccountSettingsUiState(val isLoggingOut: Boolean = false, val isDeletingAccount: Boolean = false, val error: String? = null)
 
 class AccountSettingsViewModel(
     private val authRepository: AuthRepository,
@@ -40,19 +37,23 @@ class AccountSettingsViewModel(
         val current = _uiState.value
         if (current.isLoggingOut || current.isDeletingAccount) return
         val accessToken = authSessionRepository.session.value?.accessToken
-        if (accessToken.isNullOrBlank()) {
-            authSessionRepository.clearSession()
-            viewModelScope.launch {
-                runCatching { sessionExportSharer.clearCachedExports() }
-            }
-            return
-        }
-
         viewModelScope.launch {
             _uiState.update { it.copy(isLoggingOut = true, error = null) }
-            runCatching { authRepository.logout(accessToken) }
-            authSessionRepository.clearSession()
+            if (!accessToken.isNullOrBlank()) {
+                runCatching { authRepository.logout(accessToken) }
+            }
+            val discarded = runCatching { trackingSessionsRepository.discardUnsyncedSessions() }
+            if (discarded.isFailure) {
+                _uiState.update {
+                    it.copy(
+                        isLoggingOut = false,
+                        error = stringResource(Res.string.unable_to_log_out),
+                    )
+                }
+                return@launch
+            }
             runCatching { sessionExportSharer.clearCachedExports() }
+            authSessionRepository.clearSession()
             _uiState.update { it.copy(isLoggingOut = false) }
         }
     }
@@ -77,15 +78,20 @@ class AccountSettingsViewModel(
                     return@launch
                 }
             }
-            clearLocalAccountData()
+            val discarded = runCatching { trackingSessionsRepository.discardUnsyncedSessions() }
+            if (discarded.isFailure) {
+                _uiState.update {
+                    it.copy(
+                        isDeletingAccount = false,
+                        error = stringResource(Res.string.unable_to_delete_account),
+                    )
+                }
+                return@launch
+            }
+            runCatching { trackingPreferencesRepository.clearLocal() }
+            runCatching { activeTrackingSessionController.clear() }
+            runCatching { sessionExportSharer.clearCachedExports() }
+            authSessionRepository.clearSession()
         }
-    }
-
-    private suspend fun clearLocalAccountData() {
-        runCatching { trackingSessionsRepository.discardUnsyncedSessions() }
-        runCatching { trackingPreferencesRepository.clearLocal() }
-        runCatching { activeTrackingSessionController.clear() }
-        runCatching { sessionExportSharer.clearCachedExports() }
-        authSessionRepository.clearSession()
     }
 }

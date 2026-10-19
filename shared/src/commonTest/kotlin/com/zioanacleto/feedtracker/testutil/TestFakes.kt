@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 class FakeTrackingSessionDataSource(initial: List<TrackingSessionModel> = emptyList()) : TrackingSessionDataSource {
     private val sessions = initial.toMutableList()
     val saved = mutableListOf<TrackingSessionModel>()
+    val savedTokens = mutableListOf<String>()
+    var beforeSave: (suspend () -> Unit)? = null
     var getSessionsError: Throwable? = null
     var getSessionError: Throwable? = null
     var saveError: Throwable? = null
@@ -29,6 +31,12 @@ class FakeTrackingSessionDataSource(initial: List<TrackingSessionModel> = emptyL
     override suspend fun getTrackingSession(id: String): TrackingSessionModel {
         getSessionError?.let { throw it }
         return sessions.first { it.id == id }
+    }
+
+    override suspend fun saveNewTrackingSession(sessionModel: TrackingSessionModel, accessToken: String) {
+        savedTokens += accessToken
+        beforeSave?.invoke()
+        saveNewTrackingSession(sessionModel)
     }
 
     override suspend fun saveNewTrackingSession(sessionModel: TrackingSessionModel) {

@@ -37,10 +37,12 @@ class AccountSettingsViewModelTest {
     fun logoutClearsSessionAfterServerCall() = runViewModelTest {
         val repository = FakeAuthRepository()
         val sessionRepository = FakeAuthSessionRepository(session)
+        val sessions = FakeTrackingSessionsRepository()
         val sharer = FakeSessionExportSharer()
         val viewModel = viewModel(
             repository = repository,
             sessionRepository = sessionRepository,
+            sessionsRepository = sessions,
             sharer = sharer,
         )
 
@@ -48,6 +50,7 @@ class AccountSettingsViewModelTest {
 
         repository.logoutCalls shouldBe 1
         repository.lastLogoutToken shouldBe "access-token"
+        sessions.discardUnsyncedCalls shouldBe 1
         sessionRepository.session.value.shouldBeNull()
         sharer.clearedExports shouldBe 1
         viewModel.uiState.value.isLoggingOut shouldBe false
@@ -56,16 +59,19 @@ class AccountSettingsViewModelTest {
     @Test
     fun logoutClearsSessionEvenWhenServerCallFails() = runViewModelTest {
         val sessionRepository = FakeAuthSessionRepository(session)
+        val sessions = FakeTrackingSessionsRepository()
         val sharer = FakeSessionExportSharer()
         val viewModel = viewModel(
             repository = FakeAuthRepository(logoutError = IllegalStateException("offline")),
             sessionRepository = sessionRepository,
+            sessionsRepository = sessions,
             sharer = sharer,
         )
 
         viewModel.logout()
 
         viewModel.uiState.value.isLoggingOut shouldBe false
+        sessions.discardUnsyncedCalls shouldBe 1
         sessionRepository.session.value.shouldBeNull()
         sharer.clearedExports shouldBe 1
     }
@@ -86,18 +92,42 @@ class AccountSettingsViewModelTest {
     fun logoutWithoutSessionDoesNotCallServer() = runViewModelTest {
         val repository = FakeAuthRepository()
         val sessionRepository = FakeAuthSessionRepository()
+        val sessions = FakeTrackingSessionsRepository()
         val sharer = FakeSessionExportSharer()
         val viewModel = viewModel(
             repository = repository,
             sessionRepository = sessionRepository,
+            sessionsRepository = sessions,
             sharer = sharer,
         )
 
         viewModel.logout()
 
         repository.logoutCalls shouldBe 0
+        sessions.discardUnsyncedCalls shouldBe 1
         sessionRepository.session.value.shouldBeNull()
         sharer.clearedExports shouldBe 1
+    }
+
+    @Test
+    fun logoutKeepsTheSessionWhenLocalSessionsCannotBeDiscarded() = runViewModelTest {
+        val sessionRepository = FakeAuthSessionRepository(session)
+        val sessions = FakeTrackingSessionsRepository(discardError = IllegalStateException("disk full"))
+        val sharer = FakeSessionExportSharer()
+        val viewModel = viewModel(
+            sessionRepository = sessionRepository,
+            sessionsRepository = sessions,
+            sharer = sharer,
+            stringResource = { "Unable to log out" },
+        )
+
+        viewModel.logout()
+
+        sessions.discardUnsyncedCalls shouldBe 1
+        sessionRepository.session.value.shouldNotBeNull()
+        sharer.clearedExports shouldBe 0
+        viewModel.uiState.value.isLoggingOut shouldBe false
+        viewModel.uiState.value.error shouldBe "Unable to log out"
     }
 
     @Test
@@ -151,6 +181,28 @@ class AccountSettingsViewModelTest {
         sessionRepository.session.value.shouldNotBeNull()
         viewModel.uiState.value.isDeletingAccount shouldBe false
         viewModel.uiState.value.error shouldBe "offline"
+    }
+
+    @Test
+    fun deleteAccountKeepsTheSessionWhenLocalSessionsCannotBeDiscarded() = runViewModelTest {
+        val sessions = FakeTrackingSessionsRepository(discardError = IllegalStateException("disk full"))
+        val sessionRepository = FakeAuthSessionRepository(session)
+        val sharer = FakeSessionExportSharer()
+        val viewModel = viewModel(
+            repository = FakeAuthRepository(),
+            sessionRepository = sessionRepository,
+            sessionsRepository = sessions,
+            sharer = sharer,
+            stringResource = { "Unable to delete the account" },
+        )
+
+        viewModel.deleteAccount("DELETE", "DELETE")
+
+        sessions.discardUnsyncedCalls shouldBe 1
+        sessionRepository.session.value.shouldNotBeNull()
+        sharer.clearedExports shouldBe 0
+        viewModel.uiState.value.isDeletingAccount shouldBe false
+        viewModel.uiState.value.error shouldBe "Unable to delete the account"
     }
 
     @Test

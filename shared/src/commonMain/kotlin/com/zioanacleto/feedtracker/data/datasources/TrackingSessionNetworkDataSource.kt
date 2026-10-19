@@ -10,7 +10,11 @@ class TrackingSessionNetworkDataSource(private val apiClient: FeedTrackerApiClie
     override suspend fun getTrackingSession(id: String): TrackingSessionModel = apiClient.getTrackingSession(accessToken(), id)
 
     override suspend fun saveNewTrackingSession(sessionModel: TrackingSessionModel) {
-        apiClient.createTrackingSession(accessToken(), sessionModel.toCreateRequest())
+        saveNewTrackingSession(sessionModel, accessToken())
+    }
+
+    override suspend fun saveNewTrackingSession(sessionModel: TrackingSessionModel, accessToken: String) {
+        apiClient.createTrackingSession(accessToken, sessionModel.toCreateRequest())
     }
 
     override suspend fun deleteTrackingSession(id: String) {

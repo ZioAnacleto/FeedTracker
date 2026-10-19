@@ -209,12 +209,13 @@ class AuthServiceImpl(
     override suspend fun deleteAccount(accessToken: String) {
         val claims = requireValidAccessToken(accessToken)
         val stored = users.findStoredById(claims.userId) ?: throw UnauthorizedException("Invalid access token")
-        revokedTokens.revoke(
-            jti = claims.jti,
-            expiresAt = claims.expiresAtMillis,
+        users.deleteAccount(
+            userId = stored.model.id,
+            email = stored.model.email,
+            accessTokenJti = claims.jti,
+            accessTokenExpiresAt = claims.expiresAtMillis,
             revokedAt = timeProvider.nowMillis(),
         )
-        users.deleteAccount(stored.model.id, stored.model.email)
     }
 
     override suspend fun authenticatedUserId(accessToken: String): String = requireValidAccessToken(accessToken).userId

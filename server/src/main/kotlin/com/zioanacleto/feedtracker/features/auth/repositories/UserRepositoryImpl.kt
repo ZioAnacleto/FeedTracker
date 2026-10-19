@@ -109,13 +109,20 @@ class UserRepositoryImpl : UserRepository {
         row.toUserModel(authMethodsFor(userId, row[UsersTable.authMethod]))
     }
 
-    override suspend fun deleteAccount(userId: String, email: String) {
+    override suspend fun deleteAccount(
+        userId: String,
+        email: String,
+        accessTokenJti: String,
+        accessTokenExpiresAt: Long,
+        revokedAt: Long,
+    ) {
         transactionDb {
             TrackingSessionsTable.deleteWhere { TrackingSessionsTable.userId eq userId }
             TrackingPreferencesTable.deleteWhere { TrackingPreferencesTable.userId eq userId }
             EmailVerificationCodesTable.deleteWhere { EmailVerificationCodesTable.email eq email }
             UserAuthMethodsTable.deleteWhere { UserAuthMethodsTable.userId eq userId }
             UsersTable.deleteWhere { UsersTable.id eq userId }
+            revokeAccessToken(accessTokenJti, accessTokenExpiresAt, revokedAt)
         }
     }
 

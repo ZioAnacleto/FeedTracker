@@ -35,7 +35,9 @@ object DatabaseFactory {
                 UserAuthMethodsTable,
                 RevokedAccessTokensTable,
                 TrackingPreferencesTable,
+                SchemaMigrationsTable,
             )
+            DatabaseMigrator.applyPending()
         }
     }
 }

@@ -13,6 +13,7 @@ import com.zioanacleto.feedtracker.features.trackingpreferences.models.TrackingP
 import com.zioanacleto.feedtracker.features.trackingpreferences.repositories.TrackingPreferencesRepositoryImpl
 import com.zioanacleto.feedtracker.features.trackingsessions.models.TrackingSessionsTable
 import com.zioanacleto.feedtracker.features.trackingsessions.repositories.TrackingSessionRepositoryImpl
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -268,7 +269,13 @@ class UserRepositoryTest :
                             additionalNotes = null,
                         ),
                     )
-                    repository.deleteAccount("user-1", "mario@example.com")
+                    repository.deleteAccount(
+                        userId = "user-1",
+                        email = "mario@example.com",
+                        accessTokenJti = "jti-1",
+                        accessTokenExpiresAt = 2_000L,
+                        revokedAt = 1_000L,
+                    )
                 }
 
                 runBlocking { repository.findByEmail("mario@example.com") }.shouldBeNull()
@@ -277,6 +284,38 @@ class UserRepositoryTest :
                 runBlocking { sessions.findAll("user-1") } shouldBe emptyList()
                 runBlocking { sessions.findAll("user-2") }.size shouldBe 1
                 runBlocking { repository.findByEmail("anna@example.com") }.shouldNotBeNull()
+                runBlocking { RevokedAccessTokenRepositoryImpl().isRevoked("jti-1") } shouldBe true
+            }
+
+            it("keeps the account when revoking the access token fails") {
+                runBlocking {
+                    repository.create(
+                        NewUser(
+                            id = "user-1",
+                            email = "mario@example.com",
+                            passwordHash = "hashed",
+                            authMethod = AuthMethod.EMAIL.name,
+                            firstName = "Mario",
+                            lastName = "Rossi",
+                            createdAt = 1_000L,
+                        ),
+                    )
+                }
+
+                shouldThrow<Exception> {
+                    runBlocking {
+                        repository.deleteAccount(
+                            userId = "user-1",
+                            email = "mario@example.com",
+                            accessTokenJti = "j".repeat(37),
+                            accessTokenExpiresAt = 2_000L,
+                            revokedAt = 1_000L,
+                        )
+                    }
+                }
+
+                runBlocking { repository.findByEmail("mario@example.com") }.shouldNotBeNull()
+                runBlocking { RevokedAccessTokenRepositoryImpl().isRevoked("j".repeat(37)) } shouldBe false
             }
         }
     })

@@ -27,6 +27,7 @@ class TrackingSessionsRepositoryImpl(
     private val networkDataSource: TrackingSessionDataSource,
     private val dispatcherProvider: DispatcherProvider,
     private val networkMonitor: NetworkMonitor,
+    private val accessToken: () -> String? = { null },
 ) : TrackingSessionsRepository {
     private val syncMutex = Mutex()
     private val _syncedPendingCount = MutableSharedFlow<Int>(extraBufferCapacity = 1)
@@ -76,7 +77,9 @@ class TrackingSessionsRepositoryImpl(
 
     override suspend fun discardUnsyncedSessions() {
         withContext(dispatcherProvider.io()) {
-            localDataSource.clear()
+            syncMutex.withLock {
+                localDataSource.clear()
+            }
         }
     }
 
@@ -119,11 +122,12 @@ class TrackingSessionsRepositoryImpl(
             if (!isOnline()) {
                 return
             }
+            val token = accessToken()?.takeIf { it.isNotBlank() } ?: return
             val pending = localDataSource.getTrackingSessions()
             var uploaded = 0
             pending.forEach { session ->
                 val synced = runCatching {
-                    networkDataSource.saveNewTrackingSession(session)
+                    networkDataSource.saveNewTrackingSession(session, token)
                     localDataSource.deleteTrackingSession(session.id)
                 }.isSuccess
                 if (synced) {

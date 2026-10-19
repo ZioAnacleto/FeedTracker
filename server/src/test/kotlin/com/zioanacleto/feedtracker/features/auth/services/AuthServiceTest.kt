@@ -26,6 +26,7 @@ import com.zioanacleto.feedtracker.features.trackingpreferences.repositories.Tra
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -469,12 +470,54 @@ class AuthServiceTest :
                 )
                 coEvery { revokedTokens.isRevoked("jti-1") } returns false
                 coEvery { users.findStoredById("user-1") } returns StoredUser(user, "hashed")
-                coEvery { users.deleteAccount("user-1", "mario@example.com") } returns Unit
+                coEvery {
+                    users.deleteAccount(
+                        userId = "user-1",
+                        email = "mario@example.com",
+                        accessTokenJti = "jti-1",
+                        accessTokenExpiresAt = 2_000_000L,
+                        revokedAt = 1_000_000L,
+                    )
+                } returns Unit
 
                 runBlocking { service.deleteAccount("access") }
 
-                coVerify { revokedTokens.revoke("jti-1", 2_000_000L, 1_000_000L) }
-                coVerify { users.deleteAccount("user-1", "mario@example.com") }
+                coVerify {
+                    users.deleteAccount(
+                        userId = "user-1",
+                        email = "mario@example.com",
+                        accessTokenJti = "jti-1",
+                        accessTokenExpiresAt = 2_000_000L,
+                        revokedAt = 1_000_000L,
+                    )
+                }
+            }
+
+            it("keeps the access token when account deletion fails") {
+                clearMocks(revokedTokens, answers = false, recordedCalls = true)
+                every { tokens.parseAccessToken("access") } returns AccessTokenClaims(
+                    userId = "user-1",
+                    jti = "jti-1",
+                    expiresAtMillis = 2_000_000L,
+                    issuedAtMillis = 1_000_000L,
+                )
+                coEvery { revokedTokens.isRevoked("jti-1") } returns false
+                coEvery { users.findStoredById("user-1") } returns StoredUser(user, "hashed")
+                coEvery {
+                    users.deleteAccount(
+                        userId = "user-1",
+                        email = "mario@example.com",
+                        accessTokenJti = "jti-1",
+                        accessTokenExpiresAt = 2_000_000L,
+                        revokedAt = 1_000_000L,
+                    )
+                } throws IllegalStateException("database unavailable")
+
+                shouldThrow<IllegalStateException> {
+                    runBlocking { service.deleteAccount("access") }
+                }
+
+                coVerify(exactly = 0) { revokedTokens.revoke(any(), any(), any()) }
             }
 
             it("rejects account deletion with an invalid access token") {

@@ -182,7 +182,8 @@
     <string name="profile_saved">Profilo salvato</string>
     <string name="log_out">Disconnetti</string>
     <string name="logging_out">Disconnessione in corso</string>
-    <string name="logout_confirmation">Vuoi davvero disconnetterti?</string>
+    <string name="unable_to_log_out">Impossibile disconnettersi</string>
+    <string name="logout_confirmation">Vuoi davvero disconnetterti? Le sessioni salvate solo su questo dispositivo verranno scartate e non caricate.</string>
     <string name="widget_name">Timer FeedTracker</string>
     <string name="widget_description">Mostra il timer della sessione in corso</string>
     <string name="widget_tracking_label">In corso</string>

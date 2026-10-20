@@ -18,4 +18,5 @@ interface AuthRepository {
     suspend fun getTrackingPreferences(accessToken: String): TrackingPreferences
     suspend fun updateTrackingPreferences(accessToken: String, preferences: TrackingPreferences): TrackingPreferences
     suspend fun logout(accessToken: String)
+    suspend fun deleteAccount(accessToken: String)
 }

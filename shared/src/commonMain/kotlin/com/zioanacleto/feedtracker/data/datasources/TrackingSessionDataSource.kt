@@ -6,5 +6,11 @@ interface TrackingSessionDataSource {
     suspend fun getTrackingSessions(): List<TrackingSessionModel>
     suspend fun getTrackingSession(id: String): TrackingSessionModel
     suspend fun saveNewTrackingSession(sessionModel: TrackingSessionModel)
+
+    suspend fun saveNewTrackingSession(sessionModel: TrackingSessionModel, accessToken: String) {
+        saveNewTrackingSession(sessionModel)
+    }
+
     suspend fun deleteTrackingSession(id: String)
+    suspend fun clear()
 }

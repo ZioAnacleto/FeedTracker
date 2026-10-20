@@ -63,6 +63,7 @@ fun PrivacySettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val exportingDescription = stringResource(Res.string.exporting_sessions)
     val savedMessage = stringResource(Res.string.export_sessions_saved)
+    val busy = uiState.isExporting
 
     SessionExportSaveEffect(
         pendingSave = uiState.pendingSave,
@@ -94,7 +95,7 @@ fun PrivacySettingsScreen(
                 IconButton(
                     onClick = onBackButtonClick,
                     modifier = Modifier.align(Alignment.CenterStart),
-                    enabled = !uiState.isExporting,
+                    enabled = !busy,
                 ) {
                     Icon(
                         painter = rememberVectorPainter(Icons.AutoMirrored.Rounded.ArrowBack),
@@ -136,7 +137,7 @@ fun PrivacySettingsScreen(
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isExporting,
+                    enabled = !busy,
                 ) {
                     Text(
                         stringResource(
@@ -157,7 +158,7 @@ fun PrivacySettingsScreen(
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isExporting,
+                    enabled = !busy,
                 ) {
                     Text(
                         stringResource(
@@ -176,7 +177,7 @@ fun PrivacySettingsScreen(
                             viewModel.exportSessions(SessionExportFormat.CSV, SessionExportDestination.SAVE)
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isExporting,
+                        enabled = !busy,
                     ) {
                         Text(stringResource(Res.string.save_sessions_csv))
                     }
@@ -186,7 +187,7 @@ fun PrivacySettingsScreen(
                             viewModel.exportSessions(SessionExportFormat.JSON, SessionExportDestination.SAVE)
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isExporting,
+                        enabled = !busy,
                     ) {
                         Text(stringResource(Res.string.save_sessions_json))
                     }
@@ -213,7 +214,7 @@ fun PrivacySettingsScreen(
             MessageSnackbar(message = savedMessage)
         }
 
-        if (uiState.isExporting) {
+        if (busy) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()

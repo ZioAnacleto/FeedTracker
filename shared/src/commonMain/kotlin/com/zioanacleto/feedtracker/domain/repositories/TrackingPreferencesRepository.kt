@@ -11,4 +11,6 @@ interface TrackingPreferencesRepository {
     suspend fun save(preferences: TrackingPreferences)
 
     suspend fun rememberLastUsedPerson(name: String, surname: String, birthDate: String)
+
+    suspend fun clearLocal()
 }

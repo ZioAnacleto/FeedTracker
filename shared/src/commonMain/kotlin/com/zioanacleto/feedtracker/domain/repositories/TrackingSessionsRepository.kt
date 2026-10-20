@@ -13,4 +13,5 @@ interface TrackingSessionsRepository {
     suspend fun getTrackingSession(id: String): Flow<Resource<TrackingSessionModel>>
     suspend fun saveTrackingSession(trackingSession: TrackingSessionModel)
     suspend fun deleteTrackingSession(id: String)
+    suspend fun discardUnsyncedSessions()
 }

@@ -47,23 +47,25 @@ class TrackingSessionRepositoryTest :
             )
 
             it("creates and retrieves a session") {
-                val created = runBlocking { repository.create(createRequest) }
-                val found = runBlocking { repository.findById(created.id) }
+                val created = runBlocking { repository.create("user-1", createRequest) }
+                val found = runBlocking { repository.findById("user-1", created.id) }
 
                 found shouldBe created
             }
 
-            it("lists all sessions") {
-                runBlocking { repository.create(createRequest) }
-                runBlocking { repository.create(createRequest.copy(name = "Luigi")) }
+            it("lists only the owner's sessions") {
+                runBlocking { repository.create("user-1", createRequest) }
+                runBlocking { repository.create("user-1", createRequest.copy(name = "Luigi")) }
+                runBlocking { repository.create("user-2", createRequest.copy(name = "Anna")) }
 
-                val all = runBlocking { repository.findAll() }
+                val all = runBlocking { repository.findAll("user-1") }
 
                 all shouldHaveSize 2
+                all.map { it.name }.toSet() shouldBe setOf("Mario", "Luigi")
             }
 
             it("updates a session") {
-                val created = runBlocking { repository.create(createRequest) }
+                val created = runBlocking { repository.create("user-1", createRequest) }
                 val updateRequest = UpdateTrackingSessionRequest(
                     sessionStartTime = 1000L,
                     sessionEndTime = 4000L,
@@ -73,21 +75,47 @@ class TrackingSessionRepositoryTest :
                     additionalNotes = null,
                 )
 
-                val updated = runBlocking { repository.update(created.id, updateRequest) }
-                val found = runBlocking { repository.findById(created.id) }
+                val updated = runBlocking { repository.update("user-1", created.id, updateRequest) }
+                val found = runBlocking { repository.findById("user-1", created.id) }
 
                 updated?.sessionEndTime shouldBe 4000L
                 found?.sessionEndTime shouldBe 4000L
             }
 
-            it("deletes a session") {
-                val created = runBlocking { repository.create(createRequest) }
+            it("does not update another user's session") {
+                val created = runBlocking { repository.create("user-1", createRequest) }
+                val updateRequest = UpdateTrackingSessionRequest(
+                    sessionStartTime = 1000L,
+                    sessionEndTime = 4000L,
+                    name = "Mario",
+                    surname = "Rossi",
+                    birthDate = "01/01/1990",
+                    additionalNotes = null,
+                )
 
-                val deleted = runBlocking { repository.delete(created.id) }
-                val found = runBlocking { repository.findById(created.id) }
+                val updated = runBlocking { repository.update("user-2", created.id, updateRequest) }
+
+                updated.shouldBeNull()
+            }
+
+            it("deletes a session") {
+                val created = runBlocking { repository.create("user-1", createRequest) }
+
+                val deleted = runBlocking { repository.delete("user-1", created.id) }
+                val found = runBlocking { repository.findById("user-1", created.id) }
 
                 deleted shouldBe true
                 found.shouldBeNull()
+            }
+
+            it("does not delete another user's session") {
+                val created = runBlocking { repository.create("user-1", createRequest) }
+
+                val deleted = runBlocking { repository.delete("user-2", created.id) }
+                val found = runBlocking { repository.findById("user-1", created.id) }
+
+                deleted shouldBe false
+                found shouldBe created
             }
         }
     })

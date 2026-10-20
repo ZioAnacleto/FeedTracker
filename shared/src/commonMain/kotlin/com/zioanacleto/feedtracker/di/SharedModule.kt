@@ -46,15 +46,21 @@ val sharedModule = module {
         )
     }
 
-    single { TrackingSessionNetworkDataSource(get()) }
+    single {
+        TrackingSessionNetworkDataSource(get()) {
+            get<AuthSessionRepository>().session.value?.accessToken ?: error("Missing access token")
+        }
+    }
     single { TrackingSessionLocalDataSource(get()) }
 
     single<TrackingSessionsRepository> {
+        val authSessionRepository = get<AuthSessionRepository>()
         TrackingSessionsRepositoryImpl(
             localDataSource = get<TrackingSessionLocalDataSource>(),
             networkDataSource = get<TrackingSessionNetworkDataSource>(),
             dispatcherProvider = get(),
             networkMonitor = get(),
+            accessToken = { authSessionRepository.session.value?.accessToken },
         )
     }
 }

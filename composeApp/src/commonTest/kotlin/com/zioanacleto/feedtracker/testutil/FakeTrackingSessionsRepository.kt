@@ -16,10 +16,13 @@ class FakeTrackingSessionsRepository(
     private val deleteError: Throwable? = null,
     private val deleteSuspends: Boolean = false,
     private val exportError: Throwable? = null,
+    private val discardError: Throwable? = null,
     override val syncedPendingCount: Flow<Int> = emptyFlow(),
 ) : TrackingSessionsRepository {
     val saved = mutableListOf<TrackingSessionModel>()
     val deletedIds = mutableListOf<String>()
+    var discardUnsyncedCalls = 0
+        private set
 
     override suspend fun getTrackingSessions(): Flow<Resource<List<TrackingSessionModel>>> = sessions
 
@@ -46,6 +49,11 @@ class FakeTrackingSessionsRepository(
             delay(1)
         }
         deletedIds += id
+    }
+
+    override suspend fun discardUnsyncedSessions() {
+        discardUnsyncedCalls += 1
+        discardError?.let { throw it }
     }
 }
 

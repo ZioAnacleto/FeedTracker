@@ -225,6 +225,26 @@ class AuthRepositoryImplTest {
     }
 
     @Test
+    fun deleteAccountSendsBearerToken() = runTest {
+        var authorization: String? = null
+        val engine = MockEngine { request ->
+            request.method shouldBe HttpMethod.Delete
+            request.url.encodedPath shouldBe "/api/auth/account"
+            authorization = request.headers[HttpHeaders.Authorization]
+            respond(
+                content = ByteReadChannel(json.encodeToString(ApiResponse<String?>("SUCCESS", "Account deleted"))),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+            )
+        }
+
+        val repository = AuthRepositoryImpl(apiClient(engine))
+
+        repository.deleteAccount("access-token")
+        authorization shouldBe "Bearer access-token"
+    }
+
+    @Test
     fun startPasswordResetPostsToForgotPassword() = runTest {
         var posted = false
         val engine = MockEngine { request ->

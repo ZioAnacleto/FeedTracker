@@ -12,7 +12,10 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import kotlin.test.Test
 
 class TrackingSessionsRepositoryImplTest {
@@ -309,15 +312,74 @@ class TrackingSessionsRepositoryImplTest {
         }
     }
 
+    @Test
+    fun discardUnsyncedSessionsClearsLocalSessionsWithoutCallingTheNetwork() = runTest {
+        val local = FakeTrackingSessionDataSource(listOf(trackingSession("pending")))
+        val network = FakeTrackingSessionDataSource(listOf(trackingSession("remote")))
+        val repository = repository(online = true, network = network, local = local)
+
+        repository.discardUnsyncedSessions()
+
+        local.clearCalls shouldBe 1
+        local.getTrackingSessions().shouldBeEmpty()
+        network.clearCalls shouldBe 0
+        network.getTrackingSessions() shouldBe listOf(trackingSession("remote"))
+    }
+
+    @Test
+    fun syncUploadsWithTheAccessTokenCapturedBeforeTheFirstUpload() = runTest {
+        val tokens = ArrayDeque(listOf("user-a", "user-b"))
+        val network = FakeTrackingSessionDataSource()
+        val repository = repository(
+            online = true,
+            network = network,
+            local = FakeTrackingSessionDataSource(listOf(trackingSession("first"), trackingSession("second"))),
+            accessToken = { tokens.removeFirst() },
+        )
+
+        repository.saveTrackingSession(trackingSession("third"))
+
+        network.savedTokens shouldBe listOf("user-a", "user-a", "user-a")
+        tokens.toList() shouldBe listOf("user-b")
+    }
+
+    @Test
+    fun discardUnsyncedSessionsWaitsUntilTheCurrentSyncFinishes() = runTest {
+        val started = CompletableDeferred<Unit>()
+        val allowSave = CompletableDeferred<Unit>()
+        val local = FakeTrackingSessionDataSource(listOf(trackingSession("pending")))
+        val network = FakeTrackingSessionDataSource().apply {
+            beforeSave = {
+                started.complete(Unit)
+                allowSave.await()
+            }
+        }
+        val repository = repository(online = true, network = network, local = local)
+        val sync = launch { repository.saveTrackingSession(trackingSession("another")) }
+        started.await()
+
+        val discard = launch { repository.discardUnsyncedSessions() }
+        yield()
+
+        local.clearCalls shouldBe 0
+        allowSave.complete(Unit)
+        sync.join()
+        discard.join()
+        local.clearCalls shouldBe 1
+        local.getTrackingSessions().shouldBeEmpty()
+    }
+
     private fun repository(
         online: Boolean = true,
         network: TrackingSessionDataSource = FakeTrackingSessionDataSource(),
         local: TrackingSessionDataSource = FakeTrackingSessionDataSource(),
         networkMonitor: FakeNetworkMonitor = FakeNetworkMonitor(online),
+        accessToken: () -> String? = { "access-token" },
     ) = TrackingSessionsRepositoryImpl(
         localDataSource = local,
         networkDataSource = network,
         dispatcherProvider = ImmediateDispatcherProvider,
         networkMonitor = networkMonitor,
+        accessToken = accessToken,
     )
 }

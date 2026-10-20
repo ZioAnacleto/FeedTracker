@@ -206,6 +206,20 @@ class AuthServiceImpl(
         )
     }
 
+    override suspend fun deleteAccount(accessToken: String) {
+        val claims = requireValidAccessToken(accessToken)
+        val stored = users.findStoredById(claims.userId) ?: throw UnauthorizedException("Invalid access token")
+        users.deleteAccount(
+            userId = stored.model.id,
+            email = stored.model.email,
+            accessTokenJti = claims.jti,
+            accessTokenExpiresAt = claims.expiresAtMillis,
+            revokedAt = timeProvider.nowMillis(),
+        )
+    }
+
+    override suspend fun authenticatedUserId(accessToken: String): String = requireValidAccessToken(accessToken).userId
+
     override suspend fun loginWithApple(request: SocialLoginRequest): AuthSession {
         val profile = socialVerifier.verifyApple(request.idToken)
         return upsertSocialUser(

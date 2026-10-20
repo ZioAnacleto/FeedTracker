@@ -6,9 +6,9 @@ import com.zioanacleto.feedtracker.features.login.EmailSignUpViewModel
 import com.zioanacleto.feedtracker.features.login.ForgotPasswordViewModel
 import com.zioanacleto.feedtracker.features.login.LoginMethodsViewModel
 import com.zioanacleto.feedtracker.features.newtracking.NewTrackingViewModel
+import com.zioanacleto.feedtracker.features.settings.account.AccountSettingsViewModel
 import com.zioanacleto.feedtracker.features.settings.appearance.AppearanceSettingsViewModel
 import com.zioanacleto.feedtracker.features.settings.language.LanguageSettingsViewModel
-import com.zioanacleto.feedtracker.features.settings.personal.PersonalSettingsViewModel
 import com.zioanacleto.feedtracker.features.settings.privacy.PrivacySettingsViewModel
 import com.zioanacleto.feedtracker.features.settings.profile.ProfileSettingsViewModel
 import com.zioanacleto.feedtracker.features.settings.tracking.TrackingPreferencesViewModel
@@ -41,9 +41,25 @@ val uiModule = module {
     viewModel { EmailLoginViewModel(get(), get()) }
     viewModel { EmailSignUpViewModel(get(), get()) }
     viewModel { ForgotPasswordViewModel(get(), get()) }
-    viewModel { PersonalSettingsViewModel(get(), get(), get()) }
     viewModel { ProfileSettingsViewModel(get(), get()) }
-    viewModel { PrivacySettingsViewModel(get(), get(), get(), get()) }
+    viewModel {
+        AccountSettingsViewModel(
+            authRepository = get(),
+            authSessionRepository = get(),
+            sessionExportSharer = get(),
+            trackingSessionsRepository = get(),
+            trackingPreferencesRepository = get(),
+            activeTrackingSessionController = get(),
+        )
+    }
+    viewModel {
+        PrivacySettingsViewModel(
+            trackingSessionsRepository = get(),
+            trackingPreferencesRepository = get(),
+            sessionExportSharer = get(),
+            savedStateHandle = get(),
+        )
+    }
     viewModel { TrackingPreferencesViewModel(get()) }
     viewModel { AppearanceSettingsViewModel(get()) }
     viewModel { LanguageSettingsViewModel(get()) }

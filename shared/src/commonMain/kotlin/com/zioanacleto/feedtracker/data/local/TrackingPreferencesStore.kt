@@ -6,6 +6,7 @@ import kotlinx.serialization.json.Json
 interface TrackingPreferencesStore {
     fun load(): TrackingPreferences?
     fun save(preferences: TrackingPreferences)
+    fun clear()
 }
 
 class InMemoryTrackingPreferencesStore(initial: TrackingPreferences? = null) : TrackingPreferencesStore {
@@ -15,6 +16,10 @@ class InMemoryTrackingPreferencesStore(initial: TrackingPreferences? = null) : T
 
     override fun save(preferences: TrackingPreferences) {
         this.preferences = preferences
+    }
+
+    override fun clear() {
+        preferences = null
     }
 }
 
@@ -32,6 +37,10 @@ class JsonTrackingPreferencesStore(
 
     override fun save(preferences: TrackingPreferences) {
         textStore.write(json.encodeToString(TrackingPreferences.serializer(), preferences))
+    }
+
+    override fun clear() {
+        textStore.delete()
     }
 }
 

@@ -1,0 +1,10 @@
+---
+description: Default pull request target branch
+alwaysApply: true
+---
+
+# PR target branch
+
+Open pull requests against `develop` by default.
+
+Open a pull request against `main` only when the user explicitly asks for `main`.

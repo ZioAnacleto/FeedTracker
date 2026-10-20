@@ -31,6 +31,6 @@ fun Application.configureRouting() {
         }
 
         authRoutes(authService)
-        trackingSessionRoutes(trackingSessionService)
+        trackingSessionRoutes(trackingSessionService, authService)
     }
 }

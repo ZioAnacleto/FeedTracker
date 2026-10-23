@@ -47,7 +47,9 @@ import com.zioanacleto.feedtracker.components.hideKeyboardOnTouch
 import com.zioanacleto.feedtracker.components.placeholder
 import com.zioanacleto.feedtracker.domain.repositories.TrackingPreferencesRepository
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
+import com.zioanacleto.feedtracker.theme.FormContentMaxWidth
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
+import com.zioanacleto.feedtracker.theme.centeredMaxWidth
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import com.zioanacleto.feedtracker.theme.feedTrackerTextFieldColors
 import com.zioanacleto.feedtracker.widget.ActiveTrackingSessionController
@@ -151,6 +153,7 @@ fun NewTrackingScreen(
         modifier = modifier
             .feedTrackerScreenWindowInsets()
             .fillMaxSize()
+            .centeredMaxWidth(FormContentMaxWidth)
             .hideKeyboardOnTouch(),
     ) {
         Column(

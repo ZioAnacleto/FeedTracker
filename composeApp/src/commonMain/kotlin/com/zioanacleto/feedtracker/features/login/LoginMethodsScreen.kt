@@ -22,7 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.zioanacleto.feedtracker.domain.auth.AuthMethod
+import com.zioanacleto.feedtracker.theme.FormContentMaxWidth
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
+import com.zioanacleto.feedtracker.theme.centeredMaxWidth
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.auth_method_apple
@@ -51,6 +53,7 @@ fun LoginMethodsScreen(
         modifier = modifier
             .feedTrackerScreenWindowInsets()
             .fillMaxSize()
+            .centeredMaxWidth(FormContentMaxWidth)
             .padding(horizontal = ScreenHorizontalPadding),
     ) {
         Column(

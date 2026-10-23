@@ -35,7 +35,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.zioanacleto.feedtracker.components.hideKeyboardOnTouch
+import com.zioanacleto.feedtracker.theme.FormContentMaxWidth
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
+import com.zioanacleto.feedtracker.theme.centeredMaxWidth
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import com.zioanacleto.feedtracker.theme.feedTrackerTextFieldColors
 import feedtracker.composeapp.generated.resources.Res
@@ -77,6 +79,7 @@ fun ForgotPasswordScreen(
         modifier = modifier
             .feedTrackerScreenWindowInsets()
             .fillMaxSize()
+            .centeredMaxWidth(FormContentMaxWidth)
             .hideKeyboardOnTouch(),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {

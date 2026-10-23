@@ -35,7 +35,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.zioanacleto.feedtracker.components.hideKeyboardOnTouch
+import com.zioanacleto.feedtracker.theme.FormContentMaxWidth
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
+import com.zioanacleto.feedtracker.theme.centeredMaxWidth
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import com.zioanacleto.feedtracker.theme.feedTrackerTextFieldColors
 import feedtracker.composeapp.generated.resources.Res
@@ -72,6 +74,7 @@ fun ProfileSettingsScreen(
         modifier = modifier
             .feedTrackerScreenWindowInsets()
             .fillMaxSize()
+            .centeredMaxWidth(FormContentMaxWidth)
             .hideKeyboardOnTouch(),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {

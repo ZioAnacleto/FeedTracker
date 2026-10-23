@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
@@ -75,6 +76,8 @@ import com.zioanacleto.feedtracker.domain.preferences.TrackingPreferences
 import com.zioanacleto.feedtracker.domain.repositories.AuthSessionRepository
 import com.zioanacleto.feedtracker.domain.repositories.TrackingPreferencesRepository
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
+import com.zioanacleto.feedtracker.theme.FormContentMaxWidth
+import com.zioanacleto.feedtracker.theme.HomeContentMaxWidth
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
 import com.zioanacleto.feedtracker.theme.feedTrackerCardColors
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
@@ -157,7 +160,11 @@ fun HomeScreen(
             .then(modifier),
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .widthIn(max = HomeContentMaxWidth)
+                .fillMaxHeight()
+                .fillMaxWidth()
+                .align(Alignment.TopCenter),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Row(
@@ -207,6 +214,7 @@ fun HomeScreen(
 
                 is HomeUiState.Ready -> {
                     HomeReadyTabs(
+                        modifier = Modifier.weight(1f),
                         state = state,
                         onToggleGroup = viewModel::toggleGroup,
                         onSessionClick = viewModel::selectSession,
@@ -281,6 +289,7 @@ private const val TAB_ALL_SESSIONS = 1
 
 @Composable
 private fun HomeReadyTabs(
+    modifier: Modifier = Modifier,
     state: HomeUiState.Ready,
     onToggleGroup: (String) -> Unit,
     onSessionClick: (TrackingSessionModel) -> Unit,
@@ -291,13 +300,20 @@ private fun HomeReadyTabs(
     var selectedTab by remember { mutableIntStateOf(TAB_OVERVIEW) }
     val prefill = sessionPrefill(preferences, state.recentSessions.firstOrNull())
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         HomeTabChipSelector(
             selectedTab = selectedTab,
             onTabSelected = { selectedTab = it },
         )
         when (selectedTab) {
             TAB_OVERVIEW -> OverviewTab(
+                modifier = Modifier
+                    .weight(1f)
+                    .widthIn(max = FormContentMaxWidth)
+                    .fillMaxWidth(),
                 state = state,
                 onSessionClick = onSessionClick,
                 onNewTrackingClick = onNewTrackingClick,
@@ -305,6 +321,10 @@ private fun HomeReadyTabs(
                 preferences = preferences,
             )
             else -> AllSessionsTab(
+                modifier = Modifier
+                    .weight(1f)
+                    .widthIn(max = FormContentMaxWidth)
+                    .fillMaxWidth(),
                 state = state,
                 onToggleGroup = onToggleGroup,
                 onSessionClick = onSessionClick,
@@ -323,6 +343,7 @@ private fun HomeTabChipSelector(selectedTab: Int, onTabSelected: (Int) -> Unit) 
     )
     Surface(
         modifier = Modifier
+            .widthIn(max = FormContentMaxWidth)
             .fillMaxWidth()
             .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp),
         shape = RoundedCornerShape(percent = 50),
@@ -373,6 +394,7 @@ private fun HomeTabChipSelector(selectedTab: Int, onTabSelected: (Int) -> Unit) 
 
 @Composable
 private fun OverviewTab(
+    modifier: Modifier = Modifier,
     state: HomeUiState.Ready,
     onSessionClick: (TrackingSessionModel) -> Unit,
     onNewTrackingClick: (String, String, String) -> Unit,
@@ -382,22 +404,41 @@ private fun OverviewTab(
     val prefill = sessionPrefill(preferences, state.recentSessions.firstOrNull())
     if (state.recentSessions.isEmpty()) {
         EmptySessionsState(
+            modifier = modifier,
             onStartFirstSession = { onNewTrackingClick(prefill.name, prefill.surname, prefill.birthDate) },
             onLogPastSession = { onPastTrackingClick(prefill.name, prefill.surname, prefill.birthDate) },
         )
         return
     }
 
-    val lastSession = state.recentSessions.first()
-    val olderRecentSessions = state.recentSessions.drop(1)
+    SessionList(
+        modifier = modifier,
+        stats = state.stats,
+        lastSession = state.recentSessions.first(),
+        olderRecentSessions = state.recentSessions.drop(1),
+        onSessionClick = onSessionClick,
+        onNewTrackingClick = onNewTrackingClick,
+        onPastTrackingClick = onPastTrackingClick,
+    )
+}
 
+@Composable
+private fun SessionList(
+    modifier: Modifier = Modifier,
+    stats: HomeStats,
+    lastSession: TrackingSessionModel,
+    olderRecentSessions: List<TrackingSessionModel>,
+    onSessionClick: (TrackingSessionModel) -> Unit,
+    onNewTrackingClick: (String, String, String) -> Unit,
+    onPastTrackingClick: (String, String, String) -> Unit,
+) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = 8.dp, bottom = 88.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item(key = "stats") {
-            HomeStatsCard(stats = state.stats)
+            HomeStatsCard(stats = stats)
         }
         item(key = "recent-title") {
             Text(
@@ -440,6 +481,7 @@ private fun OverviewTab(
 
 @Composable
 private fun AllSessionsTab(
+    modifier: Modifier = Modifier,
     state: HomeUiState.Ready,
     onToggleGroup: (String) -> Unit,
     onSessionClick: (TrackingSessionModel) -> Unit,
@@ -448,6 +490,7 @@ private fun AllSessionsTab(
 ) {
     if (state.items.isEmpty()) {
         EmptySessionsState(
+            modifier = modifier,
             onStartFirstSession = onStartFirstSession,
             onLogPastSession = onLogPastSession,
         )
@@ -455,7 +498,7 @@ private fun AllSessionsTab(
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = 8.dp, bottom = 88.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -484,9 +527,9 @@ private fun AllSessionsTab(
 }
 
 @Composable
-private fun EmptySessionsState(onStartFirstSession: () -> Unit, onLogPastSession: () -> Unit) {
+private fun EmptySessionsState(onStartFirstSession: () -> Unit, onLogPastSession: () -> Unit, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(horizontal = ScreenHorizontalPadding),
         verticalArrangement = Arrangement.Center,

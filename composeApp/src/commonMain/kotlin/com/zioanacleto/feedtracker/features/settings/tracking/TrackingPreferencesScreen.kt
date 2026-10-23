@@ -59,7 +59,9 @@ import com.zioanacleto.feedtracker.components.placeholder
 import com.zioanacleto.feedtracker.domain.preferences.DateDisplayFormat
 import com.zioanacleto.feedtracker.domain.preferences.DurationDisplayFormat
 import com.zioanacleto.feedtracker.domain.preferences.PersonPrefillMode
+import com.zioanacleto.feedtracker.theme.FormContentMaxWidth
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
+import com.zioanacleto.feedtracker.theme.centeredMaxWidth
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import com.zioanacleto.feedtracker.theme.feedTrackerTextFieldColors
 import feedtracker.composeapp.generated.resources.Res
@@ -112,6 +114,7 @@ fun TrackingPreferencesScreen(
         modifier = modifier
             .feedTrackerScreenWindowInsets()
             .fillMaxSize()
+            .centeredMaxWidth(FormContentMaxWidth)
             .hideKeyboardOnTouch(),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {

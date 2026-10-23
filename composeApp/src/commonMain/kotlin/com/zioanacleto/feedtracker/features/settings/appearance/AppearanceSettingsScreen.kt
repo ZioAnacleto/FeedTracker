@@ -33,6 +33,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.zioanacleto.feedtracker.domain.preferences.AppearanceMode
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
+import com.zioanacleto.feedtracker.theme.SettingsContentMaxWidth
+import com.zioanacleto.feedtracker.theme.centeredMaxWidth
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.appearance
@@ -58,7 +60,8 @@ fun AppearanceSettingsScreen(
     Column(
         modifier = modifier
             .feedTrackerScreenWindowInsets()
-            .fillMaxSize(),
+            .fillMaxSize()
+            .centeredMaxWidth(SettingsContentMaxWidth),
     ) {
         Box(
             modifier = Modifier

@@ -36,6 +36,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.zioanacleto.feedtracker.components.MessageSnackbar
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
+import com.zioanacleto.feedtracker.theme.SettingsContentMaxWidth
+import com.zioanacleto.feedtracker.theme.centeredMaxWidth
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.appearance
@@ -94,7 +96,8 @@ fun PersonalSettingsScreen(
     Box(
         modifier = modifier
             .feedTrackerScreenWindowInsets()
-            .fillMaxSize(),
+            .fillMaxSize()
+            .centeredMaxWidth(SettingsContentMaxWidth),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(

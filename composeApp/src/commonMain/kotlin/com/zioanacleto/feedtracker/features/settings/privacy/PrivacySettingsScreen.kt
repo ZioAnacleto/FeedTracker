@@ -35,7 +35,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.zioanacleto.feedtracker.components.MessageSnackbar
+import com.zioanacleto.feedtracker.theme.FormContentMaxWidth
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
+import com.zioanacleto.feedtracker.theme.centeredMaxWidth
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import feedtracker.composeapp.generated.resources.Res
 import feedtracker.composeapp.generated.resources.back
@@ -84,7 +86,8 @@ fun PrivacySettingsScreen(
     Box(
         modifier = modifier
             .feedTrackerScreenWindowInsets()
-            .fillMaxSize(),
+            .fillMaxSize()
+            .centeredMaxWidth(FormContentMaxWidth),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(

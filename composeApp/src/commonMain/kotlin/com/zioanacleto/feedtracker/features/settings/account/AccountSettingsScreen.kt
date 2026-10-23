@@ -34,7 +34,9 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.zioanacleto.feedtracker.theme.FormContentMaxWidth
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
+import com.zioanacleto.feedtracker.theme.centeredMaxWidth
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import com.zioanacleto.feedtracker.theme.feedTrackerTextFieldColors
 import feedtracker.composeapp.generated.resources.Res
@@ -73,7 +75,8 @@ fun AccountSettingsScreen(
     Box(
         modifier = modifier
             .feedTrackerScreenWindowInsets()
-            .fillMaxSize(),
+            .fillMaxSize()
+            .centeredMaxWidth(FormContentMaxWidth),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(

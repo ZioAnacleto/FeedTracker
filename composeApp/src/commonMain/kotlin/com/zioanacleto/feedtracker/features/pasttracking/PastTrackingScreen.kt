@@ -71,7 +71,9 @@ import com.zioanacleto.feedtracker.domain.repositories.TrackingPreferencesReposi
 import com.zioanacleto.feedtracker.features.newtracking.NewTrackingViewModel
 import com.zioanacleto.feedtracker.features.newtracking.SaveTrackingUiState
 import com.zioanacleto.feedtracker.getCurrentTimeMillis
+import com.zioanacleto.feedtracker.theme.FormContentMaxWidth
 import com.zioanacleto.feedtracker.theme.ScreenHorizontalPadding
+import com.zioanacleto.feedtracker.theme.centeredMaxWidth
 import com.zioanacleto.feedtracker.theme.feedTrackerScreenWindowInsets
 import com.zioanacleto.feedtracker.theme.feedTrackerTextButtonColors
 import com.zioanacleto.feedtracker.theme.feedTrackerTextFieldColors
@@ -175,6 +177,7 @@ fun PastTrackingScreen(
         modifier = modifier
             .feedTrackerScreenWindowInsets()
             .fillMaxSize()
+            .centeredMaxWidth(FormContentMaxWidth)
             .hideKeyboardOnTouch(),
     ) {
         Column(
